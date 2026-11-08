@@ -28,7 +28,7 @@ export function useQ<T = any>(f: () => Promise<T>, deps: any[]) {
 
 export const Logo = ({ petit }: { petit?: boolean }) => (
   <div className={petit ? 'logo petit' : 'logo'}>
-    <img src="/img/accueil/icone-net.webp" alt="" />
+    <img src="/img/accueil/icone.webp" alt="" />
     <img className="mot" src="/img/accueil/mot.webp" alt="Scolaris" />
   </div>
 );

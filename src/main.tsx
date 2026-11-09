@@ -10,7 +10,6 @@ import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finan
 import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
 import { Abonnement, BandeauAbonnement } from './abonnement';
-import { PiGearSixFill, PiHouseSimpleFill, PiReceiptFill, PiStudentFill, PiUsersThreeFill } from 'react-icons/pi';
 import { EspaceAdmin } from './admin';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
@@ -33,14 +32,13 @@ const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 
 
 function BarreBas({ chemin, can, ouvrir }: any) {
   const fin = can(...STAFF);
-  const it = (to: string, t: string, I: any, F: any) => { const on = chemin.startsWith(to); const X = on ? F : I; return <Lien to={to} className={on ? 'on' : ''}><X aria-hidden="true" /><span>{t}</span></Lien>; };
-  const fab = <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien>;
+  const it = (to: string, t: string, I: any) => <Lien to={to} className={chemin.startsWith(to) ? 'on' : ''}><I aria-hidden="true" /><span>{t}</span></Lien>;
   return (
     <nav className="barre-bas" aria-label="Navigation principale">
-      {it('/tableau', 'Accueil', PiHouseSimpleDuotone, PiHouseSimpleFill)}
-      {it('/eleves', 'Élèves', PiStudentDuotone, PiStudentFill)}
-      {fin ? fab : it('/classes', 'Classes', PiUsersThreeDuotone, PiUsersThreeFill)}
-      {fin ? it('/paiements', 'Paiements', PiReceiptDuotone, PiReceiptFill) : it('/parametres', 'Paramètres', PiGearSixDuotone, PiGearSixFill)}
+      {it('/tableau', 'Accueil', PiHouseSimpleDuotone)}
+      {it('/eleves', 'Élèves', PiStudentDuotone)}
+      {fin ? <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien> : it('/classes', 'Classes', PiUsersThreeDuotone)}
+      {fin ? it('/paiements', 'Paiements', PiReceiptDuotone) : it('/parametres', 'Paramètres', PiGearSixDuotone)}
       <button type="button" onClick={ouvrir}><PiDotsThreeCircleDuotone aria-hidden="true" /><span>Plus</span></button>
     </nav>
   );

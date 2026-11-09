@@ -63,13 +63,25 @@ function Coque({ m, annees, recharger, abo }: any) {
     const [p, v] = await Promise.all([db.tout(`paiements?etablissement_id=eq.${eid}&statut=eq.en_attente&select=id&order=id`), db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&en_retard=is.true&select=inscription_id&order=inscription_id`)]);
     return { attente: p.length, retard: v.length };
   }, [annee?.id, chemin]);
-  poserLectureSeule(!!abo?.lecture_seule);
+  const attente = abo?.situation === 'attente';
+  poserLectureSeule(!!abo?.lecture_seule, attente);
+  // École pas encore payée : elle visite tout, mais chaque action d'ajout mène à l'abonnement.
+  useEffect(() => {
+    if (!attente || role !== 'fondateur') return;
+    const f = (e: MouseEvent) => {
+      const b = (e.target as Element)?.closest?.('a,button') as HTMLElement | null;
+      if (!b || !b.closest('.app') || b.closest('.band-abo') || /^\/(abonnement|parametres\/compte)/.test(location.pathname)) return;
+      const t = (b.getAttribute('aria-label') || b.textContent || '').trim();
+      if (!/^(ajouter|nouveau|nouvelle|créer|importer|inscrire|enregistrer|activer|valider|saisir)/i.test(t)) return;
+      e.preventDefault(); e.stopPropagation(); naviguer('/abonnement');
+    };
+    document.addEventListener('click', f, true);
+    return () => document.removeEventListener('click', f, true);
+  }, [attente, role]);
   const ctx = { abo, eid, etab, role, can, annee, annees, zoneBandeau, zoneFiltres, setAnnee: (id: string) => { setA(id); try { localStorage.setItem('scolaris_annee', id); } catch { /* ignoré */ } }, recharger, majNotif: notif.reload };
   const seg = chemin.split('/').filter(Boolean);
   let page: any = <Tableau />;
-  const attente = abo?.situation === 'attente';
-  if (attente) page = <Abonnement />;
-  else if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
+  if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
   else if (seg[0] === 'eleves' && seg[1]) page = <DetailEleve id={seg[1]} key={seg[1]} />;
   else if (seg[0] === 'eleves') page = <Eleves />;
   else if (seg[0] === 'classes') page = <Classes />;
@@ -90,7 +102,7 @@ function Coque({ m, annees, recharger, abo }: any) {
   const nd: any = notif.data || {};
   return (
     <Ctx.Provider value={ctx}>
-      <div className={`app${attente || chemin.startsWith('/abonnement') || (seg[0] === 'parametres' && seg[1]) ? ' plein' : ''}${attente ? ' attente' : ''}${chemin === '/' || seg[0] === 'tableau' ? ' ondule' : ''}`}>
+      <div className={`app${chemin.startsWith('/abonnement') || (seg[0] === 'parametres' && seg[1]) ? ' plein' : ''}${chemin === '/' || seg[0] === 'tableau' ? ' ondule' : ''}`}>
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
@@ -130,7 +142,7 @@ function Espace() {
     const abo = await db.rpc('abonnement_etat', { p_etab: l[0].etablissement_id }).catch(() => null);
     return { m: l[0], annees, abo };
   }, [uid]);
-  if (nouvelle) return <Finalisation pret={!!q.data} erreur={q.erreur} abo={(q.data as any)?.abo} ecole={(q.data as any)?.m?.etablissements} fini={() => { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } setNouvelle(false); }} />;
+  if (nouvelle) return <Finalisation pret={!!q.data} erreur={q.erreur} abo={(q.data as any)?.abo} ecole={(q.data as any)?.m?.etablissements} fini={(to: string) => { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } history.replaceState(null, '', to); setNouvelle(false); }} />;
   if (q.erreur && !q.data) return <main className="pub"><section className="carte-pub"><Logo /><Erreur t={q.erreur} /><button className="btn plein" onClick={q.reload}>Réessayer</button><button className="btn lien" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
   if (!q.data) return <main className="pub"><Chargement /></main>;
   const d: any = q.data;

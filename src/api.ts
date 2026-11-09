@@ -28,11 +28,11 @@ const TRAD: [RegExp, string][] = [
   [/row-level security|permission denied/i, 'Action non autorisée pour votre rôle'],
   [/failed to fetch|networkerror/i, 'Connexion impossible. Vérifiez votre réseau'],
 ];
-let lectureSeule = false;
-export const poserLectureSeule = (v: boolean) => { lectureSeule = v; };
+let lectureSeule = false; let nonPayee = false;
+export const poserLectureSeule = (v: boolean, attente = false) => { lectureSeule = v; nonPayee = attente; };
 export function message(e: any): string {
   const m = String(e?.message || e || 'Erreur');
-  if (lectureSeule && /row-level security|permission denied|non autorisée/i.test(m)) return 'Abonnement terminé : renouvelez-le pour continuer à enregistrer';
+  if (lectureSeule && /row-level security|permission denied|non autorisée/i.test(m)) return nonPayee ? 'Votre école n’est pas encore activée : payez votre abonnement pour enregistrer' : 'Abonnement terminé : renouvelez-le pour continuer à enregistrer';
   for (const [r, t] of TRAD) if (r.test(m)) return t;
   return m;
 }

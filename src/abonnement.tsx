@@ -16,12 +16,12 @@ export function BandeauAbonnement({ cache, accueil }: { cache: boolean; accueil:
   const { abo, role } = useApp();
   if (!abo || cache) return null;
   const { situation: s, jours, jours_grace: g } = abo; let t = ''; let ton = 'orange';
-  if ((s === 'essai' || s === 'actif') && jours <= 7) t = `Votre ${s === 'essai' ? 'essai gratuit' : 'abonnement'} se termine ${jours === 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}.`;
+  if (s === 'attente') { if (abo.en_attente) t = 'Paiement en cours de vérification. Votre école sera activée dès sa validation.'; else { t = 'Votre école n’est pas encore activée. Payez votre abonnement pour commencer.'; ton = 'paye'; } } else if ((s === 'essai' || s === 'actif') && jours <= 7) t = `Votre ${s === 'essai' ? 'essai gratuit' : 'abonnement'} se termine ${jours === 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}.`;
   else if (s === 'grace') t = `Votre abonnement est terminé. Plus que ${g} jour${g > 1 ? 's' : ''} avant le passage en lecture seule.`;
   else if (s === 'expire') { t = "Abonnement expiré : vous pouvez consulter vos données, mais plus rien enregistrer."; ton = 'rouge'; } else if (s === 'suspendu') { t = 'Cet établissement est suspendu : contactez Scolaris.'; ton = 'rouge'; }
   if (!t && s === 'essai' && accueil && role === 'fondateur') { t = `Essai gratuit : il vous reste ${jours} jours.`; ton = 'bleu'; }
   if (!t) return null;
-  return <div className={`band-abo ${ton}`} role="status">{ton === 'bleu' ? <PiInfoFill aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}<span>{t}</span>{role === 'fondateur' ? <Lien to="/abonnement" className="btn plein mini"><PiCrownSimpleFill aria-hidden="true" />{s === 'essai' ? 'Acheter un abonnement' : 'Renouveler'}</Lien> : <small>Prévenez le fondateur.</small>}</div>;
+  return <div className={`band-abo ${ton}`} role="status">{ton === 'bleu' ? <PiInfoFill aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}<span>{t}</span>{role === 'fondateur' ? <Lien to="/abonnement" className="btn plein mini"><PiCrownSimpleFill aria-hidden="true" />{s === 'attente' ? (abo.en_attente ? 'Voir' : 'Payer') : s === 'essai' ? 'Acheter un abonnement' : 'Renouveler'}</Lien> : <small>Prévenez le fondateur.</small>}</div>;
 }
 
 function Gemme() {
@@ -83,7 +83,7 @@ export function Abonnement() {
           <p>Scolaris vérifie l'argent reçu, puis prolonge votre abonnement.</p>
           <div className="abp-recap"><span className="abp-tuile"><pl.Ic /></span><div><b>Plan {pl.nom}</b><strong>{gnf(att?.montant ?? pl.prix)} / {pl.unite}</strong></div><em className="abp-att">À vérifier</em></div>
           <ul className="abp-suivi"><li className="ok"><PiCheckCircleFill aria-hidden="true" />Paiement envoyé</li><li className="cours"><PiClockCountdownFill aria-hidden="true" />Vérification par Scolaris</li><li><i aria-hidden="true" />Abonnement prolongé</li></ul>
-          <div className="abp-bas">{abo.situation === 'attente' ? <button type="button" className="abp-cta" onClick={recharger}>Actualiser</button> : <Lien to="/tableau" className="abp-cta">Retour au tableau de bord</Lien>}{lienHist}{abo.situation === 'attente' && <button type="button" className="abp-lien" onClick={auth.deconnexion}>Se déconnecter</button>}</div>
+          <div className="abp-bas"><Lien to="/tableau" className="abp-cta">Retour au tableau de bord</Lien>{lienHist}{abo.situation === 'attente' && <button type="button" className="abp-lien" onClick={auth.deconnexion}>Se déconnecter</button>}</div>
         </div>
         {hist && <Historique abo={abo} fermer={() => setHist(false)} />}
       </>
@@ -126,7 +126,7 @@ export function Abonnement() {
     <><Titre t="Abonnement" />
       <div className="abp">
         <section className="abp-hero">
-          <header className="abp-haut">{abo.situation !== 'attente' && <Lien to="/tableau" className="abp-ret" aria-label="Retour"><PiArrowLeftBold aria-hidden="true" /></Lien>}<h1>Abonnement</h1></header>
+          <header className="abp-haut"><Lien to="/tableau" className="abp-ret" aria-label="Retour"><PiArrowLeftBold aria-hidden="true" /></Lien><h1>Abonnement</h1></header>
           <span className="abp-cou"><Couronne blanc /></span>
           <h2>{abo.situation === 'attente' ? 'Activez votre école' : 'Gérez votre école sans impayés'}</h2>
           <p>{etat}</p>

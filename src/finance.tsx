@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
+import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { auj, dateFr, entier, gnf, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
 import { EtatPaiement } from './gestion';
-import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, SelAnnee, Titre, Tuile, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
@@ -68,10 +68,11 @@ export function Tableau() {
             <div className="hero-val"><b>{nb(encaisse)}</b><small>GNF</small></div>
             {objectif > 0 && <span className="hero-sur">sur {gnf(objectif)}</span>}
             {pct !== null && <div className="hero-etat"><span className={bonne ? 'chip-v' : 'chip-a'}>{bonne ? <PiTrendUpBold aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}{bonne ? 'Objectif en bonne voie' : 'Objectif à surveiller'}</span><span className="hero-note">{bonne ? 'En avance' : 'En retard'} de {gnf(Math.abs(ecart))} sur le rythme prévu</span></div>}
-            {!objectif && can('directeur') && <Lien to="/parametres" className="chip-l">Définir l'objectif annuel</Lien>}
+            {!objectif && can('directeur') && <Lien to="/parametres" className="chip-l"><PiCalendarDotsFill aria-hidden="true" />Définir l'objectif annuel</Lien>}
           </div>
           {pct !== null && <Jauge p={pct}><b>{pct} %</b><small>de l'objectif</small></Jauge>}
         </div>
+        <Vague />
         {fin && <div className="hero-bas">
           {objectif > 0 && <div><span>Objectif annuel</span><Gnf n={objectif} /></div>}
           <div><span>Total des frais</span><Gnf n={frais} /></div>
@@ -89,7 +90,7 @@ export function Tableau() {
         <div className="rang">
           <section className="carte c-large"><div className="tete-carte"><h2>Encaissements cumulés</h2>{objectif > 0 && <div className="legende"><span><i className="trait" />Encaissé</span><span><i className="pts" />Rythme prévu</span></div>}</div>
             {reel.length ? <Cumul labels={mois.map((m) => m.label)} reel={reel} objectif={objectif} /> : <Vide t="L'année scolaire n'a pas encore commencé." />}</section>
-          <section className="carte c-etat"><h2>État des paiements</h2>
+          <section className="carte c-etat"><h2><PiChartBarFill aria-hidden="true" />État des paiements</h2>
             <Segments parts={[[aJour, '#0FA968'], [partiels, '#F79009'], [rien, '#E5484D']]} />
             <ul className="etats">
               <li><PiCheckCircleFill className="c-vert" aria-hidden="true" />Entièrement payé<b className="vert">{nb(aJour)}</b><small>{pc(aJour)} %</small></li>

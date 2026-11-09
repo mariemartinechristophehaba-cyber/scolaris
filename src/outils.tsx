@@ -189,7 +189,7 @@ export function Parametres() {
   );
 }
 
-function ChangerMdp({ fermer, fini }: any) {
+export function ChangerMdp({ fermer, fini }: any) {
   const [a, setA] = useState(''); const [b, setB] = useState(''); const e = useEnvoi();
   return <Modale titre="Changer le mot de passe" fermer={fermer}><form noValidate onSubmit={(x) => { x.preventDefault(); if (a.length < 8) return e.setE('Le mot de passe doit contenir au moins 8 caractères'); if (a !== b) return e.setE('Les deux mots de passe sont différents'); e.envoyer(async () => { await auth.nouveauMotDePasse(a); fini(); }); }}>
     <Champ label="Nouveau mot de passe"><input type="password" autoComplete="new-password" value={a} onChange={(x) => setA(x.target.value)} autoFocus /></Champ>

@@ -10,6 +10,8 @@ import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finan
 import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
 import { Abonnement, BandeauAbonnement } from './abonnement';
+import { APropos, Aide, Plus, Profil } from './plus';
+import { PiDotsThreeBold, PiGearSixFill, PiHouseSimpleFill, PiReceiptFill, PiStudentFill, PiUsersThreeFill } from 'react-icons/pi';
 import { EspaceAdmin } from './admin';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
@@ -30,16 +32,17 @@ const MENU: [string, string, any, string[]?, string?][] = [
 ];
 const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
 
-function BarreBas({ chemin, can, ouvrir }: any) {
+function BarreBas({ chemin, can }: any) {
   const fin = can(...STAFF);
-  const it = (to: string, t: string, I: any) => <Lien to={to} className={chemin.startsWith(to) ? 'on' : ''}><I aria-hidden="true" /><span>{t}</span></Lien>;
+  const it = (to: string, t: string, I: any, F: any) => { const on = chemin.startsWith(to); const X = on ? F : I; return <Lien to={to} className={on ? 'on' : ''}><X aria-hidden="true" /><span>{t}</span></Lien>; };
+  const fab = <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien>;
   return (
     <nav className="barre-bas" aria-label="Navigation principale">
-      {it('/tableau', 'Accueil', PiHouseSimpleDuotone)}
-      {it('/eleves', 'Élèves', PiStudentDuotone)}
-      {fin ? <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien> : it('/classes', 'Classes', PiUsersThreeDuotone)}
-      {fin ? it('/paiements', 'Paiements', PiReceiptDuotone) : it('/parametres', 'Paramètres', PiGearSixDuotone)}
-      <button type="button" onClick={ouvrir}><PiDotsThreeCircleDuotone aria-hidden="true" /><span>Plus</span></button>
+      {it('/tableau', 'Accueil', PiHouseSimpleDuotone, PiHouseSimpleFill)}
+      {it('/eleves', 'Élèves', PiStudentDuotone, PiStudentFill)}
+      {fin ? fab : it('/classes', 'Classes', PiUsersThreeDuotone, PiUsersThreeFill)}
+      {fin ? it('/paiements', 'Paiements', PiReceiptDuotone, PiReceiptFill) : it('/parametres', 'Paramètres', PiGearSixDuotone, PiGearSixFill)}
+      {it('/plus', 'Plus', PiDotsThreeBold, PiDotsThreeBold)}
     </nav>
   );
 }
@@ -65,7 +68,14 @@ function Coque({ m, annees, recharger, abo }: any) {
   const ctx = { abo, eid, etab, role, can, annee, annees, zoneBandeau, zoneFiltres, setAnnee: (id: string) => { setA(id); try { localStorage.setItem('scolaris_annee', id); } catch { /* ignoré */ } }, recharger, majNotif: notif.reload };
   const seg = chemin.split('/').filter(Boolean);
   let page: any = <Tableau />;
-  if (!annee) page = <Parametres />;
+  const COMPTE = ['/abonnement', '/parametres'];
+  const gestion = MENU.filter((x: any) => (!x[3] || can(...x[3])) && !COMPTE.includes(x[0]) && !['/tableau', '/eleves', '/paiements'].includes(x[0]));
+  const nd0: any = notif.data || {};
+  if (seg[0] === 'plus') page = <Plus gestion={gestion} notif={nd0} />;
+  else if (seg[0] === 'profil') page = <Profil />;
+  else if (seg[0] === 'aide') page = <Aide />;
+  else if (seg[0] === 'apropos') page = <APropos />;
+  else if (!annee) page = <Parametres />;
   else if (seg[0] === 'eleves' && seg[1]) page = <DetailEleve id={seg[1]} key={seg[1]} />;
   else if (seg[0] === 'eleves') page = <Eleves />;
   else if (seg[0] === 'classes') page = <Classes />;
@@ -86,7 +96,7 @@ function Coque({ m, annees, recharger, abo }: any) {
   const nd: any = notif.data || {};
   return (
     <Ctx.Provider value={ctx}>
-      <div className={`app${chemin.startsWith('/abonnement') ? ' plein' : ''}`}>
+      <div className={`app${chemin.startsWith('/abonnement') ? ' plein' : ''}${chemin === '/' || seg[0] === 'tableau' || seg[0] === 'plus' ? ' ondule' : ''}`}>
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
@@ -97,7 +107,7 @@ function Coque({ m, annees, recharger, abo }: any) {
           <div className="lignes" aria-hidden="true" />
           <header className="haut">
             <img className="logo-tel" src="/img/icone.png" alt="" />
-            <div className="ecole"><PiBuildingsDuotone aria-hidden="true" /><b>{etab.nom}</b></div>
+            <div className="ecole"><PiBuildingsDuotone aria-hidden="true" /><span className="ecole-mq">Scolaris</span><b>{etab.nom}</b></div>
             <div className="esp" />
             <SelAnnee className="bureau" />
             <div className="zone-filtres" ref={setZF} />
@@ -106,7 +116,7 @@ function Coque({ m, annees, recharger, abo }: any) {
           <div className="zone-bandeau" ref={setZB} />
           <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main>
         </div>
-        <BarreBas chemin={chemin} can={can} ouvrir={() => setO(true)} />
+        <BarreBas chemin={chemin} can={can} />
       </div>
     </Ctx.Provider>
   );

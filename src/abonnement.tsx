@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PiArrowLeftBold, PiArrowRightBold, PiBankDuotone, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCopySimpleBold, PiInfoFill, PiMoneyWavyDuotone, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
+import { PiArrowLeftBold, PiArrowRightBold, PiBankDuotone, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCopySimpleBold, PiCrownSimpleFill, PiInfoFill, PiMoneyWavyDuotone, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
 import { db } from './api';
 import { dateFr, gnf, nb, tel, telAff } from './lib';
 import { Erreur, Lien, Modale, Pastille, Titre, Tuile, Vide, useApp, useEnvoi } from './ui';
@@ -21,7 +21,7 @@ export function BandeauAbonnement({ cache, accueil }: { cache: boolean; accueil:
   else if (s === 'expire') { t = "Abonnement expiré : vous pouvez consulter vos données, mais plus rien enregistrer."; ton = 'rouge'; } else if (s === 'suspendu') { t = 'Cet établissement est suspendu : contactez Scolaris.'; ton = 'rouge'; }
   if (!t && s === 'essai' && accueil && role === 'fondateur') { t = `Essai gratuit : il vous reste ${jours} jours.`; ton = 'bleu'; }
   if (!t) return null;
-  return <div className={`band-abo ${ton}`} role="status"><PiWarningCircleFill aria-hidden="true" /><span>{t}</span>{role === 'fondateur' ? <Lien to="/abonnement" className="btn plein mini">{s === 'essai' ? 'Acheter un abonnement' : 'Renouveler'}</Lien> : <small>Prévenez le fondateur.</small>}</div>;
+  return <div className={`band-abo ${ton}`} role="status">{ton === 'bleu' ? <PiInfoFill aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}<span>{t}</span>{role === 'fondateur' ? <Lien to="/abonnement" className="btn plein mini"><PiCrownSimpleFill aria-hidden="true" />{s === 'essai' ? 'Acheter un abonnement' : 'Renouveler'}</Lien> : <small>Prévenez le fondateur.</small>}</div>;
 }
 
 function Gemme() {

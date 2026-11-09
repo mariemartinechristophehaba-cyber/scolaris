@@ -94,6 +94,10 @@ export function Bandeau({ children }: any) {
   return zoneBandeau ? createPortal(children, zoneBandeau) : null;
 }
 
+export function Vague() {
+  return <svg className="vague" viewBox="0 0 390 72" preserveAspectRatio="none" aria-hidden="true"><path fill="rgba(255,255,255,.2)" d="M0 72V44C110 70 245 62 390 6v66z" /><path fill="#F4F7FC" d="M0 72V58C120 76 262 62 390 26v46z" /></svg>;
+}
+
 export function Titre({ t, children, retour }: any) {
   return <Bandeau><div className="tete-page">{retour && <Lien to={retour} className="retour-v" aria-label="Retour"><PiArrowLeftBold /></Lien>}<h1>{t}</h1><div className="esp" />{children}</div></Bandeau>;
 }

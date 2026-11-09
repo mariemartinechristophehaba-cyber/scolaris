@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
-import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingDuotone, PiBuildingsDuotone, PiCaretLeftBold, PiChalkboardTeacherDuotone, PiChartLineUpDuotone, PiCheckBold, PiCheckCircleFill, PiEnvelopeSimpleDuotone, PiEyeDuotone, PiEyeSlashDuotone, PiLockKeyDuotone, PiMapPinDuotone, PiPhoneDuotone, PiSealCheckFill, PiStudentDuotone, PiTargetDuotone, PiUserDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
+import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingDuotone, PiBuildingsDuotone, PiBabyFill, PiBackpackFill, PiBookOpenFill, PiBuildingsFill, PiCameraFill, PiCaretDownBold, PiCaretLeftBold, PiChalkboardTeacherFill, PiCrownSimpleFill, PiEnvelopeSimpleFill, PiGraduationCapFill, PiImageFill, PiLockKeyFill, PiMagnifyingGlassBold, PiMapPinFill, PiMinusBold, PiPencilSimpleFill, PiPhoneFill, PiPlusBold, PiShieldCheckFill, PiUserFill, PiXBold, PiChalkboardTeacherDuotone, PiChartLineUpDuotone, PiCheckBold, PiCheckCircleFill, PiEnvelopeSimpleDuotone, PiEyeDuotone, PiEyeSlashDuotone, PiLockKeyDuotone, PiMapPinDuotone, PiPhoneDuotone, PiSealCheckFill, PiStudentDuotone, PiTargetDuotone, PiUserDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db } from './api';
 import { TRANCHES, gnf, tel, trancheDe } from './lib';
 import { Erreur, Gnf, Lien, Mot, Tuile, naviguer, useEnvoi } from './ui';
@@ -123,28 +123,45 @@ function Message({ t, st }: any) {
 
 const BROUILLON = 'scolaris_brouillon_ins';
 const lireBrouillon = () => { try { return JSON.parse(sessionStorage.getItem(BROUILLON) || 'null'); } catch { return null; } };
-const NIVEAUX = ['Maternelle', 'Primaire', 'Collège', 'Lycée'];
+const NIVEAUX: [string, any][] = [['Maternelle', PiBabyFill], ['Primaire', PiBackpackFill], ['Collège', PiBookOpenFill], ['Lycée', PiGraduationCapFill]];
+const VILLES = ['Beyla', 'Boffa', 'Boké', 'Coyah', 'Dabola', 'Dalaba', 'Dinguiraye', 'Dubréka', 'Faranah', 'Forécariah', 'Fria', 'Gaoual', 'Guéckédou', 'Kankan', 'Kérouané', 'Kindia', 'Kissidougou', 'Koubia', 'Koundara', 'Kouroussa', 'Labé', 'Lélouma', 'Lola', 'Macenta', 'Mali', 'Mamou', 'Mandiana', 'Nzérékoré', 'Pita', 'Siguiri', 'Télimélé', 'Tougué', 'Yomou'];
+const sansAccent = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+let logoEnAttente: File | null = null;
+export const prendreLogo = () => { const f = logoEnAttente; logoEnAttente = null; return f; };
 const CAD = 30; // nombre de pas de progression
-function Etapes({ n }: { n: number }) {
-  return <ol className="ins-sp">{['École', 'Élèves', 'Compte'].map((t, i) => <li key={t} className={i + 1 < n ? 'd' : i + 1 === n ? 'a' : ''} aria-current={i + 1 === n ? 'step' : undefined}><i>{i + 1 < n ? <PiCheckBold aria-hidden="true" /> : i + 1}</i>{t}</li>)}</ol>;
+
+function Haut3({ n, retour }: { n: number; retour: () => void }) {
+  return <><div className="ric-to"><button type="button" className="ric-bk" onClick={retour} aria-label="Retour"><PiCaretLeftBold /></button><img src="/img/icone.png" alt="" /><span><b>Scolaris</b><small>Inscription de votre école</small></span></div>
+    <ol className="ric-sp">{['École', 'Élèves', 'Compte'].map((t, i) => <li key={t} className={i + 1 < n ? 'd' : i + 1 === n ? 'a' : ''} aria-current={i + 1 === n ? 'step' : undefined}><i>{i + 1 < n ? <PiCheckBold aria-hidden="true" /> : i + 1}</i>{t}</li>)}</ol></>;
 }
-function ChampI({ i: I, label, requis = true, aide, tel: estTel, mdp, ...p }: any) {
+function Carte({ ton = 'bl', i: I, label, estTel, mdp, ...p }: any) {
   const [voir, setV] = useState(false);
-  return <div className="ins-f"><label htmlFor={p.id}>{label}{requis && <em> *</em>}</label><div className="ins-in">{estTel ? <span className="ins-pf"><span className="ins-fg" aria-hidden="true"><s /><s /><s /></span>+224</span> : <I aria-hidden="true" />}<input type={mdp ? (voir ? 'text' : 'password') : p.type || 'text'} {...p} />{mdp && <button type="button" onClick={() => setV(!voir)} aria-label={voir ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>{voir ? <PiEyeSlashDuotone /> : <PiEyeDuotone />}</button>}</div>{aide && <p>{aide}</p>}</div>;
+  return <label className="ric-cd"><span className={`ric-tu ${ton}`}><I aria-hidden="true" /></span><span className="ric-t"><small>{label}</small><span className="ric-v">{estTel && <span className="ric-pf"><span className="ins-fg" aria-hidden="true"><s /><s /><s /></span>+224</span>}<input type={mdp ? (voir ? 'text' : 'password') : p.type || 'text'} {...p} /></span></span>{mdp && <button type="button" className="ric-oe" onClick={(x) => { x.preventDefault(); setV(!voir); }} aria-label={voir ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>{voir ? <PiEyeSlashDuotone /> : <PiEyeDuotone />}</button>}</label>;
+}
+function ChoixVille({ v, choisir, autre, fermer }: any) {
+  const [q, setQ] = useState(''); const q2 = sansAccent(q.trim());
+  const L = VILLES.filter((x) => sansAccent(x).includes(q2)); const voirC = sansAccent('Conakry').includes(q2);
+  const R = ({ t }: any) => <button type="button" role="radio" aria-checked={v === t} className={v === t ? 'on' : ''} onClick={() => choisir(t)}><span>{t}</span><i aria-hidden="true" /></button>;
+  return <main className="vil"><header className="vil-h"><div><button type="button" className="ric-bk" onClick={fermer} aria-label="Fermer"><PiXBold /></button><h1>Choisissez votre ville</h1></div><label className="vil-s"><PiMagnifyingGlassBold aria-hidden="true" /><input autoFocus value={q} onChange={(x) => setQ(x.target.value)} placeholder="Rechercher une ville" aria-label="Rechercher une ville" /></label></header>
+    <div className="vil-l" role="radiogroup" aria-label="Ville">{voirC && <><h2>Le plus choisi</h2><div className="vil-b"><R t="Conakry" /></div></>}{L.length > 0 && <><h2>Toutes les villes</h2><div className="vil-b">{L.map((t) => <R key={t} t={t} />)}</div></>}{!voirC && !L.length && <p className="vil-v">Aucune ville trouvée.</p>}<button type="button" className="vil-a" onClick={autre}><PiPencilSimpleFill aria-hidden="true" />Autre ville, je l’écris moi-même</button></div></main>;
 }
 
 export function Inscription() {
   const [br] = useState(lireBrouillon);
-  const [f, setF] = useState({ ecole: '', ville: '', quartier: '', telE: '', eleves: '', classes: '', prenom: '', nom: '', tel: '', email: '', ok: false, ...(br?.f || {}), m: '' });
+  const [f, setF] = useState({ ecole: '', ville: '', vl: false, quartier: '', telE: '', eleves: '', classes: '', prenom: '', nom: '', tel: '', email: '', ok: false, ...(br?.f || {}), m: '' });
   const [niv, setNiv] = useState<string[]>(br?.niv || []); const [et, setEt] = useState<number>(br?.et || 1);
-  useEffect(() => { try { const { m: _m, ...sansMdp } = f; sessionStorage.setItem(BROUILLON, JSON.stringify({ f: sansMdp, niv, et })); } catch { /* ignoré */ } }, [f, niv, et]); const [fin, setFin] = useState(false); const [tarifs, setTarifs] = useState<any[]>([]); const e = useEnvoi();
+  useEffect(() => { try { const { m: _m, ...sansMdp } = f; sessionStorage.setItem(BROUILLON, JSON.stringify({ f: sansMdp, niv, et })); } catch { /* ignoré */ } }, [f, niv, et]);
+  const [fin, setFin] = useState(false); const [tarifs, setTarifs] = useState<any[]>([]); const [pv, setPv] = useState(false); const [apercu, setAp] = useState(''); const e = useEnvoi();
   useEffect(() => { db.rpc('tarifs_liste', {}).then(setTarifs).catch(() => setTarifs([])); }, []);
-  const c = (k: string) => ({ id: `ins-${k}`, value: (f as any)[k], onChange: (x: any) => { setF({ ...f, [k]: x.target.value }); e.setE(''); } });
+  const c = (k: string) => ({ value: (f as any)[k], onChange: (x: any) => { setF({ ...f, [k]: x.target.value }); e.setE(''); } });
   const nb_ = Number(f.eleves.replace(/\D/g, '')) || 0; const tr = nb_ ? trancheDe(nb_) : ''; const t = tarifs.find((x) => x.tranche === tr);
+  const ajout = (d: number) => { setF({ ...f, eleves: String(Math.max(1, Math.min(50000, nb_ + d))) }); e.setE(''); };
+  const force = [f.m.length >= 8, /[A-Z]/.test(f.m), /[a-z]/.test(f.m), /\d/.test(f.m)].filter(Boolean).length;
+  const retour = () => { e.setE(''); if (et === 1) naviguer('/'); else { setEt(et - 1); window.scrollTo(0, 0); } };
   const suite = (x: any) => {
     x.preventDefault(); e.setE('');
     if (et === 1) {
-      if (!f.ecole.trim() || !f.ville.trim() || !f.quartier.trim()) return e.setE('Remplissez tous les champs marqués d’une étoile');
+      if (!f.ecole.trim() || !f.ville.trim() || !f.quartier.trim()) return e.setE('Remplissez le nom, la ville et le quartier');
       if (tel(f.telE).length !== 9) return e.setE('Le téléphone de l’école doit avoir 9 chiffres');
       setEt(2); window.scrollTo(0, 0); return;
     }
@@ -154,9 +171,9 @@ export function Inscription() {
       if (!niv.length) return e.setE('Choisissez au moins un niveau');
       setEt(3); window.scrollTo(0, 0); return;
     }
-    if (!f.prenom.trim() || !f.nom.trim() || !f.email.trim() || !f.m) return e.setE('Remplissez tous les champs marqués d’une étoile');
+    if (!f.prenom.trim() || !f.nom.trim() || !f.email.trim() || !f.m) return e.setE('Remplissez tous les champs');
     const tr2 = tel(f.tel); if (tr2.length !== 9) return e.setE('Votre téléphone doit avoir 9 chiffres');
-    if (f.m.length < 8 || !/[A-Z]/.test(f.m) || !/[a-z]/.test(f.m) || !/\d/.test(f.m)) return e.setE('Le mot de passe doit avoir 8 caractères, une majuscule, une minuscule et un chiffre');
+    if (force < 4) return e.setE('Le mot de passe doit avoir 8 caractères, une majuscule, une minuscule et un chiffre');
     if (!f.ok) return e.setE('Acceptez les conditions d’utilisation pour continuer');
     e.envoyer(async () => {
       try { sessionStorage.setItem('scolaris_nouvelle', '1'); } catch { /* ignoré */ }
@@ -167,29 +184,33 @@ export function Inscription() {
     });
   };
   if (fin) return <Message t="Vérifiez vos e-mails" st={`Un lien de confirmation a été envoyé à ${f.email}.`} />;
+  if (pv) return <ChoixVille v={f.ville} fermer={() => setPv(false)} choisir={(v: string) => { setF({ ...f, ville: v, vl: false }); setPv(false); e.setE(''); }} autre={() => { setF({ ...f, ville: '', vl: true }); setPv(false); }} />;
+  const TITRES = [['Parlons de votre école', 'Elle aura son propre espace.'], ['Combien d’élèves ?', 'Votre tarif s’affiche tout seul.'], ['Parlons de vous', 'Le responsable du compte.']][et - 1];
   return (
-    <main className="ins"><form className="ins-c" noValidate onSubmit={suite}>
-      <header className="ins-h">{et === 1 ? <Lien className="ins-r" to="/" aria-label="Retour"><PiCaretLeftBold /></Lien> : <button type="button" className="ins-r" onClick={() => { e.setE(''); setEt(et - 1); }} aria-label="Retour"><PiCaretLeftBold /></button>}<img src="/img/icone.png" alt="" /><small>Espace École</small></header>
-      <Etapes n={et} />
-      <div className="ins-b">
-        {et === 1 && <><h1>Parlons de <span>votre école</span></h1><p className="ins-s">Ces informations servent à créer l’espace de votre école.</p>
-          <ChampI i={PiBuildingsDuotone} label="Nom de l’école" placeholder="Ex. : Groupe scolaire La Réussite" autoComplete="organization" {...c('ecole')} />
-          <ChampI i={PiMapPinDuotone} label="Ville" placeholder="Ex. : Conakry" {...c('ville')} />
-          <ChampI i={PiMapPinDuotone} label="Quartier" placeholder="Ex. : Kipé" {...c('quartier')} />
-          <ChampI tel label="Téléphone de l’école" inputMode="tel" placeholder="620 11 22 33" aide="Les parents verront ce numéro sur les reçus." {...c('telE')} /></>}
-        {et === 2 && <><h1>Combien <span>d’élèves ?</span></h1><p className="ins-s">Votre tarif dépend de cette réponse.</p>
-          <div className="ins-2"><ChampI i={PiStudentDuotone} label="Nombre d’élèves" inputMode="numeric" placeholder="150" {...c('eleves')} /><ChampI i={PiChalkboardTeacherDuotone} label="Classes" inputMode="numeric" placeholder="8" {...c('classes')} /></div>
-          <div className="ins-f"><span className="ins-lb">Niveaux enseignés<em> *</em></span><div className="ins-ch">{NIVEAUX.map((n) => <button type="button" key={n} aria-pressed={niv.includes(n)} className={niv.includes(n) ? 'on' : ''} onClick={() => { setNiv(niv.includes(n) ? niv.filter((x) => x !== n) : [...niv, n]); e.setE(''); }}>{n}</button>)}</div></div>
-          {tr && <div className="ins-tf" aria-live="polite"><small>Votre tarif, {TRANCHES.find(([k]) => k === tr)?.[1].toLowerCase()}</small>{t?.prix_mois ? <><div>{gnf(t.prix_mois)} <em>par mois</em></div><small>ou {gnf(t.prix_an)} par an, 4 mois offerts</small></> : <div className="pt">Tarif à voir avec Scolaris</div>}<ul><li><PiCheckCircleFill aria-hidden="true" />Toutes les fonctions de Scolaris</li><li><PiCheckCircleFill aria-hidden="true" />Paiement direct, sans frais cachés</li></ul></div>}</>}
-        {et === 3 && <><h1>Parlons de <span>vous</span></h1><p className="ins-s">Vous serez le responsable de ce compte.</p>
-          <div className="ins-2"><ChampI i={PiUserDuotone} label="Prénom" placeholder="Mohamed" autoComplete="given-name" {...c('prenom')} /><ChampI i={PiUserDuotone} label="Nom" placeholder="Diallo" autoComplete="family-name" {...c('nom')} /></div>
-          <ChampI tel label="Numéro de téléphone" inputMode="tel" placeholder="620 11 22 33" autoComplete="tel-national" {...c('tel')} />
-          <ChampI i={PiEnvelopeSimpleDuotone} label="Adresse e-mail" type="email" placeholder="vous@exemple.com" autoComplete="email" autoCapitalize="none" spellCheck={false} {...c('email')} />
-          <ChampI i={PiLockKeyDuotone} label="Mot de passe" mdp placeholder="8 caractères minimum" autoComplete="new-password" aide="Avec une majuscule, une minuscule et un chiffre." {...c('m')} />
-          <label className="ins-cg"><input type="checkbox" checked={f.ok} onChange={(x) => setF({ ...f, ok: x.target.checked })} /><span>J’accepte les <Lien to="/conditions">conditions d’utilisation</Lien></span></label></>}
+    <main className="ric"><form className="ric-c" noValidate onSubmit={suite}>
+      <header className="ric-he"><Haut3 n={et} retour={retour} /><div className="ric-ti"><h1>{TITRES[0]}</h1><p>{TITRES[1]}</p></div></header>
+      <div className="ric-b">
+        {et === 1 && <>
+          <label className="ric-lg">{apercu ? <img src={apercu} alt="" /> : <span className="ric-tu bl"><PiImageFill aria-hidden="true" /></span>}<span><b>Logo de l’école</b><small>Facultatif</small></span><span className="ric-ca"><PiCameraFill aria-hidden="true" /></span><input type="file" accept="image/png,image/jpeg,image/webp" hidden aria-label="Ajouter le logo de l’école" onChange={(x) => { const fi = x.target.files?.[0] || null; logoEnAttente = fi; setAp(fi ? URL.createObjectURL(fi) : ''); }} /></label>
+          <Carte i={PiBuildingsFill} label="Nom de l’école" placeholder="Groupe scolaire La Réussite" autoComplete="organization" {...c('ecole')} />
+          {f.vl ? <Carte ton="ve" i={PiMapPinFill} label="Ville" placeholder="Écrivez votre ville" {...c('ville')} /> : <button type="button" className="ric-cd ric-btn" onClick={() => setPv(true)}><span className="ric-tu ve"><PiMapPinFill aria-hidden="true" /></span><span className="ric-t"><small>Ville</small><span className={f.ville ? 'ric-val' : 'ric-ph'}>{f.ville || 'Touchez pour choisir'}</span></span><PiCaretDownBold className="ric-ch" aria-hidden="true" /></button>}
+          <Carte ton="or" i={PiMapPinFill} label="Quartier" placeholder="Ex. : Kipé" {...c('quartier')} />
+          <Carte ton="vi" i={PiPhoneFill} label="Téléphone de l’école" estTel inputMode="tel" placeholder="620 11 22 33" {...c('telE')} /></>}
+        {et === 2 && <>
+          <div className="ric-co"><label><small>Nombre d’élèves</small><span><input inputMode="numeric" placeholder="0" aria-label="Nombre d’élèves" {...c('eleves')} /><em>élèves</em></span></label><div><button type="button" onClick={() => ajout(-10)} aria-label="Enlever 10 élèves"><PiMinusBold /></button><button type="button" onClick={() => ajout(10)} aria-label="Ajouter 10 élèves"><PiPlusBold /></button></div></div>
+          <div className="ric-ni" role="group" aria-label="Niveaux enseignés">{NIVEAUX.map(([n, I]) => <button type="button" key={n} aria-pressed={niv.includes(n)} className={niv.includes(n) ? 'on' : ''} onClick={() => { setNiv(niv.includes(n) ? niv.filter((x) => x !== n) : [...niv, n]); e.setE(''); }}><I aria-hidden="true" />{n}</button>)}</div>
+          <Carte i={PiChalkboardTeacherFill} label="Nombre de classes" inputMode="numeric" placeholder="Ex. : 8" {...c('classes')} />
+          {tr && <div className="ric-tf" aria-live="polite"><span className="ric-bd">{TRANCHES.find(([k]) => k === tr)?.[1]}</span><div className="h"><PiCrownSimpleFill aria-hidden="true" />Votre tarif</div>{t?.prix_mois ? <><div className="pr">{gnf(t.prix_mois)} <em>/ mois</em></div><small>ou {gnf(t.prix_an)} par an, 4 mois offerts</small></> : <div className="pr p2">À voir avec Scolaris</div>}<ul><li><PiCheckCircleFill aria-hidden="true" />Toutes les fonctions de Scolaris</li><li><PiCheckCircleFill aria-hidden="true" />Reçus, relances, caisse et rapports</li></ul></div>}</>}
+        {et === 3 && <>
+          <div className="ric-2"><Carte i={PiUserFill} label="Prénom" placeholder="Mohamed" autoComplete="given-name" {...c('prenom')} /><Carte i={PiUserFill} label="Nom" placeholder="Diallo" autoComplete="family-name" {...c('nom')} /></div>
+          <Carte ton="vi" i={PiPhoneFill} label="Votre téléphone" estTel inputMode="tel" placeholder="620 11 22 33" autoComplete="tel-national" {...c('tel')} />
+          <Carte ton="ve" i={PiEnvelopeSimpleFill} label="Adresse e-mail" type="email" placeholder="vous@exemple.com" autoComplete="email" autoCapitalize="none" spellCheck={false} {...c('email')} />
+          <Carte ton="or" i={PiLockKeyFill} label="Mot de passe" mdp placeholder="8 caractères minimum" autoComplete="new-password" {...c('m')} />
+          {f.m && <><div className="ric-pw" aria-hidden="true">{[1, 2, 3, 4].map((k) => <i key={k} className={k <= force ? 'y' : ''} />)}</div><p className={`ric-pwt${force < 4 ? ' f' : ''}`}>{force < 4 ? 'Ajoutez une majuscule, une minuscule, un chiffre, 8 caractères' : 'Mot de passe solide'}</p></>}
+          <label className="ric-cg"><input type="checkbox" checked={f.ok} onChange={(x) => setF({ ...f, ok: x.target.checked })} /><span>J’accepte les <Lien to="/conditions">conditions d’utilisation</Lien></span></label></>}
         <Erreur t={e.erreur} />
       </div>
-      <footer className="ins-ft"><button className="ins-bt" disabled={e.occupe}>{e.occupe ? 'Envoi…' : et === 3 ? 'Créer mon école' : 'Continuer'}<PiArrowRightBold aria-hidden="true" /></button><p><PiLockKeyDuotone aria-hidden="true" />Vos informations restent confidentielles.</p></footer>
+      <footer className="ric-ft"><button className="ric-bt" disabled={e.occupe}>{e.occupe ? 'Envoi…' : et === 3 ? 'Créer mon école' : 'Continuer'}<PiArrowRightBold aria-hidden="true" /></button><p><PiShieldCheckFill aria-hidden="true" />Vos informations restent confidentielles.</p></footer>
     </form></main>
   );
 }
@@ -203,7 +224,7 @@ export function Finalisation({ pret, erreur, abo, ecole, fini }: any) {
     const R: [string, number, number][] = [['Création de votre école', 0, 36], ['Préparation de l’année scolaire', 36, 70], ['Calcul de votre tarif', 70, 100]];
     return <main className="fin1" aria-live="polite"><div className="fin-c"><div className="fin-r" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Finalisation"><svg viewBox="0 0 188 188"><defs><linearGradient id="fin-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff" /><stop offset="1" stopColor="#8DBBFF" /></linearGradient></defs><circle cx="94" cy="94" r="84" fill="none" stroke="rgba(255,255,255,.16)" strokeWidth="9" /><g className="fin-t"><circle cx="94" cy="94" r="84" fill="none" stroke="url(#fin-g)" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${C * Math.max(0.08, pct / 100)} ${C}`} /></g></svg><img src="/img/icone.png" alt="" /></div><h1>Nous préparons votre école</h1><p>Cela ne prend que quelques secondes.</p><ul className="fin-l2">{R.map(([t, a, b]) => <li key={t} className={pct >= b ? 'd' : pct >= a ? 'c' : ''}><u>{pct >= b && <PiCheckBold aria-hidden="true" />}</u>{t}</li>)}</ul></div><div className="fin-pb"><div><span>Finalisation</span><span>{pct} %</span></div><s><i style={{ width: `${pct}%` }} /></s></div></main>;
   }
-  return <main className="fin2"><div className="fin-c2"><div className="fin-ok"><span><PiCheckBold aria-hidden="true" /></span></div><h1>Inscription reçue !</h1><p>Payez votre abonnement pour activer votre école.</p><div className="fin-rc"><div><span>École</span><b>{ecole?.nom}</b></div>{ecole?.eleves_annonces != null && <div><span>Élèves annoncés</span><b>{ecole.eleves_annonces}</b></div>}{abo?.prix_mois != null && <div><span>Tarif</span><b>{gnf(abo.prix_mois)} / mois</b></div>}<div><span>État</span><em>En attente de paiement</em></div></div></div><div className="ins-ft"><button className="ins-bt" onClick={fini}>Payer mon abonnement<PiArrowRightBold aria-hidden="true" /></button></div></main>;
+  return <main className="ric"><div className="ric-c"><header className="fin-he"><div className="fin-ok2"><span><PiCheckBold aria-hidden="true" /></span></div><h1>Inscription reçue !</h1><p>Plus qu’une étape pour activer votre école.</p></header><section className="fin-tk"><div className="a"><span className="ric-tu bl"><PiBuildingsFill aria-hidden="true" /></span><div><b>{ecole?.nom}</b>{(ecole?.ville || ecole?.quartier) && <small>{[ecole.ville, ecole.quartier].filter(Boolean).join(', ')}</small>}</div></div><div className="pe" aria-hidden="true"><i /><i /></div>{ecole?.eleves_annonces != null && <div className="r"><span>Élèves annoncés</span><b>{ecole.eleves_annonces}</b></div>}<div className="r"><span>État</span><em>En attente de paiement</em></div>{abo?.prix_mois != null && <div className="px"><span>Votre tarif</span><b>{gnf(abo.prix_mois)} <em>/ mois</em></b></div>}</section><div className="ric-sp2" /><footer className="ric-ft"><button className="ric-bt" onClick={fini}>Payer mon abonnement<PiArrowRightBold aria-hidden="true" /></button></footer></div></main>;
 }
 
 export function Oublie() {

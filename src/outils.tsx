@@ -2,7 +2,7 @@ import { PiBuildingsFill, PiCalendarBlankFill, PiCaretRightBold, PiStudentFill, 
 import { Haut } from './abonnement';
 import { useMemo, useRef, useState } from 'react';
 import { PiKeyDuotone, PiStudentDuotone, PiBuildingsDuotone, PiCalendarBlankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiTargetDuotone, PiUserCircleDuotone, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
-import { auth, db, getSession, message } from './api';
+import { SUPA, auth, db, getSession, message } from './api';
 import { TRANCHES, auj, dateFr, gnf, heure, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
 import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
@@ -163,6 +163,7 @@ export function Parametres({ vue }: { vue?: string }) {
   const Msg = <><Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}</>;
 
   if (vue === 'ecole') return Ecran({ t: 'Mon école', children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, f); await recharger(); fait('École enregistrée'); }); }}><fieldset disabled={!d}>
+    {d && <div className="par-logo">{etab.logo_chemin ? <img src={`${SUPA}/storage/v1/object/public/logos/${etab.logo_chemin}`} alt="" /> : <span className="par-logo-v" aria-hidden="true"><PiBuildingsFill /></span>}<label className="btn contour mini">{etab.logo_chemin ? 'Changer le logo' : 'Ajouter le logo'}<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(x) => { const fi = x.target.files?.[0]; if (fi) e.envoyer(async () => { await db.poserLogo(eid, fi); await recharger(); fait('Logo enregistré'); }); }} /></label></div>}
     <Champ label="Nom de l'école"><input value={f.nom} onChange={(x) => setF({ ...f, nom: x.target.value })} required /></Champ>
     <Champ label="Ville"><input placeholder="Ex. Conakry" value={f.ville} onChange={(x) => setF({ ...f, ville: x.target.value })} /></Champ>
     <Champ label="Téléphone de l'école"><input inputMode="tel" placeholder="Ex. 621 34 56 78" value={f.telephone} onChange={(x) => setF({ ...f, telephone: x.target.value })} /></Champ>

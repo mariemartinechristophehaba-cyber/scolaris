@@ -83,6 +83,7 @@ export const db = {
   upd: (q: string, b: any) => appel(`/rest/v1/${q}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(b) }),
   del: (q: string) => appel(`/rest/v1/${q}`, { method: 'DELETE' }),
   rpc: (f: string, a: any = {}) => appel(`/rest/v1/rpc/${f}`, { method: 'POST', body: JSON.stringify(a) }),
+  poserLogo: async (etab: string, brut: File) => { const f = await compresser(brut, 512, 0.85); const chemin = `${etab}/logo-${Date.now()}`; await appel(`/storage/v1/object/logos/${chemin}`, { method: 'POST', headers: { 'Content-Type': f.type || 'image/jpeg' }, body: f }); await appel('/rest/v1/rpc/definir_logo', { method: 'POST', body: JSON.stringify({ p_etab: etab, p_chemin: chemin }) }); return chemin; },
   voirFichier: async (chemin: string) => { const r = await appel(`/storage/v1/object/sign/justificatifs/${chemin}`, { method: 'POST', body: JSON.stringify({ expiresIn: 300 }) }); return `${SUPA}/storage/v1${r.signedURL}`; },
   fichier: async (etab: string, brut: File) => {
     const f = await compresser(brut);

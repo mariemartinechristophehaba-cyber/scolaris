@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { PiCrownSimpleDuotone, PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiDotsThreeCircleDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiReceiptDuotone, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
 import { auth, db, getSession, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
-import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, NouveauMdp, Oublie, PremierEtablissement } from './acces';
+import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, FamillePublic, RecuPublic } from './public';
 import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
@@ -123,7 +123,7 @@ function Espace() {
     let l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)&order=cree_le`);
     if (!l.length) {
       const md = getSession()?.user?.user_metadata || {}; const nom = md.etablissement;
-      if (nom) { await db.rpc('creer_etablissement', { p_nom: nom, p_ville: md.ville || null, p_telephone: md.tel_ecole || null, p_email: getSession()?.user?.email || null, p_details: md.eleves ? { quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null }); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
+      if (nom) { const idE = await db.rpc('creer_etablissement', { p_nom: nom, p_ville: md.ville || null, p_telephone: md.tel_ecole || null, p_email: getSession()?.user?.email || null, p_details: md.eleves ? { quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null }); const lg = prendreLogo(); if (lg) await db.poserLogo(idE, lg).catch(() => null); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
     }
     if (!l.length) return { m: null, annees: [] };
     const annees = await db.get(`annees_scolaires?etablissement_id=eq.${l[0].etablissement_id}&order=date_debut.desc`);

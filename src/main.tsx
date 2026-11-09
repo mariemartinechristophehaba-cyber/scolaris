@@ -86,7 +86,7 @@ function Coque({ m, annees, recharger, abo }: any) {
   const nd: any = notif.data || {};
   return (
     <Ctx.Provider value={ctx}>
-      <div className="app">
+      <div className={`app${chemin.startsWith('/abonnement') ? ' plein' : ''}`}>
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>

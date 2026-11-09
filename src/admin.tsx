@@ -27,7 +27,7 @@ function Vue() {
     const vide = data.every((x: any) => x.valeur === 0); const maxT = Math.max(...d.tranches.map((t: any) => Number(t.ecoles)), 1);
     const apres = mois - Number(d.cout_mensuel); const mB = d.usage.base_octets / 1048576; const mF = d.usage.fichiers_octets / 1048576;
     const pB = (mB / d.limite_base_mo) * 100; const pF = (mF / d.limite_fichiers_mo) * 100;
-    const ETATS: [string, number, any, string][] = [['Actives', e.actif, PiCheckCircleFill, 'c-vert'], ['En essai', e.essai, PiCircleHalfFill, 'c-bleu'], ['Terminées', e.grace, PiClockCountdownFill, 'c-orange'], ['Expirées', e.expire, PiXCircleFill, 'c-rouge'], ['Suspendues', e.suspendu, PiProhibitFill, 'c-gris']];
+    const ETATS: [string, number, any, string][] = [['Actives', e.actif, PiCheckCircleFill, 'c-vert'], ['En attente de paiement', e.attente || 0, PiCircleHalfFill, 'c-gris'], ['En essai', e.essai, PiCircleHalfFill, 'c-bleu'], ['Terminées', e.grace, PiClockCountdownFill, 'c-orange'], ['Expirées', e.expire, PiXCircleFill, 'c-rouge'], ['Suspendues', e.suspendu, PiProhibitFill, 'c-gris']];
     return <>
       <Bandeau><section className="hero">
         <div className="hero-haut">
@@ -88,7 +88,7 @@ function Vue() {
   }}</Etat>;
 }
 
-const FILTRES: [string, string, (s: string) => boolean][] = [['toutes', 'Toutes', () => true], ['essai', 'Essai', (s) => s === 'essai'], ['actif', 'Actives', (s) => s === 'actif'], ['retard', 'À renouveler', (s) => s === 'grace' || s === 'expire'], ['suspendu', 'Suspendues', (s) => s === 'suspendu']];
+const FILTRES: [string, string, (s: string) => boolean][] = [['toutes', 'Toutes', () => true], ['attente', 'À payer', (s) => s === 'attente'], ['essai', 'Essai', (s) => s === 'essai'], ['actif', 'Actives', (s) => s === 'actif'], ['retard', 'À renouveler', (s) => s === 'grace' || s === 'expire'], ['suspendu', 'Suspendues', (s) => s === 'suspendu']];
 
 function Ecoles() {
   const [f, setF] = useState('toutes'); const [t, setT] = useState('');
@@ -144,7 +144,7 @@ function Fiche({ id }: { id: string }) {
         <div className="param-g">
           <div className="param-c">
             <section className="carte para"><div className="tete-carte"><h2>Abonnement</h2><Sit x={x} /></div>
-              <dl className="cl-d"><div><dt>Date de fin</dt><dd>{dateFr(x.fin)}</dd></div><div><dt>Tranche</dt><dd>{LIB_T[x.tranche]}</dd></div><div><dt>Tranche annoncée</dt><dd>{x.tranche_declaree ? LIB_T[x.tranche_declaree] : 'Non indiquée'}</dd></div><div><dt>Prix par mois</dt><dd>{x.prix_mois ? gnf(x.prix_mois) : 'À discuter'}{x.prix_perso ? ' (spécial)' : ''}</dd></div><div><dt>Prix par an</dt><dd>{x.prix_an ? gnf(x.prix_an) : 'À discuter'}</dd></div></dl>
+              <dl className="cl-d"><div><dt>Date de fin</dt><dd>{dateFr(x.fin)}</dd></div><div><dt>Tranche</dt><dd>{LIB_T[x.tranche]}</dd></div><div><dt>Tranche annoncée</dt><dd>{x.tranche_declaree ? LIB_T[x.tranche_declaree] : 'Non indiquée'}</dd></div>{x.eleves_annonces != null && <div><dt>Élèves annoncés</dt><dd>{nb(x.eleves_annonces)}</dd></div>}{x.classes_annoncees != null && <div><dt>Classes annoncées</dt><dd>{nb(x.classes_annoncees)}</dd></div>}{x.niveaux?.length > 0 && <div><dt>Niveaux</dt><dd>{x.niveaux.join(', ')}</dd></div>}{x.quartier && <div><dt>Quartier</dt><dd>{x.quartier}</dd></div>}<div><dt>Prix par mois</dt><dd>{x.prix_mois ? gnf(x.prix_mois) : 'À discuter'}{x.prix_perso ? ' (spécial)' : ''}</dd></div><div><dt>Prix par an</dt><dd>{x.prix_an ? gnf(x.prix_an) : 'À discuter'}</dd></div></dl>
               <div className="ligne-btn"><button className="btn plein mini" onClick={() => setPro(true)}><PiCalendarCheckDuotone aria-hidden="true" />Prolonger</button><button className="btn contour mini" onClick={() => setPrix(true)}>Prix spécial</button>{x.situation === 'suspendu' ? <button className="btn contour mini" onClick={() => e.envoyer(async () => { await db.rpc('admin_suspendre', { p_etab: x.id, p_suspendre: false }); q.reload(); tableau.reload(); })}>Réactiver</button> : <button className="btn contour mini rouge" onClick={() => setSus(true)}>Suspendre</button>}</div>
             </section>
             <section className="carte para"><h2>Paiements d'abonnement</h2>{x.paiements.length === 0 ? <p className="note">Aucun paiement pour le moment.</p> : <ul className="hist">{x.paiements.map((p: any) => <li key={p.id}><div><b>{gnf(p.montant)}</b><small>{LIB_P[p.periode]}, {LIB_M[p.moyen]}, {dateFr(p.declare_le)}{p.reference ? `, ${p.reference}` : ''}</small></div><Pastille k={ST_P[p.statut][0]} t={ST_P[p.statut][1]} /></li>)}</ul>}</section>

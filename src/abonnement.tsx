@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { PiArrowLeftBold, PiArrowRightBold, PiBankDuotone, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCopySimpleBold, PiCrownSimpleFill, PiInfoFill, PiMoneyWavyDuotone, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
-import { db } from './api';
-import { dateFr, gnf, nb, tel, telAff } from './lib';
+import { auth, db } from './api';
+import { TRANCHES, dateFr, gnf, nb, tel, telAff } from './lib';
 import { Erreur, Lien, Modale, Pastille, Titre, Tuile, Vide, useApp, useEnvoi } from './ui';
 
-export const LIB_T: any = { moins_200: "Jusqu'à 200 élèves", '201_500': '201 à 500 élèves', '501_1000': '501 à 1 000 élèves', plus_1000: 'Plus de 1 000 élèves' };
-export const SIT: any = { essai: ['partiel', 'Essai gratuit'], actif: ['a_jour', 'Actif'], grace: ['retard', 'Terminé'], expire: ['rien', 'Expiré'], suspendu: ['rien', 'Suspendu'] };
+export const LIB_T: any = { ...Object.fromEntries(TRANCHES), moins_200: "Jusqu'à 200 élèves", '201_500': '201 à 500 élèves', '501_1000': '501 à 1 000 élèves' };
+export const SIT: any = { attente: ['retard', 'En attente de paiement'], essai: ['partiel', 'Essai gratuit'], actif: ['a_jour', 'Actif'], grace: ['retard', 'Terminé'], expire: ['rien', 'Expiré'], suspendu: ['rien', 'Suspendu'] };
 export const MOYENS: [string, string][] = [['orange_money', 'Orange Money'], ['mtn_money', 'MTN Money'], ['especes', 'Espèces'], ['virement', 'Virement']];
 export const LIB_M: any = Object.fromEntries(MOYENS);
 export const LIB_P: any = { mois: '1 mois', an: '1 an' };
@@ -40,7 +40,7 @@ const MODES: [string, string, string | null, any][] = [
   ['virement', 'Virement', null, PiBankDuotone],
 ];
 
-function Haut({ t, retour }: { t: string; retour: () => void }) {
+export function Haut({ t, retour }: { t: string; retour: () => void }) {
   return <header className="abp-haut"><button type="button" className="abp-ret" onClick={retour} aria-label="Retour"><PiArrowLeftBold aria-hidden="true" /></button><h1>{t}</h1></header>;
 }
 function Historique({ abo, fermer }: any) {
@@ -61,7 +61,7 @@ export function Abonnement() {
   const aller = (n: number) => { setEtape(n); window.scrollTo(0, 0); };
   const mobile = moy === 'orange_money' || moy === 'mtn_money'; const numero = moy === 'orange_money' ? abo.orange_money : moy === 'mtn_money' ? abo.mtn_money : null;
   const j = abo.jours; const duree = `${nb(j)} jour${j > 1 ? 's' : ''} restant${j > 1 ? 's' : ''}`;
-  const etat = abo.situation === 'essai' ? `Essai gratuit, ${duree}` : abo.situation === 'actif' ? `Abonnement actif, ${duree}` : abo.situation === 'suspendu' ? 'Établissement suspendu' : `Abonnement terminé le ${dateFr(abo.fin)}`;
+  const etat = abo.situation === 'essai' ? `Essai gratuit, ${duree}` : abo.situation === 'actif' ? `Abonnement actif, ${duree}` : abo.situation === 'attente' ? 'En attente de paiement' : abo.situation === 'suspendu' ? 'Établissement suspendu' : `Abonnement terminé le ${dateFr(abo.fin)}`;
   const dernier = [...abo.historique].sort((x: any, y: any) => String(y.declare_le).localeCompare(String(x.declare_le)))[0];
   const copier = async () => { try { await navigator.clipboard.writeText(numero); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch { setCopie(false); } };
   const envoyer = (x: any) => {
@@ -83,7 +83,7 @@ export function Abonnement() {
           <p>Scolaris vérifie l'argent reçu, puis prolonge votre abonnement.</p>
           <div className="abp-recap"><span className="abp-tuile"><pl.Ic /></span><div><b>Plan {pl.nom}</b><strong>{gnf(att?.montant ?? pl.prix)} / {pl.unite}</strong></div><em className="abp-att">À vérifier</em></div>
           <ul className="abp-suivi"><li className="ok"><PiCheckCircleFill aria-hidden="true" />Paiement envoyé</li><li className="cours"><PiClockCountdownFill aria-hidden="true" />Vérification par Scolaris</li><li><i aria-hidden="true" />Abonnement prolongé</li></ul>
-          <div className="abp-bas"><Lien to="/tableau" className="abp-cta">Retour au tableau de bord</Lien>{lienHist}</div>
+          <div className="abp-bas">{abo.situation === 'attente' ? <button type="button" className="abp-cta" onClick={recharger}>Actualiser</button> : <Lien to="/tableau" className="abp-cta">Retour au tableau de bord</Lien>}{lienHist}{abo.situation === 'attente' && <button type="button" className="abp-lien" onClick={auth.deconnexion}>Se déconnecter</button>}</div>
         </div>
         {hist && <Historique abo={abo} fermer={() => setHist(false)} />}
       </>
@@ -126,9 +126,9 @@ export function Abonnement() {
     <><Titre t="Abonnement" />
       <div className="abp">
         <section className="abp-hero">
-          <header className="abp-haut"><Lien to="/tableau" className="abp-ret" aria-label="Retour"><PiArrowLeftBold aria-hidden="true" /></Lien><h1>Abonnement</h1></header>
+          <header className="abp-haut">{abo.situation !== 'attente' && <Lien to="/tableau" className="abp-ret" aria-label="Retour"><PiArrowLeftBold aria-hidden="true" /></Lien>}<h1>Abonnement</h1></header>
           <span className="abp-cou"><Couronne blanc /></span>
-          <h2>Gérez votre école sans impayés</h2>
+          <h2>{abo.situation === 'attente' ? 'Activez votre école' : 'Gérez votre école sans impayés'}</h2>
           <p>{etat}</p>
         </section>
         <div className="abp-co abp-feuille">
@@ -139,6 +139,7 @@ export function Abonnement() {
             <div className="abp-bas"><button type="button" className="abp-cta" onClick={() => aller(2)}>Continuer<PiArrowRightBold aria-hidden="true" /></button></div>
           </>}
           {lienHist}
+          {abo.situation === 'attente' && <button type="button" className="abp-lien" onClick={auth.deconnexion}>Se déconnecter</button>}
         </div>
       </div>
       {hist && <Historique abo={abo} fermer={() => setHist(false)} />}

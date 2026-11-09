@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { PiCrownSimpleDuotone, PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiDotsThreeCircleDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiReceiptDuotone, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
 import { auth, db, getSession, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
-import { Accueil, Connexion, ConnexionAdmin, Inscription, NouveauMdp, Oublie, PremierEtablissement } from './acces';
+import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, FamillePublic, RecuPublic } from './public';
 import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
@@ -67,7 +67,9 @@ function Coque({ m, annees, recharger, abo }: any) {
   const ctx = { abo, eid, etab, role, can, annee, annees, zoneBandeau, zoneFiltres, setAnnee: (id: string) => { setA(id); try { localStorage.setItem('scolaris_annee', id); } catch { /* ignoré */ } }, recharger, majNotif: notif.reload };
   const seg = chemin.split('/').filter(Boolean);
   let page: any = <Tableau />;
-  if (!annee) page = <Parametres />;
+  const attente = abo?.situation === 'attente';
+  if (attente) page = <Abonnement />;
+  else if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
   else if (seg[0] === 'eleves' && seg[1]) page = <DetailEleve id={seg[1]} key={seg[1]} />;
   else if (seg[0] === 'eleves') page = <Eleves />;
   else if (seg[0] === 'classes') page = <Classes />;
@@ -81,14 +83,14 @@ function Coque({ m, annees, recharger, abo }: any) {
   else if (seg[0] === 'equipe' && role === 'fondateur') page = <Equipe />;
   else if (seg[0] === 'activite' && role === 'fondateur') page = <Activite />;
   else if (seg[0] === 'abonnement' && role === 'fondateur') page = <Abonnement />;
-  else if (seg[0] === 'parametres') page = <Parametres />;
+  else if (seg[0] === 'parametres') page = <Parametres key={seg[1] || 'liste'} vue={seg[1]} />;
   const md = s?.user?.user_metadata || {};
   const nom = `${md.prenom || ''} ${md.nom || ''}`.trim() || s?.user?.email || etab.nom;
   const init = nom.split(/\s+/).slice(0, 2).map((x: string) => x[0]).join('').toUpperCase();
   const nd: any = notif.data || {};
   return (
     <Ctx.Provider value={ctx}>
-      <div className={`app${chemin.startsWith('/abonnement') ? ' plein' : ''}${chemin === '/' || seg[0] === 'tableau' ? ' ondule' : ''}`}>
+      <div className={`app${attente || chemin.startsWith('/abonnement') || (seg[0] === 'parametres' && seg[1]) ? ' plein' : ''}${attente ? ' attente' : ''}${chemin === '/' || seg[0] === 'tableau' ? ' ondule' : ''}`}>
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
@@ -115,18 +117,20 @@ function Coque({ m, annees, recharger, abo }: any) {
 }
 
 function Espace() {
+  const [nouvelle, setNouvelle] = useState(() => { try { return !!sessionStorage.getItem('scolaris_nouvelle'); } catch { return false; } });
   const uid = getSession()?.user?.id;
   const q = useQ(async () => {
     let l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)&order=cree_le`);
     if (!l.length) {
-      const nom = getSession()?.user?.user_metadata?.etablissement;
-      if (nom) { const id = await db.rpc('creer_etablissement', { p_nom: nom }); const tr = getSession()?.user?.user_metadata?.tranche_eleves; if (tr) await db.upd(`etablissements?id=eq.${id}`, { tranche_eleves: tr }); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
+      const md = getSession()?.user?.user_metadata || {}; const nom = md.etablissement;
+      if (nom) { await db.rpc('creer_etablissement', { p_nom: nom, p_ville: md.ville || null, p_telephone: md.tel_ecole || null, p_email: getSession()?.user?.email || null, p_details: md.eleves ? { quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null }); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
     }
     if (!l.length) return { m: null, annees: [] };
     const annees = await db.get(`annees_scolaires?etablissement_id=eq.${l[0].etablissement_id}&order=date_debut.desc`);
     const abo = await db.rpc('abonnement_etat', { p_etab: l[0].etablissement_id }).catch(() => null);
     return { m: l[0], annees, abo };
   }, [uid]);
+  if (nouvelle) return <Finalisation pret={!!q.data} erreur={q.erreur} abo={(q.data as any)?.abo} ecole={(q.data as any)?.m?.etablissements} fini={() => { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } setNouvelle(false); }} />;
   if (q.erreur && !q.data) return <main className="pub"><section className="carte-pub"><Logo /><Erreur t={q.erreur} /><button className="btn plein" onClick={q.reload}>Réessayer</button><button className="btn lien" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
   if (!q.data) return <main className="pub"><Chargement /></main>;
   const d: any = q.data;

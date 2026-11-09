@@ -1,8 +1,10 @@
+import { PiBuildingsFill, PiCalendarBlankFill, PiCaretRightBold, PiStudentFill, PiTargetBold, PiUserCircleFill } from 'react-icons/pi';
+import { Haut } from './abonnement';
 import { useMemo, useRef, useState } from 'react';
 import { PiKeyDuotone, PiStudentDuotone, PiBuildingsDuotone, PiCalendarBlankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiTargetDuotone, PiUserCircleDuotone, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, getSession, message } from './api';
 import { TRANCHES, auj, dateFr, gnf, heure, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
-import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
 
@@ -143,48 +145,65 @@ export function Importation() {
 
 const Sec = ({ i, ton, t, children }: any) => <section className="carte para"><header><Tuile i={i} ton={ton} t={40} /><h2>{t}</h2></header>{children}</section>;
 
-export function Parametres() {
+export function Parametres({ vue }: { vue?: string }) {
   const { annee, annees, eid, etab, can, recharger, role } = useApp();
   const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
-  const [f, setF] = useState({ nom: etab.nom || '', ville: etab.ville || '', telephone: etab.telephone || '', orange_money_numero: etab.orange_money_numero || '', mtn_money_numero: etab.mtn_money_numero || '' });
+  const [f, setF] = useState({ nom: etab.nom || '', ville: etab.ville || '', telephone: etab.telephone || '' });
   const [obj, setO] = useState<number | null>(null); const [na, setNa] = useState({ libelle: '', date_debut: '', date_fin: '' }); const [ok, setOk] = useState(''); const e = useEnvoi();
+  const [sel, setSel] = useState<string | null>(null);
   const q = useQ(async () => (annee && can('directeur', 'comptable') ? db.get(`objectifs_financiers?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel&classe_id=is.null`) : []), [annee?.id]);
   const tb = useQ(async () => (annee && role === 'fondateur' ? db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}&select=eleves`) : []), [annee?.id]);
+  const tarifs = useQ(async () => (role === 'fondateur' ? db.rpc('tarifs_liste', {}) : []), []);
   const [mdp, setMdp] = useState(false);
   const courant = q.data?.[0]; const valeur = obj ?? courant?.montant ?? 0; const d = can('directeur');
   const fait = (t: string) => { setOk(t); setTimeout(() => setOk(''), 3000); };
   const u = getSession()?.user; const nomU = `${u?.user_metadata?.prenom || ''} ${u?.user_metadata?.nom || ''}`.trim() || u?.email || '';
+  const retour = () => naviguer('/parametres');
+  const Ecran = ({ t, children }: any) => <><Titre t="Paramètres" /><div className="abp"><Haut t={t} retour={retour} /><div className="abp-co par-co">{children}</div></div></>;
+  const Msg = <><Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}</>;
+
+  if (vue === 'ecole') return Ecran({ t: 'Mon école', children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, f); await recharger(); fait('École enregistrée'); }); }}><fieldset disabled={!d}>
+    <Champ label="Nom de l'école"><input value={f.nom} onChange={(x) => setF({ ...f, nom: x.target.value })} required /></Champ>
+    <Champ label="Ville"><input placeholder="Ex. Conakry" value={f.ville} onChange={(x) => setF({ ...f, ville: x.target.value })} /></Champ>
+    <Champ label="Téléphone de l'école"><input inputMode="tel" placeholder="Ex. 621 34 56 78" value={f.telephone} onChange={(x) => setF({ ...f, telephone: x.target.value })} /></Champ>
+  </fieldset>{Msg}{d && <div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Enregistrer</button></div>}</form> });
+
+  if (vue === 'taille' && role === 'fondateur') {
+    const choix = sel ?? etab.tranche_eleves ?? ''; const n = Number((tb.data as any)?.[0]?.eleves || 0); const reel = trancheDe(n); const ordre = TRANCHES.map(([k]) => k);
+    const prix = (k: string) => { const t = ((tarifs.data as any[]) || []).find((x) => x.tranche === k); return t?.prix_mois ? `${gnf(t.prix_mois)} par mois` : 'Tarif à voir avec Scolaris'; };
+    return Ecran({ t: "Taille de l'école", children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); if (!choix) return e.setE('Choisissez la taille de votre école'); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, { tranche_eleves: choix }); await recharger(); fait('Taille enregistrée'); }); }}>
+      <h2 className="par-q">Combien d'élèves compte votre école ?</h2><p className="par-s">Votre tarif dépend de cette réponse. Élèves inscrits cette année : {nb(n)}.</p>
+      <div className="par-ch" role="radiogroup" aria-label="Taille de l'école">{TRANCHES.map(([k, t]) => <button type="button" role="radio" aria-checked={choix === k} key={k} className={choix === k ? 'on' : ''} onClick={() => setSel(k)}><i aria-hidden="true" /><span><b>{t}</b><small>{prix(k)}</small></span></button>)}</div>
+      {etab.tranche_eleves && ordre.indexOf(reel) > ordre.indexOf(etab.tranche_eleves) && <div className="alerte err">L'école a dépassé la tranche annoncée : elle compte maintenant dans « {TRANCHES.find(([k]) => k === reel)?.[1]} ».</div>}
+      {Msg}<div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Enregistrer</button></div></form> });
+  }
+
+  if (vue === 'objectif' && annee && can('directeur', 'comptable')) return Ecran({ t: "Objectif de l'année", children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); if (!valeur) return e.setE('Indiquez un montant'); e.envoyer(async () => { if (courant) await db.upd(`objectifs_financiers?id=eq.${courant.id}`, { montant: valeur }); else await db.ins('objectifs_financiers', { etablissement_id: eid, annee_scolaire_id: annee.id, periode: 'annuel', montant: valeur }); await q.reload(); fait('Objectif enregistré'); }); }}>
+    <h2 className="par-q">Combien voulez-vous encaisser cette année ?</h2><p className="par-s">Année scolaire {annee.libelle}</p><Montant value={valeur} onChange={setO} label="Objectif de l'année" /><p className="abp-info">L'accueil vous montrera si l'école est en avance ou en retard sur cet objectif.</p>{Msg}{d && <div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Enregistrer</button></div>}</form> });
+
+  if (vue === 'annee') return Ecran({ t: 'Année scolaire', children: <>
+    <ul className="hist">{annees.map((a: any) => <li key={a.id}><div><b>{a.libelle}</b><small>{dateFr(a.date_debut)} au {dateFr(a.date_fin)}</small></div>{a.statut === 'active' ? <Pastille k="a_jour" t="Active" /> : a.statut === 'preparation' ? (d ? <button className="btn contour mini" onClick={() => e.envoyer(async () => { await db.rpc('activer_annee', { p_annee: a.id }); await recharger(); })}>Activer</button> : <Pastille k="sans" t="En préparation" />) : <Pastille k="sans" t="Clôturée" />}</li>)}</ul>
+    {d && <form className="par-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.ins('annees_scolaires', { ...na, etablissement_id: eid }); setNa({ libelle: '', date_debut: '', date_fin: '' }); await recharger(); }); }}><p className="par-s">À remplir seulement à l'approche de la prochaine rentrée.</p>
+      <Champ label="Nouvelle année"><input placeholder="2027-2028" value={na.libelle} onChange={(x) => setNa({ ...na, libelle: x.target.value })} required /></Champ>
+      <div className="deux"><Champ label="Début"><input type="date" value={na.date_debut} onChange={(x) => setNa({ ...na, date_debut: x.target.value })} required /></Champ><Champ label="Fin"><input type="date" value={na.date_fin} onChange={(x) => setNa({ ...na, date_fin: x.target.value })} required /></Champ></div>
+      {Msg}<div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Ajouter l'année</button></div></form>}</> });
+
+  if (vue === 'compte') return <>{Ecran({ t: 'Mon compte', children: <>
+    <div className="compte-l"><Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span></div>{Msg}
+    <div className="par-bt"><button className="btn contour" onClick={() => setMdp(true)}><PiKeyDuotone />Changer le mot de passe</button><button className="btn contour rouge" onClick={auth.deconnexion}><PiSignOutBold />Se déconnecter</button></div></> })}
+    {mdp && <ChangerMdp fermer={() => setMdp(false)} fini={() => { setMdp(false); fait('Mot de passe changé'); }} />}</>;
+
+  const Rang = ({ to, I, t, s, tag }: any) => <Lien to={`/parametres/${to}`} className="par-l"><span className="par-i"><I aria-hidden="true" /></span><span className="par-t"><b>{t}</b><small>{s}</small></span>{tag}<PiCaretRightBold className="par-c" aria-hidden="true" /></Lien>;
   return (
     <>
       <Titre t="Paramètres" />
-      <Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}
-      <div className="param-g">
-        <div className="param-c">
-          <Sec i={PiBuildingsDuotone} ton="bleu" t="Établissement"><form onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, f); await recharger(); fait('Établissement enregistré'); }); }}><fieldset disabled={!d}>
-            <Champ label="Nom"><input value={f.nom} onChange={(x) => setF({ ...f, nom: x.target.value })} required /></Champ>
-            <div className="deux"><Champ label="Ville"><input value={f.ville} onChange={(x) => setF({ ...f, ville: x.target.value })} /></Champ><Champ label="Téléphone"><input inputMode="tel" value={f.telephone} onChange={(x) => setF({ ...f, telephone: x.target.value })} /></Champ></div>
-            <div className="deux"><Champ label="Numéro Orange Money"><input inputMode="tel" value={f.orange_money_numero} onChange={(x) => setF({ ...f, orange_money_numero: x.target.value })} /></Champ><Champ label="Numéro MTN Money"><input inputMode="tel" value={f.mtn_money_numero} onChange={(x) => setF({ ...f, mtn_money_numero: x.target.value })} /></Champ></div>
-            {d && <button className="btn plein mini">Enregistrer</button>}</fieldset></form></Sec>
-          {role === 'fondateur' && <Sec i={PiStudentDuotone} ton="bleu" t="Taille de l'école">
-            <Champ label="Nombre d'élèves annoncé"><select value={etab.tranche_eleves || ''} onChange={(x) => e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, { tranche_eleves: x.target.value || null }); await recharger(); fait('Taille enregistrée'); })}><option value="">Non indiqué</option>{TRANCHES.map(([k, t]) => <option key={k} value={k}>{t}</option>)}</select></Champ>
-            {(() => { const n = Number((tb.data as any)?.[0]?.eleves || 0); const reel = trancheDe(n); const ordre = TRANCHES.map(([k]) => k); return <><div className="rappel-d"><span>Élèves inscrits cette année</span><span className="gnf"><b>{nb(n)}</b></span></div>{etab.tranche_eleves && ordre.indexOf(reel) > ordre.indexOf(etab.tranche_eleves) && <div className="alerte err">L'école a dépassé la tranche annoncée : elle compte maintenant dans « {TRANCHES.find(([k]) => k === reel)?.[1]} ».</div>}</>; })()}
-          </Sec>}
-          <Sec i={PiUserCircleDuotone} ton="violet" t="Mon compte"><div className="compte-l"><Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span></div><div className="ligne-btn"><button className="btn contour mini" onClick={() => setMdp(true)}><PiKeyDuotone />Changer le mot de passe</button><button className="btn contour mini rouge" onClick={auth.deconnexion}><PiSignOutBold />Se déconnecter</button></div></Sec>
-        </div>
-        <div className="param-c">
-          {annee && can('directeur', 'comptable') && <Sec i={PiTargetDuotone} ton="vert" t={`Objectif financier ${annee.libelle}`}>
-            <form className="ligne-f" onSubmit={(x) => { x.preventDefault(); if (!valeur) return e.setE('Indiquez un montant'); e.envoyer(async () => { if (courant) await db.upd(`objectifs_financiers?id=eq.${courant.id}`, { montant: valeur }); else await db.ins('objectifs_financiers', { etablissement_id: eid, annee_scolaire_id: annee.id, periode: 'annuel', montant: valeur }); await q.reload(); fait('Objectif enregistré'); }); }}>
-              <Montant value={valeur} onChange={setO} label="Objectif financier annuel" /><button className="btn plein mini" disabled={!d || e.occupe}>Enregistrer</button></form></Sec>}
-          <Sec i={PiCalendarBlankDuotone} ton="orange" t="Années scolaires">
-            <ul className="hist">{annees.map((a: any) => <li key={a.id}><div><b>{a.libelle}</b><small>{dateFr(a.date_debut)} au {dateFr(a.date_fin)}</small></div>{a.statut === 'active' ? <Pastille k="a_jour" t="Active" /> : a.statut === 'preparation' ? (d ? <button className="btn contour mini" onClick={() => e.envoyer(async () => { await db.rpc('activer_annee', { p_annee: a.id }); await recharger(); })}>Activer</button> : <Pastille k="sans" t="En préparation" />) : <Pastille k="sans" t="Clôturée" />}</li>)}</ul>
-            {d && <form className="annee-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.ins('annees_scolaires', { ...na, etablissement_id: eid }); setNa({ libelle: '', date_debut: '', date_fin: '' }); await recharger(); }); }}>
-              <Champ label="Nouvelle année"><input placeholder="2027-2028" value={na.libelle} onChange={(x) => setNa({ ...na, libelle: x.target.value })} required /></Champ>
-              <div className="deux"><Champ label="Début"><input type="date" value={na.date_debut} onChange={(x) => setNa({ ...na, date_debut: x.target.value })} required /></Champ><Champ label="Fin"><input type="date" value={na.date_fin} onChange={(x) => setNa({ ...na, date_fin: x.target.value })} required /></Champ></div>
-              <button className="btn contour mini">Ajouter l'année</button></form>}
-          </Sec>
-        </div>
-      </div>
-      {mdp && <ChangerMdp fermer={() => setMdp(false)} fini={() => { setMdp(false); fait('Mot de passe changé'); }} />}
+      <nav className="par-liste" aria-label="Paramètres">
+        <Rang to="ecole" I={PiBuildingsFill} t="Mon école" s="Nom, ville, téléphone" />
+        {role === 'fondateur' && <Rang to="taille" I={PiStudentFill} t="Taille de l'école" s={etab.tranche_eleves ? TRANCHES.find(([k]) => k === etab.tranche_eleves)?.[1] : 'Elle fixe votre tarif'} tag={!etab.tranche_eleves && <em className="par-tag">À choisir</em>} />}
+        {annee && can('directeur', 'comptable') && <Rang to="objectif" I={PiTargetBold} t="Objectif de l'année" s={courant?.montant ? gnf(courant.montant) : 'Pas encore défini'} />}
+        <Rang to="annee" I={PiCalendarBlankFill} t="Année scolaire" s={annee?.libelle || 'À créer'} tag={annee?.statut === 'active' && <em className="par-tag ok">Active</em>} />
+        <Rang to="compte" I={PiUserCircleFill} t="Mon compte" s="Mot de passe, déconnexion" />
+      </nav>
     </>
   );
 }

@@ -113,6 +113,16 @@ export function ConnexionAdmin() {
   );
 }
 
+function Message({ t, st }: any) {
+  return (
+    <Cadre titre={t} sous={st}>
+      <div className="acc-bt"><Lien className="btn plein" to="/connexion">Retour à la connexion</Lien></div>
+    </Cadre>
+  );
+}
+
+const BROUILLON = 'scolaris_brouillon_ins';
+const lireBrouillon = () => { try { return JSON.parse(sessionStorage.getItem(BROUILLON) || 'null'); } catch { return null; } };
 const NIVEAUX = ['Maternelle', 'Primaire', 'Collège', 'Lycée'];
 const CAD = 30; // nombre de pas de progression
 function Etapes({ n }: { n: number }) {
@@ -124,8 +134,10 @@ function ChampI({ i: I, label, requis = true, aide, tel: estTel, mdp, ...p }: an
 }
 
 export function Inscription() {
-  const [f, setF] = useState({ ecole: '', ville: '', quartier: '', telE: '', eleves: '', classes: '', prenom: '', nom: '', tel: '', email: '', m: '', ok: false });
-  const [niv, setNiv] = useState<string[]>([]); const [et, setEt] = useState(1); const [fin, setFin] = useState(false); const [tarifs, setTarifs] = useState<any[]>([]); const e = useEnvoi();
+  const [br] = useState(lireBrouillon);
+  const [f, setF] = useState({ ecole: '', ville: '', quartier: '', telE: '', eleves: '', classes: '', prenom: '', nom: '', tel: '', email: '', ok: false, ...(br?.f || {}), m: '' });
+  const [niv, setNiv] = useState<string[]>(br?.niv || []); const [et, setEt] = useState<number>(br?.et || 1);
+  useEffect(() => { try { const { m: _m, ...sansMdp } = f; sessionStorage.setItem(BROUILLON, JSON.stringify({ f: sansMdp, niv, et })); } catch { /* ignoré */ } }, [f, niv, et]); const [fin, setFin] = useState(false); const [tarifs, setTarifs] = useState<any[]>([]); const e = useEnvoi();
   useEffect(() => { db.rpc('tarifs_liste', {}).then(setTarifs).catch(() => setTarifs([])); }, []);
   const c = (k: string) => ({ id: `ins-${k}`, value: (f as any)[k], onChange: (x: any) => { setF({ ...f, [k]: x.target.value }); e.setE(''); } });
   const nb_ = Number(f.eleves.replace(/\D/g, '')) || 0; const tr = nb_ ? trancheDe(nb_) : ''; const t = tarifs.find((x) => x.tranche === tr);
@@ -150,6 +162,7 @@ export function Inscription() {
       try { sessionStorage.setItem('scolaris_nouvelle', '1'); } catch { /* ignoré */ }
       let ouvert = false;
       try { ouvert = await auth.inscription(f.email, f.m, { prenom: f.prenom.trim(), nom: f.nom.trim(), telephone: tr2, etablissement: f.ecole.trim(), ville: f.ville.trim(), quartier: f.quartier.trim(), tel_ecole: tel(f.telE), eleves: nb_, classes: Number(f.classes), niveaux: niv }); } catch (err) { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } throw err; }
+      try { sessionStorage.removeItem(BROUILLON); } catch { /* ignoré */ }
       if (ouvert) naviguer('/tableau'); else { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } setFin(true); }
     });
   };

@@ -103,6 +103,7 @@ export const auth = {
   inscription: async (email: string, mdp: string, data: any) => {
     const r = await appel(`/auth/v1/signup?redirect_to=${encodeURIComponent(location.origin + '/')}`, { method: 'POST', body: JSON.stringify({ email: email.trim(), password: mdp, data }) });
     if (r?.access_token) { poser(r); return true; }
+    if (Array.isArray(r?.identities ?? r?.user?.identities) && !(r?.identities ?? r?.user?.identities).length) throw new Error('Un compte existe déjà avec cet e-mail. Connectez-vous ou utilisez une autre adresse.');
     return false;
   },
   recuperation: async (id: string) => {

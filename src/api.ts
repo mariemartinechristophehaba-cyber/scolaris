@@ -56,6 +56,8 @@ async function appel(url: string, init: RequestInit = {}) {
 
 export const db = {
   get: (q: string) => appel(`/rest/v1/${q}`),
+  // Supabase coupe à 1000 lignes : on lit par pages pour que les totaux restent exacts. La requête doit avoir un ordre stable.
+  tout: async (q: string) => { const N = 1000; let r: any[] = []; for (let o = 0; ; o += N) { const l = await appel(`/rest/v1/${q}${q.includes('?') ? '&' : '?'}limit=${N}&offset=${o}`); r = r.concat(l); if (l.length < N) return r; } },
   ins: (t: string, b: any) => appel(`/rest/v1/${t}`, { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(b) }),
   ups: (t: string, b: any, cols: string) => appel(`/rest/v1/${t}?on_conflict=${cols}`, { method: 'POST', headers: { Prefer: 'return=representation,resolution=merge-duplicates' }, body: JSON.stringify(b) }),
   upd: (q: string, b: any) => appel(`/rest/v1/${q}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(b) }),

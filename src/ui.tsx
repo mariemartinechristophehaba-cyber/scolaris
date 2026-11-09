@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { FaXmark } from 'react-icons/fa6';
+import { createPortal } from 'react-dom';
+import { PiArrowLeftBold, PiCaretDownBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiXBold, PiXCircleFill } from 'react-icons/pi';
 import { message } from './api';
 import { nb } from './lib';
 
@@ -33,6 +34,9 @@ export const Logo = ({ petit }: { petit?: boolean }) => (
   </div>
 );
 
+// Nom de marque en texte net, avec le point vert sur le i
+export const Mot = ({ taille }: { taille: number }) => <span className="mot-s" role="img" aria-label="Scolaris" style={{ fontSize: taille }}>Scolar<span className="mot-i">ı<i /></span>s</span>;
+
 export const Chargement = () => <div className="vide"><div className="spin" aria-label="Chargement" /></div>;
 export const Erreur = ({ t }: { t: string }) => (t ? <div className="alerte err" role="alert">{t}</div> : null);
 export const Vide = ({ t, children }: any) => <div className="vide"><p>{t}</p>{children}</div>;
@@ -47,7 +51,7 @@ export function Modale({ titre, fermer, children }: any) {
   return (
     <div className="fond" onMouseDown={(e) => e.target === e.currentTarget && fermer()}>
       <div className="modale" role="dialog" aria-modal="true" aria-label={titre}>
-        <div className="mod-t"><h2>{titre}</h2><button className="ico" onClick={fermer} aria-label="Fermer"><FaXmark /></button></div>
+        <div className="mod-t"><h2>{titre}</h2><button className="ico" onClick={fermer} aria-label="Fermer"><PiXBold /></button></div>
         {children}
       </div>
     </div>
@@ -71,6 +75,38 @@ export function useEnvoi() {
   return { occupe, erreur, envoyer, setE };
 }
 
+// Choix de l'année scolaire, sur fond bleu nuit
+export function Verre({ value, onChange, label, children, className }: any) {
+  return <label className={`verre ${className || ''}`}><select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}>{children}</select><PiCaretDownBold aria-hidden="true" /></label>;
+}
+
+export function SelAnnee({ className }: any) {
+  const { annee, annees, setAnnee } = useApp();
+  if (!annees.length) return null;
+  return <Verre value={annee?.id} onChange={setAnnee} label="Année scolaire" className={className}>{annees.map((a: any) => <option key={a.id} value={a.id}>{a.libelle}</option>)}</Verre>;
+}
+
+// Ce qui s'affiche sur le bandeau bleu nuit, au-dessus de la feuille
+export function Bandeau({ children }: any) {
+  const { zoneBandeau } = useApp();
+  return zoneBandeau ? createPortal(children, zoneBandeau) : null;
+}
+
 export function Titre({ t, children, retour }: any) {
-  return <div className="titre">{retour && <Lien to={retour} className="ico" aria-label="Retour">←</Lien>}<h1>{t}</h1><div className="esp" />{children}</div>;
+  return <Bandeau><div className="tete-page">{retour && <Lien to={retour} className="retour-v" aria-label="Retour"><PiArrowLeftBold /></Lien>}<h1>{t}</h1><div className="esp" />{children}</div></Bandeau>;
+}
+
+export const Tuile = ({ i: I, ton, t }: any) => <span className={`tuile ${ton}${t ? ' t' + t : ''}`}><I aria-hidden="true" /></span>;
+export const Gnf = ({ n }: { n: any }) => <span className="gnf"><b>{nb(n)}</b><small>GNF</small></span>;
+
+const ST: any = {
+  a_jour: ['vert', PiCheckCircleFill, 'À jour'],
+  partiel: ['bleu', PiCircleHalfFill, 'Partiel'],
+  retard: ['orange', PiClockCountdownFill, 'Retard'],
+  rien: ['rouge', PiXCircleFill, 'Non payé'],
+  sans: ['gris', PiCircleHalfFill, 'Sans frais'],
+};
+export function Pastille({ k, t }: { k: string; t?: string }) {
+  const [c, I, l] = ST[k];
+  return <span className={`pastille ${c}`}><I aria-hidden="true" />{t || l}</span>;
 }

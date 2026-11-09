@@ -1,73 +1,123 @@
 import { useMemo, useState } from 'react';
-import { FaBuildingColumns, FaCircleCheck, FaCircleExclamation, FaCircleXmark, FaFileExcel, FaFilePdf, FaMagnifyingGlass, FaMoneyBillWave, FaMoneyBillTrendUp, FaMoneyBill1Wave, FaPlus, FaSackDollar, FaUser, FaUsers, FaWallet, FaMobileScreen, FaThumbsUp, FaUserGroup, FaHandHoldingDollar, FaCheck, FaBan } from 'react-icons/fa6';
+import { createPortal } from 'react-dom';
+import { FaBuildingColumns, FaFileExcel, FaFilePdf, FaMagnifyingGlass, FaMoneyBillWave, FaMoneyBillTrendUp, FaMoneyBill1Wave, FaPlus, FaUser, FaWallet, FaMobileScreen, FaCheck, FaBan, FaCircleXmark } from 'react-icons/fa6';
+import { PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
-import { Anneau, Barres, Courbe } from './charts';
+import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { auj, dateFr, entier, gnf, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
 import { EtatPaiement } from './gestion';
-import { Champ, Erreur, Etat, Lien, Modale, Montant, Titre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, SelAnnee, Titre, Tuile, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
 export function Tableau() {
-  const { annee, eid, can, etab } = useApp();
-  const fin = can('directeur', 'comptable', 'caissier', 'secretaire');
-  const [per, setPer] = useState(12);
+  const { annee, eid, can, zoneFiltres } = useApp();
+  const fin = can(...STAFF);
+  const [classe, setCl] = useState(''); const [per, setPer] = useState('');
   const q = useQ(async () => {
-    const [tb, obj, pay, recents] = await Promise.all([
+    const [tb, obj, pay, sit, st, cls, p3, ins, dep] = await Promise.all([
       db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}`),
-      can('directeur', 'comptable') ? db.get(`v_objectifs_resultats?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel&classe_id=is.null`) : [],
-      fin ? db.get(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.valide&select=montant,date_paiement`) : [],
-      fin ? db.get(`v_paiements_detail?etablissement_id=eq.${eid}&annee_scolaire_id=eq.${annee.id}&select=id,montant,date_paiement,statut,prenom,nom&order=date_paiement.desc&limit=3`) : [],
+      can('directeur', 'comptable') ? db.get(`v_objectifs_resultats?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel`) : [],
+      fin ? db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.valide&select=id,montant,date_paiement,classe_id&order=id`) : [],
+      fin ? db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=inscription_id`) : [],
+      fin ? db.get(`v_stats_classes?annee_scolaire_id=eq.${annee.id}&facture_net=gt.0&order=taux_recouvrement.desc&limit=5`) : [],
+      db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=id,nom&order=ordre,nom`),
+      fin ? db.get(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,montant,cree_le,statut,eleves(prenom,nom)&order=cree_le.desc&limit=4`) : [],
+      db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=3`),
+      can('directeur', 'comptable', 'caissier') ? db.get(`depenses?annee_scolaire_id=eq.${annee.id}&select=id,libelle,montant,cree_le&order=cree_le.desc&limit=3`) : [],
     ]);
-    return { t: tb[0] || {}, obj: obj[0], pay, recents };
+    return { t: tb[0] || {}, obj, pay, sit, st, cls, p3, ins, dep };
   }, [annee.id]);
-  return (
-    <Etat q={q}>{(d) => {
-      const t = d.t; const o = d.obj; const encaisse = t.encaisse_valide || 0;
-      const pct = o ? Math.min(100, Math.round((encaisse / o.objectif) * 100)) : 0;
-      const courbe = parMois(annee, d.pay, 'date_paiement', true).slice(-per);
-      const tot = t.eleves || 0; const part = (n: number) => (tot ? Math.round((n / tot) * 100) : 0);
-      // Estimation de fin d'année selon le rythme observé
-      const debut = +new Date(annee.date_debut), finA = +new Date(annee.date_fin), now = Math.min(Date.now(), finA);
-      const estim = now > debut ? Math.round((encaisse / (now - debut)) * (finA - debut)) : 0;
-      const retard = t.en_retard || 0;
-      return <>
-        <Titre t="Tableau de bord" />
-        <p className="sous">{etab.nom} · {t.classes || 0} classes · {t.enseignants || 0} enseignants</p>
-        <div className="stats">
-          <div className="stat bleu"><FaUsers /><span>Élèves inscrits</span><b>{nb(tot)}</b></div>
-          <div className="stat vert"><FaSackDollar /><span>Total des frais</span><b>{nb(t.facture_net)}</b><small>GNF</small></div>
-          <div className="stat vert"><FaCircleCheck /><span>Déjà encaissé</span><b>{nb(encaisse)}</b><small>GNF</small></div>
-          <div className="stat rouge"><FaCircleExclamation /><span>Reste à encaisser</span><b className="rg">{nb(t.reste)}</b><small>GNF</small></div>
+  const mois = moisAnnee(annee);
+  const filtres = zoneFiltres && fin ? createPortal(<>
+    <Verre value={per} onChange={setPer} label="Période"><option value="">Toute l'année</option>{mois.map((m) => <option key={m.cle} value={m.cle}>{m.label} {m.cle.slice(0, 4)}</option>)}</Verre>
+    {q.data && <Verre value={classe} onChange={setCl} label="Classe"><option value="">Toutes les classes</option>{(q.data as any).cls.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</Verre>}
+  </>, zoneFiltres) : null;
+  return <>{filtres}<Etat q={q}>{(d) => {
+    const s = classe ? d.sit.filter((x: any) => x.classe_id === classe) : d.sit;
+    const payC = classe ? d.pay.filter((x: any) => x.classe_id === classe) : d.pay;
+    const payP = per ? payC.filter((x: any) => String(x.date_paiement).startsWith(per)) : payC;
+    const som = (l: any[], k: string) => l.reduce((a, x) => a + Number(x[k] || 0), 0);
+    const compte = (f: (x: any) => boolean) => s.filter(f).length;
+    const encaisse = som(payP, 'montant'), frais = som(s, 'facture_net'), reste = som(s, 'reste'), echu = som(s, 'impaye_echu'), avances = som(s, 'avance');
+    const tot = fin ? s.length : d.t.eleves || 0;
+    const aJour = compte((x) => x.situation === 'a_jour'), partiels = compte((x) => x.situation === 'partiel'), rien = compte((x) => x.situation === 'rien_paye'), retard = compte((x) => x.en_retard);
+    const pc = (n: number) => (tot ? Math.round((n / tot) * 100) : 0);
+    const objet = d.obj.find((o: any) => (classe ? o.classe_id === classe : !o.classe_id));
+    const objectif = objet ? Number(objet.objectif) : 0;
+    const pct = objectif && !per ? Math.round((encaisse / objectif) * 100) : null;
+    const fini = auj().slice(0, 7);
+    const courants = mois.filter((m) => m.cle <= fini);
+    let cumul = 0;
+    const reel = courants.map((m) => { cumul += payC.filter((x: any) => String(x.date_paiement).startsWith(m.cle)).reduce((a: number, x: any) => a + Number(x.montant), 0); return cumul; });
+    const attendu = objectif && courants.length ? Math.round((objectif * courants.length) / mois.length) : 0;
+    const ecart = attendu ? encaisse - attendu : 0;
+    const bonne = ecart >= 0;
+    const fil = [
+      ...d.p3.map((p: any) => ({ cle: 'p' + p.id, date: p.cree_le, I: PiMoneyWavyDuotone, ton: p.statut === 'en_attente' ? 'orange' : 'vert', t: `${p.statut === 'en_attente' ? 'Paiement à vérifier' : 'Paiement reçu'} : ${gnf(p.montant)}`, s: `${p.eleves?.prenom || ''} ${p.eleves?.nom || ''}` })),
+      ...d.ins.map((x: any) => ({ cle: 'i' + x.id, date: x.cree_le, I: PiUserPlusDuotone, ton: 'bleu', t: 'Nouvelle inscription', s: `${x.eleves?.prenom || ''} ${x.eleves?.nom || ''}, ${x.classes?.nom || ''}` })),
+      ...d.dep.map((x: any) => ({ cle: 'd' + x.id, date: x.cree_le, I: PiShoppingCartDuotone, ton: 'orange', t: `Dépense : ${gnf(x.montant)}`, s: x.libelle })),
+    ].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 4);
+    const quand = (v: string) => { const j = String(v).slice(0, 10); if (j === auj()) return heure(v); const h = new Date(Date.now() - 86400000).toISOString().slice(0, 10); return j === h ? 'Hier' : dateFr(v); };
+    const titreLab = per ? 'Encaissé sur la période' : 'Déjà encaissé';
+    return <>
+      <Bandeau><section className="hero">
+        <div className="hero-haut">
+          <div className="hero-g">
+            <div className="hero-titre"><h1>Tableau de bord</h1><SelAnnee className="tel" /></div>
+            <span className="hero-lab">{titreLab}</span>
+            <div className="hero-val"><b>{nb(encaisse)}</b><small>GNF</small></div>
+            {objectif > 0 && <span className="hero-sur">sur {gnf(objectif)}</span>}
+            {pct !== null && <div className="hero-etat"><span className={bonne ? 'chip-v' : 'chip-a'}>{bonne ? <PiTrendUpBold aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}{bonne ? 'Objectif en bonne voie' : 'Objectif à surveiller'}</span><span className="hero-note">{bonne ? 'En avance' : 'En retard'} de {gnf(Math.abs(ecart))} sur le rythme prévu</span></div>}
+            {!objectif && can('directeur') && <Lien to="/parametres" className="chip-l">Définir l'objectif annuel</Lien>}
+          </div>
+          {pct !== null && <Jauge p={pct}><b>{pct} %</b><small>de l'objectif</small></Jauge>}
         </div>
-        {can('directeur', 'comptable') && <section className="carte objectif">
-          {o ? <><div className="obj-g"><h2>Objectif annuel : {gnf(o.objectif)}</h2><div className="barre-p grande"><i style={{ width: `${pct}%` }} /></div><p>{pct >= 100 ? 'Objectif atteint' : 'Objectif en cours'} <FaThumbsUp /> · reste {gnf(Math.max(o.objectif - encaisse, 0))}{estim > 0 && ` · estimation fin d'année ${gnf(estim)}`}</p></div><strong>{pct} %</strong></>
-            : <><div className="obj-g"><h2>Objectif annuel</h2><p>Définissez l'objectif financier de l'année pour suivre votre progression.</p></div>{can('directeur') && <Lien to="/parametres" className="btn contour mini">Définir</Lien>}</>}
-        </section>}
-        {fin && <div className="grille-2">
-          <section className="carte"><div className="tete-carte"><h2>Évolution des recettes</h2><select value={per} onChange={(e) => setPer(Number(e.target.value))} aria-label="Période"><option value={12}>12 mois</option><option value={6}>6 mois</option><option value={3}>3 mois</option></select></div>{courbe.length ? <Courbe data={courbe} /> : <Vide t="L'année scolaire n'a pas encore commencé." />}</section>
-          <section className="carte"><h2>État des paiements</h2><ul className="etats">
-            <li><FaCircleCheck className="vert" />Entièrement payé<b className="vert">{nb(t.a_jour)}</b><small>({part(t.a_jour)} %)</small></li>
-            <li><FaCircleExclamation className="orange" />Paiement partiel<b className="orange">{nb(t.partiels)}</b><small>({part(t.partiels)} %)</small></li>
-            <li><FaCircleXmark className="rouge" />Sans paiement<b className="rouge">{nb(t.rien_paye)}</b><small>({part(t.rien_paye)} %)</small></li>
-            <li><FaCircleExclamation className="rouge" />En retard<b>{nb(retard)}</b><small>({part(retard)} %)</small></li>
-            <li><FaHandHoldingDollar className="bleu" />Avec avance<b>{nb(t.avec_avance)}</b><small>({part(t.avec_avance)} %)</small></li>
-          </ul></section>
+        {fin && <div className="hero-bas">
+          {objectif > 0 && <div><span>Objectif annuel</span><Gnf n={objectif} /></div>}
+          <div><span>Total des frais</span><Gnf n={frais} /></div>
+          <div><span>Reste à encaisser</span><Gnf n={reste} /></div>
+          <div><span>Élèves inscrits</span><span className="gnf"><b>{nb(tot)}</b></span></div>
         </div>}
-        {fin && <div className="mini-stats">
-          <div><span>Impayés échus</span><b>{gnf(t.impaye_echu)}</b></div><div><span>Avances</span><b>{gnf(t.avances)}</b></div>
-          <div><span>Dépenses</span><b>{gnf(t.depenses_payees)}</b></div><div><span>Trésorerie</span><b>{gnf(t.tresorerie)}</b></div>
-        </div>}
-        {fin && <div className="grille-2">
-          <section className="carte"><div className="tete-carte"><h2>Activités récentes</h2><Lien to="/paiements" className="voir">Voir tout →</Lien></div>
-            {d.recents.length === 0 ? <p className="note">Aucun paiement pour le moment.</p> : <ul className="activites">{d.recents.map((p: any) => <li key={p.id}><i><FaMoneyBillWave /></i><div><b>Paiement reçu : {gnf(p.montant)}</b><small>{p.prenom} {p.nom} · {dateFr(p.date_paiement)}</small></div></li>)}</ul>}</section>
-          {tot === 0 ? <section className="carte bilan bleu"><FaUserGroup /><div><b>Bienvenue !</b><p>Créez vos classes puis vos élèves pour commencer.</p></div></section>
-            : retard > 0 ? <section className="carte bilan orange"><FaCircleExclamation /><div><b>{retard} élève{retard > 1 ? 's' : ''} en retard</b><p>{gnf(t.impaye_echu)} d'impayés échus. <Lien to="/relances">Relancer</Lien></p></div></section>
-              : <section className="carte bilan vert"><FaCircleCheck /><div><b>Tout se passe bien !</b><p>Aucun impayé échu.</p></div></section>}
-        </div>}
-      </>;
-    }}</Etat>
-  );
+      </section></Bandeau>
+      {!fin ? <section className="carte"><h2>Votre établissement</h2><p className="note">{nb(tot)} élèves inscrits, {nb(d.t.classes)} classes et {nb(d.t.enseignants)} enseignants.</p></section> : <>
+        <div className="kpis">
+          <div className="kpi"><div><Tuile i={PiStudentDuotone} ton="bleu" t={34} /><span>Élèves inscrits</span></div><span className="gnf"><b>{nb(tot)}</b></span></div>
+          <div className="kpi"><div><Tuile i={PiCoinsDuotone} ton="vert" t={34} /><span>Total des frais</span></div><Gnf n={frais} /></div>
+          <div className="kpi"><div><Tuile i={PiHourglassMediumDuotone} ton="rouge" t={34} /><span>Reste à encaisser</span></div><span className="rg"><Gnf n={reste} /></span></div>
+          <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Trésorerie</span></div><Gnf n={d.t.tresorerie} /></div>
+        </div>
+        <div className="rang">
+          <section className="carte c-large"><div className="tete-carte"><h2>Encaissements cumulés</h2>{objectif > 0 && <div className="legende"><span><i className="trait" />Encaissé</span><span><i className="pts" />Rythme prévu</span></div>}</div>
+            {reel.length ? <Cumul labels={mois.map((m) => m.label)} reel={reel} objectif={objectif} /> : <Vide t="L'année scolaire n'a pas encore commencé." />}</section>
+          <section className="carte c-etat"><h2>État des paiements</h2>
+            <Segments parts={[[aJour, '#0FA968'], [partiels, '#F79009'], [rien, '#E5484D']]} />
+            <ul className="etats">
+              <li><PiCheckCircleFill className="c-vert" aria-hidden="true" />Entièrement payé<b className="vert">{nb(aJour)}</b><small>{pc(aJour)} %</small></li>
+              <li><PiCircleHalfFill className="c-orange" aria-hidden="true" />Paiement partiel<b className="orange">{nb(partiels)}</b><small>{pc(partiels)} %</small></li>
+              <li><PiXCircleFill className="c-rouge" aria-hidden="true" />Sans paiement<b className="rouge">{nb(rien)}</b><small>{pc(rien)} %</small></li>
+            </ul>
+            {tot === 0 ? <div className="action bleu"><PiStudentDuotone aria-hidden="true" /><div><b>Commencez ici</b><small>Créez vos classes puis vos élèves.</small></div><Lien to="/classes" className="btn plein mini">Créer</Lien></div>
+              : retard > 0 ? <div className="action"><PiClockCountdownFill aria-hidden="true" /><div><b>{nb(retard)} élève{retard > 1 ? 's' : ''} en retard</b><small>{gnf(echu)} d'impayés échus</small></div><Lien to="/relances" className="btn plein mini">Relancer</Lien></div>
+                : <div className="action vert"><PiCheckCircleFill aria-hidden="true" /><div><b>Tout se passe bien !</b><small>Aucun impayé échu.</small></div></div>}
+          </section>
+        </div>
+        <div className="minis">
+          <div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="rouge" t={44} /><div><span>Impayés échus</span><Gnf n={echu} /></div></div>
+          <div className="carte mini-c"><Tuile i={PiHandCoinsDuotone} ton="bleu" t={44} /><div><span>Avances</span><Gnf n={avances} /></div></div>
+          <div className="carte mini-c"><Tuile i={PiShoppingCartDuotone} ton="orange" t={44} /><div><span>Dépenses</span><Gnf n={d.t.depenses_payees} /></div></div>
+          <div className="carte mini-c tres"><Tuile i={PiPiggyBankDuotone} ton="vert" t={44} /><div><span>Trésorerie</span><Gnf n={d.t.tresorerie} /></div></div>
+        </div>
+        <div className="rang">
+          <section className="carte c-large"><div className="tete-carte"><h2>Activités récentes</h2><Lien to="/paiements" className="voir">Voir tout</Lien></div>
+            {fil.length === 0 ? <p className="note">Aucune activité pour le moment.</p> : <ul className="activites">{fil.map((a) => <li key={a.cle}><Tuile i={a.I} ton={a.ton} t={40} /><div><b>{a.t}</b><small>{a.s}</small></div><time>{quand(a.date)}</time></li>)}</ul>}</section>
+          <section className="carte c-etat"><h2>Classes les plus à jour</h2>
+            {d.st.length === 0 ? <p className="note">Définissez les frais de vos classes pour voir ce classement.</p> : <ul className="rangs">{d.st.map((c: any) => { const t = Math.round(c.taux_recouvrement); return <li key={c.classe_id}><b>{c.nom}</b><div className="barre-p"><i style={{ width: `${t}%` }} /></div><span>{t} %</span></li>; })}</ul>}
+          </section>
+        </div>
+      </>}
+    </>;
+  }}</Etat></>;
 }
 
 const ICO: any = { especes: FaMoneyBillWave, virement: FaBuildingColumns, depot: FaBuildingColumns, orange_money: FaMobileScreen, mtn_money: FaMobileScreen, autre: FaWallet };

@@ -12,15 +12,16 @@ export const LIB_P: any = { mois: '1 mois', an: '1 an' };
 export const ST_P: any = { en_attente: ['retard', 'À vérifier'], valide: ['a_jour', 'Validé'], rejete: ['rien', 'Rejeté'] };
 export const waUrl = (n: string, t = '') => { const x = tel(n); return `https://wa.me/${x.length === 9 ? '224' + x : x}${t ? `?text=${encodeURIComponent(t)}` : ''}`; };
 
-export function BandeauAbonnement({ cache }: { cache: boolean }) {
+export function BandeauAbonnement({ cache, accueil }: { cache: boolean; accueil: boolean }) {
   const { abo, role } = useApp();
   if (!abo || cache) return null;
   const { situation: s, jours, jours_grace: g } = abo; let t = ''; let ton = 'orange';
   if ((s === 'essai' || s === 'actif') && jours <= 7) t = `Votre ${s === 'essai' ? 'essai gratuit' : 'abonnement'} se termine ${jours === 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}.`;
   else if (s === 'grace') t = `Votre abonnement est terminé. Plus que ${g} jour${g > 1 ? 's' : ''} avant le passage en lecture seule.`;
   else if (s === 'expire') { t = "Abonnement expiré : vous pouvez consulter vos données, mais plus rien enregistrer."; ton = 'rouge'; } else if (s === 'suspendu') { t = 'Cet établissement est suspendu : contactez Scolaris.'; ton = 'rouge'; }
+  if (!t && s === 'essai' && accueil && role === 'fondateur') { t = `Essai gratuit : il vous reste ${jours} jours.`; ton = 'bleu'; }
   if (!t) return null;
-  return <div className={`band-abo ${ton}`} role="status"><PiWarningCircleFill aria-hidden="true" /><span>{t}</span>{role === 'fondateur' ? <Lien to="/abonnement" className="btn plein mini">Renouveler</Lien> : <small>Prévenez le fondateur.</small>}</div>;
+  return <div className={`band-abo ${ton}`} role="status"><PiWarningCircleFill aria-hidden="true" /><span>{t}</span>{role === 'fondateur' ? <Lien to="/abonnement" className="btn plein mini">{s === 'essai' ? 'Acheter un abonnement' : 'Renouveler'}</Lien> : <small>Prévenez le fondateur.</small>}</div>;
 }
 
 export function Abonnement() {
@@ -44,7 +45,7 @@ export function Abonnement() {
             <dl className="cl-d"><div><dt>Date de fin</dt><dd>{dateFr(abo.fin)}</dd></div><div><dt>Élèves inscrits</dt><dd>{nb(abo.eleves)}</dd></div><div><dt>Tranche</dt><dd>{LIB_T[abo.tranche]}</dd></div></dl>
         </section>
         <section className="carte abo-p">
-          <h2>Renouveler</h2>
+          <h2>{abo.situation === 'essai' ? 'Acheter mon abonnement' : 'Renouveler'}</h2>
           {abo.prix_mois == null || abo.prix_an == null ? <div className="ident-c"><p>Pour une école de cette taille, le tarif se fixe directement avec Scolaris.</p>{abo.whatsapp && <a className="btn wa" href={waUrl(abo.whatsapp, 'Bonjour Scolaris, je souhaite connaître le tarif pour mon école.')} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Contacter Scolaris</a>}</div>
             : abo.en_attente ? <div className="abo-att"><Tuile i={PiHourglassMediumDuotone} ton="orange" t={44} /><div><b>Paiement en cours de vérification</b><small>Votre abonnement sera prolongé dès que Scolaris aura confirmé l'argent reçu.</small></div></div>
               : <form onSubmit={envoyer} noValidate>

@@ -104,7 +104,7 @@ function Coque({ m, annees, recharger, abo }: any) {
             <Lien to="/relances" className="cloche" aria-label="Notifications"><PiBellSimpleDuotone aria-hidden="true" />{nd.attente > 0 && <i>{nd.attente > 99 ? '99+' : nd.attente}</i>}</Lien>
           </header>
           <div className="zone-bandeau" ref={setZB} />
-          <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} />{page}</main>
+          <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main>
         </div>
         <BarreBas chemin={chemin} can={can} ouvrir={() => setO(true)} />
       </div>

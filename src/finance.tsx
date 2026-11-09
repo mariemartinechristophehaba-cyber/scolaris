@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FaBuildingColumns, FaFileExcel, FaFilePdf, FaMagnifyingGlass, FaMoneyBillWave, FaMoneyBillTrendUp, FaMoneyBill1Wave, FaPlus, FaUser, FaWallet, FaMobileScreen, FaCheck, FaBan, FaCircleXmark } from 'react-icons/fa6';
-import { PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
+import { PiBankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { auj, dateFr, entier, gnf, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
 import { EtatPaiement } from './gestion';
-import { Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, SelAnnee, Titre, Tuile, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, SelAnnee, Titre, Tuile, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
@@ -120,14 +120,19 @@ export function Tableau() {
   }}</Etat></>;
 }
 
-const ICO: any = { especes: FaMoneyBillWave, virement: FaBuildingColumns, depot: FaBuildingColumns, orange_money: FaMobileScreen, mtn_money: FaMobileScreen, autre: FaWallet };
+const ORDRE_M = ['especes', 'virement', 'depot', 'orange_money', 'mtn_money', 'autre'];
+const TuileMoyen = ({ type }: { type: string }) => {
+  if (type === 'orange_money') return <span className="tuile t-om">OM</span>;
+  if (type === 'mtn_money') return <span className="tuile t-mtn">MoMo</span>;
+  return <Tuile i={type === 'especes' ? PiMoneyDuotone : type === 'autre' ? PiWalletDuotone : PiBankDuotone} ton={type === 'especes' ? 'vert' : 'bleu'} />;
+};
 
 export function NouveauPaiement() {
-  const { annee, eid, can } = useApp();
+  const { annee, eid, can, majNotif } = useApp();
   const pre = new URLSearchParams(location.search).get('eleve') || '';
   const [el, setEl] = useState(pre); const [txt, setT] = useState(''); const [m, setM] = useState(0); const [moy, setMoy] = useState(''); const [ref, setR] = useState(''); const [date, setD] = useState(auj()); const [fic, setF] = useState<File | null>(null); const e = useEnvoi();
   const q = useQ(async () => {
-    const [l, mo] = await Promise.all([db.get(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom`), db.get(`moyens_paiement?etablissement_id=eq.${eid}&actif=is.true`)]);
+    const [l, mo] = await Promise.all([db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom,inscription_id`), db.get(`moyens_paiement?etablissement_id=eq.${eid}&actif=is.true`)]);
     return { l, mo };
   }, [annee.id]);
   const valider = can('directeur', 'comptable');
@@ -135,54 +140,84 @@ export function NouveauPaiement() {
     <>
       <Titre t="Enregistrer un paiement" retour="/paiements" />
       <Etat q={q}>{(d) => {
-        const moyens = [...d.mo].sort((a: any, b: any) => ['especes', 'virement', 'depot', 'orange_money', 'mtn_money', 'autre'].indexOf(a.type) - ['especes', 'virement', 'depot', 'orange_money', 'mtn_money', 'autre'].indexOf(b.type));
+        const moyens = [...d.mo].sort((a: any, b: any) => ORDRE_M.indexOf(a.type) - ORDRE_M.indexOf(b.type));
         const choix = moy || moyens[0]?.id; const s = d.l.find((x: any) => x.eleve_id === el); const t = txt.trim().toLowerCase();
-        return <section className="carte form-p"><form onSubmit={(x) => { x.preventDefault(); if (!el) return e.setE('Choisissez un élève'); if (!m) return e.setE('Indiquez le montant'); e.envoyer(async () => {
-          const justificatif_chemin = fic ? await db.fichier(eid, fic) : null;
-          const [p] = await db.ins('paiements', { etablissement_id: eid, eleve_id: el, annee_scolaire_id: annee.id, montant: m, date_paiement: date, moyen_id: choix, reference: ref.trim() || null, justificatif_chemin });
-          if (valider) { await db.upd(`paiements?id=eq.${p.id}`, { statut: 'valide' }); naviguer(`/r/${p.jeton_public}`); } else naviguer('/paiements');
-        }); }}>
-          {s ? <div className="eleve-choisi"><FaUser /><b>Élève : {s.nom} {s.prenom} ({s.matricule})</b><button type="button" className="btn lien" onClick={() => setEl('')}>Changer</button></div> :
-            <div className="choix-eleve"><div className="recherche"><FaMagnifyingGlass /><input value={txt} onChange={(v) => setT(v.target.value)} placeholder="Rechercher l'élève…" autoFocus /></div>
-              {t && <ul>{d.l.filter((y: any) => `${y.matricule} ${y.nom} ${y.prenom}`.toLowerCase().includes(t)).slice(0, 6).map((y: any) => <li key={y.eleve_id}><button type="button" onClick={() => { setEl(y.eleve_id); setT(''); }}>{y.nom} {y.prenom} · {y.classe}</button></li>)}</ul>}</div>}
-          {s && s.reste > 0 && <p className="note">Reste à payer : <b>{gnf(s.reste)}</b></p>}
-          <Champ label="Montant *"><Montant value={m} onChange={setM} /></Champ>
-          <div className="champ"><span>Moyen de paiement</span><div className="moyens">{moyens.map((y: any) => { const I = ICO[y.type] || FaWallet; return <button type="button" key={y.id} className={`${choix === y.id ? 'on ' : ''}${y.type}`} onClick={() => setMoy(y.id)}><I /><span>{y.libelle}</span></button>; })}</div></div>
-          <Champ label="Référence (optionnel)"><input value={ref} onChange={(v) => setR(v.target.value)} placeholder="Entrez la référence…" /></Champ>
-          <div className="deux"><Champ label="Date"><input type="date" value={date} max={auj()} onChange={(v) => setD(v.target.value)} required /></Champ><Champ label="Justificatif"><input type="file" accept="image/*,application/pdf" onChange={(v) => setF(v.target.files?.[0] || null)} /></Champ></div>
-          {!valider && <p className="note">Ce paiement restera en attente jusqu'à sa validation par le directeur ou le comptable.</p>}
-          <Erreur t={e.erreur} />
-          <button className="btn plein" disabled={e.occupe}><FaCheck /> {valider ? 'Valider le paiement' : 'Enregistrer le paiement'}</button>
-        </form></section>;
+        const apres = s ? Math.max(s.reste - m, 0) : 0; const avance = s ? Math.max(m - s.reste, 0) : 0;
+        const envoyer = (x: any) => {
+          x.preventDefault();
+          if (!el) return e.setE('Choisissez un élève'); if (!m) return e.setE('Indiquez le montant reçu');
+          e.envoyer(async () => {
+            const justificatif_chemin = fic ? await db.fichier(eid, fic) : null;
+            const [p] = await db.ins('paiements', { etablissement_id: eid, eleve_id: el, annee_scolaire_id: annee.id, montant: m, date_paiement: date, moyen_id: choix, reference: ref.trim() || null, justificatif_chemin });
+            majNotif();
+            if (valider) { await db.upd(`paiements?id=eq.${p.id}`, { statut: 'valide' }); naviguer(`/r/${p.jeton_public}`); } else naviguer('/paiements');
+          });
+        };
+        return <div className="paie-g">
+          <form className="carte paie-f" onSubmit={envoyer} noValidate>
+            {s ? <div className="eleve-choisi"><Avatar nom={`${s.nom} ${s.prenom}`} /><div><b>{s.nom} {s.prenom}</b><small>{s.matricule}, {s.classe}</small></div><button type="button" className="btn lien" onClick={() => setEl('')}>Changer</button></div> :
+              <div className="choix-eleve"><div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={txt} onChange={(v) => setT(v.target.value)} placeholder="Rechercher l'élève" aria-label="Rechercher l'élève" /></div>
+                {t && <ul>{d.l.filter((y: any) => `${y.matricule} ${y.nom} ${y.prenom}`.toLowerCase().includes(t)).slice(0, 6).map((y: any) => <li key={y.eleve_id}><button type="button" onClick={() => { setEl(y.eleve_id); setT(''); }}><Avatar nom={`${y.nom} ${y.prenom}`} /><span>{y.nom} {y.prenom}<small>{y.classe}</small></span></button></li>)}</ul>}</div>}
+            <label className="saisie-m"><span>Montant reçu</span><div><input inputMode="numeric" value={m ? nb(m) : ''} placeholder="0" onChange={(v) => setM(entier(v.target.value))} aria-label="Montant reçu" /><b>GNF</b></div></label>
+            {s && s.reste > 0 && <div className="vite"><button type="button" className={m === s.reste ? 'on' : ''} onClick={() => setM(s.reste)}>Tout le reste<b>{nb(s.reste)}</b></button>{s.impaye_echu > 0 && s.impaye_echu !== s.reste && <button type="button" className={m === s.impaye_echu ? 'on' : ''} onClick={() => setM(s.impaye_echu)}>En retard<b>{nb(s.impaye_echu)}</b></button>}</div>}
+            <div className="champ"><span>Moyen de paiement</span><div className="moyens">{moyens.map((y: any) => <button type="button" key={y.id} aria-pressed={choix === y.id} className={choix === y.id ? 'on' : ''} onClick={() => setMoy(y.id)}><TuileMoyen type={y.type} /><span>{y.libelle}</span></button>)}</div></div>
+            <Champ label="Référence de la transaction"><input value={ref} onChange={(v) => setR(v.target.value)} placeholder="Facultatif" /></Champ>
+            <div className="deux"><Champ label="Date du paiement"><input type="date" value={date} max={auj()} onChange={(v) => setD(v.target.value)} required /></Champ><Champ label="Justificatif"><label className="joindre"><PiPaperclipDuotone aria-hidden="true" /><span>{fic ? fic.name : 'Joindre'}</span><input type="file" accept="image/*,application/pdf" onChange={(v) => setF(v.target.files?.[0] || null)} /></label></Champ></div>
+            <Erreur t={e.erreur} />
+            <button className="btn plein" disabled={e.occupe}><PiCheckBold aria-hidden="true" />{e.occupe ? 'Enregistrement…' : valider ? 'Enregistrer et valider' : 'Enregistrer le paiement'}</button>
+            {!valider && <p className="note ctr">Le paiement restera en attente jusqu'à sa vérification par le directeur ou le comptable.</p>}
+          </form>
+          {s && <aside className="carte paie-r"><h2>Situation de l'élève</h2>
+            <dl className="cl-d"><div><dt>Frais dus</dt><dd>{gnf(s.facture_net)}</dd></div><div><dt>Déjà payé</dt><dd className="vert">{gnf(s.regle)}</dd></div><div><dt>Reste à payer</dt><dd>{gnf(s.reste)}</dd></div></dl>
+            {m > 0 && <div className="apres"><span>Après ce paiement</span><b>{avance > 0 ? `Soldé, avance de ${gnf(avance)}` : apres > 0 ? `Reste ${gnf(apres)}` : 'Élève à jour'}</b></div>}
+            <div className="securite"><PiShieldCheckDuotone aria-hidden="true" /><p>Scolaris n'encaisse jamais l'argent. Il enregistre et vérifie les paiements reçus par l'école.</p></div>
+          </aside>}
+        </div>;
       }}</Etat>
     </>
   );
 }
 
+function Motif({ titre, fermer, valider }: any) {
+  const [m, setM] = useState(''); const e = useEnvoi();
+  return <Modale titre={titre} fermer={fermer}><form onSubmit={(x) => { x.preventDefault(); if (!m.trim()) return e.setE('Indiquez le motif'); e.envoyer(async () => { await valider(m.trim()); fermer(); }); }}><Champ label="Motif *"><input value={m} onChange={(x) => setM(x.target.value)} autoFocus /></Champ><Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}>Confirmer</button></form></Modale>;
+}
+
 export function Paiements() {
-  const { annee, can, majNotif } = useApp(); const [f, setF] = useState('en_attente'); const e = useEnvoi();
+  const { annee, can, majNotif } = useApp(); const [f, setF] = useState('en_attente'); const e = useEnvoi(); const [mot, setMot] = useState<any>(null);
   const q = useQ(async () => {
-    const [l, jet] = await Promise.all([db.get(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&order=date_paiement.desc,numero_recu.desc`), db.get(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,jeton_public`)]);
+    const [l, jet] = await Promise.all([db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&order=date_paiement.desc,id`), db.tout(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,jeton_public&order=id`)]);
     const j = Object.fromEntries(jet.map((x: any) => [x.id, x.jeton_public])); return { l, j };
   }, [annee.id]);
-  const act = (id: string, b: any) => e.envoyer(async () => { await db.upd(`paiements?id=eq.${id}`, b); await q.reload(); majNotif(); });
+  const act = async (id: string, b: any) => { await db.upd(`paiements?id=eq.${id}`, b); await q.reload(); majNotif(); };
   const v = can('directeur', 'comptable');
   return (
     <>
-      <Titre t="Paiements"><Lien to="/paiements/nouveau" className="btn plein mini"><FaPlus /> Enregistrer</Lien></Titre>
+      <Titre t="Paiements"><Lien to="/paiements/nouveau" className="btn plein mini"><PiPlusBold />Enregistrer</Lien></Titre>
       <Erreur t={e.erreur} />
       <Etat q={q}>{(d) => {
-        const l = d.l.filter((p: any) => f === 'tous' || p.statut === f);
-        return <section className="carte">
-          <div className="onglets">{[['en_attente', `En attente (${d.l.filter((p: any) => p.statut === 'en_attente').length})`], ['valide', 'Validés'], ['tous', 'Tous']].map(([k, t]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{t}</button>)}</div>
-          {l.length === 0 ? <Vide t="Aucun paiement ici." /> : <div className="table"><table><thead><tr><th>Date</th><th>Élève</th><th>Montant</th><th>Moyen</th><th>Statut</th><th>Actions</th></tr></thead><tbody>{l.map((p: any) => <tr key={p.id}>
-            <td>{dateFr(p.date_paiement)}</td><td><Lien to={`/eleves/${p.eleve_id}`}>{p.nom} {p.prenom}</Lien><small className="bloc">{p.classe}</small></td><td><b>{nb(p.montant)}</b></td><td>{p.moyen}{p.reference && <small className="bloc">{p.reference}</small>}</td><td><EtatPaiement s={p.statut} /></td>
-            <td className="acts">
-              {p.statut === 'en_attente' && v && <><button className="ico vert" aria-label="Valider" title="Valider" onClick={() => act(p.id, { statut: 'valide' })}><FaCheck /></button><button className="ico rouge" aria-label="Rejeter" title="Rejeter" onClick={() => { const m = prompt('Motif du rejet'); if (m) act(p.id, { statut: 'rejete', motif_rejet: m }); }}><FaBan /></button></>}
-              {p.numero_recu && <Lien className="btn lien" to={`/r/${d.j[p.id]}`}>Reçu</Lien>}
-              {p.statut === 'valide' && v && <button className="ico rouge" aria-label="Annuler" title="Annuler" onClick={() => { const m = prompt('Motif de l\'annulation'); if (m) act(p.id, { statut: 'annule', annule_motif: m }); }}><FaCircleXmark /></button>}
-            </td></tr>)}</tbody></table></div>}
-        </section>;
+        const att = d.l.filter((p: any) => p.statut === 'en_attente'); const val = d.l.filter((p: any) => p.statut === 'valide');
+        const som = (a: any[]) => a.reduce((s, x) => s + Number(x.montant), 0);
+        const ce = auj().slice(0, 7); const mois = val.filter((p: any) => String(p.date_paiement).startsWith(ce));
+        const l = f === 'tous' ? d.l : d.l.filter((p: any) => p.statut === f);
+        const actions = (p: any) => <>
+          {p.statut === 'en_attente' && v && <><button className="btn plein mini" onClick={() => e.envoyer(() => act(p.id, { statut: 'valide' }))}><PiCheckBold />Valider</button><button className="btn contour mini rouge" onClick={() => setMot({ t: 'Rejeter ce paiement', b: (m: string) => act(p.id, { statut: 'rejete', motif_rejet: m }) })}>Rejeter</button></>}
+          {p.numero_recu && <Lien className="btn contour mini" to={`/r/${d.j[p.id]}`}><PiReceiptDuotone />Reçu</Lien>}
+          {p.statut === 'valide' && v && <button className="ico rouge" aria-label="Annuler ce paiement" title="Annuler" onClick={() => setMot({ t: 'Annuler ce paiement', b: (m: string) => act(p.id, { statut: 'annule', annule_motif: m }) })}><PiXCircleFill /></button>}
+        </>;
+        return <>
+          <div className="minis"><div className="carte mini-c"><Tuile i={PiHourglassMediumDuotone} ton="orange" t={44} /><div><span>À vérifier ({nb(att.length)})</span><Gnf n={som(att)} /></div></div><div className="carte mini-c"><Tuile i={PiCalendarCheckDuotone} ton="bleu" t={44} /><div><span>Validés ce mois</span><Gnf n={som(mois)} /></div></div><div className="carte mini-c"><Tuile i={PiCoinsDuotone} ton="vert" t={44} /><div><span>Encaissé sur l'année</span><Gnf n={som(val)} /></div></div></div>
+          <div className="segment" role="tablist">{[['en_attente', 'En attente', att.length], ['valide', 'Validés', val.length], ['tous', 'Tous', d.l.length]].map(([k, t, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{t}<em>{nb(n)}</em></button>)}</div>
+          <section className="carte c-table">
+            {l.length === 0 ? <Vide t={f === 'en_attente' ? 'Aucun paiement à vérifier.' : 'Aucun paiement ici.'} /> : <>
+              <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Élève</th><th className="dr">Montant</th><th>Moyen</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, 200).map((p: any) => <tr key={p.id}>
+                <td className="gr">{dateFr(p.date_paiement)}</td><td><Lien to={`/eleves/${p.eleve_id}`} className="nom-el"><Avatar nom={`${p.nom} ${p.prenom}`} /><span><b>{p.nom} {p.prenom}</b><small className="bloc">{p.classe}</small></span></Lien></td><td className="dr fort">{nb(p.montant)}</td><td>{p.moyen}{p.reference && <small className="bloc">{p.reference}</small>}</td><td><EtatPaiement s={p.statut} /></td><td><div className="acts-l">{actions(p)}</div></td></tr>)}</tbody></table></div>
+              <ul className="vue-tel liste-p">{l.slice(0, 200).map((p: any) => <li key={p.id}><div className="lp-h"><Avatar nom={`${p.nom} ${p.prenom}`} /><div><b>{p.nom} {p.prenom}</b><small>{dateFr(p.date_paiement)}, {p.moyen}</small></div><div className="fin"><span className="gnf"><b>{nb(p.montant)}</b></span><EtatPaiement s={p.statut} /></div></div>{(p.statut === 'en_attente' ? v : true) && (p.statut === 'en_attente' || p.numero_recu) && <div className="acts-l">{actions(p)}</div>}</li>)}</ul>
+            </>}
+          </section>
+          <p className="note ctr">Un paiement en attente n'est pas compté dans l'encaissé tant qu'il n'est pas validé.</p>
+          {mot && <Motif titre={mot.t} fermer={() => setMot(null)} valider={mot.b} />}
+        </>;
       }}</Etat>
     </>
   );

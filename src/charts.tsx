@@ -74,9 +74,11 @@ export function Anneau({ data }: { data: { label: string; valeur: number }[] }) 
 }
 
 // Jauge de l'objectif, sur le bandeau bleu nuit
-export function Jauge({ p, children }: any) {
-  const S = 176, E = 18, R_ = (S - E) / 2, C = 2 * Math.PI * R_, d = (Math.min(p, 100) / 100) * C;
-  return <div className="jauge"><svg viewBox={`0 0 ${S} ${S}`} aria-hidden="true"><defs><linearGradient id="jg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#2BD98A" /><stop offset="1" stopColor="#8CF5C4" /></linearGradient></defs><circle cx={S / 2} cy={S / 2} r={R_} fill="none" stroke="rgba(255,255,255,.16)" strokeWidth={E} />{d > 0 && <circle cx={S / 2} cy={S / 2} r={R_} fill="none" stroke="url(#jg)" strokeWidth={E} strokeLinecap="round" strokeDasharray={`${d} ${C}`} />}</svg><div>{children}</div></div>;
+export function Jauge({ p, children, clair, petit, ton }: any) {
+  const S = 176, E = clair ? 12 : 18, R_ = (S - E) / 2, C = 2 * Math.PI * R_, d = (Math.min(p, 100) / 100) * C;
+  const id = clair ? `jg-${ton || 'v'}` : 'jg';
+  const [a, b] = ton === 'orange' ? ['#F79009', '#FBBF4D'] : clair ? ['#0FA968', '#2BD98A'] : ['#2BD98A', '#8CF5C4'];
+  return <div className={`jauge${clair ? ' clair' : ''}${petit ? ' petit' : ''}`}><svg viewBox={`0 0 ${S} ${S}`} aria-hidden="true"><defs><linearGradient id={id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={a} /><stop offset="1" stopColor={b} /></linearGradient></defs><circle cx={S / 2} cy={S / 2} r={R_} fill="none" stroke={clair ? '#E8EDF7' : 'rgba(255,255,255,.16)'} strokeWidth={E} />{d > 0 && <circle cx={S / 2} cy={S / 2} r={R_} fill="none" stroke={`url(#${id})`} strokeWidth={E} strokeLinecap={p >= 100 ? 'butt' : 'round'} strokeDasharray={`${d} ${C}`} />}</svg><div>{children}</div></div>;
 }
 
 export function Segments({ parts }: { parts: [number, string][] }) {

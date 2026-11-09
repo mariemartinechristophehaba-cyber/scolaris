@@ -96,6 +96,13 @@ export function Titre({ t, children, retour }: any) {
   return <Bandeau><div className="tete-page">{retour && <Lien to={retour} className="retour-v" aria-label="Retour"><PiArrowLeftBold /></Lien>}<h1>{t}</h1><div className="esp" />{children}</div></Bandeau>;
 }
 
+const TEINTES = ['bleu', 'vert', 'orange', 'violet', 'cyan', 'rose'];
+export function Avatar({ nom, grand }: { nom: string; grand?: boolean }) {
+  const p = nom.trim().split(/\s+/);
+  const k = [...nom].reduce((a, c) => a + c.charCodeAt(0), 0) % TEINTES.length;
+  return <span aria-hidden="true" className={`avatar ${TEINTES[k]}${grand ? ' grand' : ''}`}>{((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase()}</span>;
+}
+
 export const Tuile = ({ i: I, ton, t }: any) => <span className={`tuile ${ton}${t ? ' t' + t : ''}`}><I aria-hidden="true" /></span>;
 export const Gnf = ({ n }: { n: any }) => <span className="gnf"><b>{nb(n)}</b><small>GNF</small></span>;
 

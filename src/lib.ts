@@ -5,6 +5,7 @@ export const dateFr = (d: any) => (d ? new Date(String(d).length === 10 ? d + 'T
 export const heure = (d: any) => (d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '');
 export const auj = () => new Date().toISOString().slice(0, 10);
 export const tel = (v: any) => { let t = String(v ?? '').replace(/\D/g, '').replace(/^00/, ''); if (/^224\d{9}$/.test(t)) t = t.slice(3); return t; };
+export const telAff = (v: any) => { const t = String(v ?? ''); return /^\d{9}$/.test(t) ? `${t.slice(0, 3)} ${t.slice(3, 5)} ${t.slice(5, 7)} ${t.slice(7)}` : t; };
 const MOIS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 // Mois de l'année scolaire : [{cle:'2026-10', label:'Oct'}…]

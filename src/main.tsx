@@ -9,7 +9,8 @@ import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
-import { Abonnement, BandeauAbonnement, EspaceAdmin } from './abonnement';
+import { Abonnement, BandeauAbonnement } from './abonnement';
+import { EspaceAdmin } from './admin';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 const MENU: [string, string, any, string[]?, string?][] = [

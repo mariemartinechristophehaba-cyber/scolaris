@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
-import { PiBuildingsDuotone, PiCalendarBlankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiTargetDuotone, PiUserCircleDuotone, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
+import { PiKeyDuotone, PiStudentDuotone, PiBuildingsDuotone, PiCalendarBlankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiTargetDuotone, PiUserCircleDuotone, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, getSession, message } from './api';
-import { auj, dateFr, gnf, heure, lireTableau, nb, tel, telechargerExcel } from './lib';
+import { TRANCHES, auj, dateFr, gnf, heure, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
 import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
 
 const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
@@ -145,10 +145,12 @@ const Sec = ({ i, ton, t, children }: any) => <section className="carte para"><h
 
 export function Parametres() {
   const { annee, annees, eid, etab, can, recharger, role } = useApp();
-  const ROLES: any = { directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
+  const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
   const [f, setF] = useState({ nom: etab.nom || '', ville: etab.ville || '', telephone: etab.telephone || '', orange_money_numero: etab.orange_money_numero || '', mtn_money_numero: etab.mtn_money_numero || '' });
   const [obj, setO] = useState<number | null>(null); const [na, setNa] = useState({ libelle: '', date_debut: '', date_fin: '' }); const [ok, setOk] = useState(''); const e = useEnvoi();
   const q = useQ(async () => (annee && can('directeur', 'comptable') ? db.get(`objectifs_financiers?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel&classe_id=is.null`) : []), [annee?.id]);
+  const tb = useQ(async () => (annee && role === 'fondateur' ? db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}&select=eleves`) : []), [annee?.id]);
+  const [mdp, setMdp] = useState(false);
   const courant = q.data?.[0]; const valeur = obj ?? courant?.montant ?? 0; const d = can('directeur');
   const fait = (t: string) => { setOk(t); setTimeout(() => setOk(''), 3000); };
   const u = getSession()?.user; const nomU = `${u?.user_metadata?.prenom || ''} ${u?.user_metadata?.nom || ''}`.trim() || u?.email || '';
@@ -163,7 +165,11 @@ export function Parametres() {
             <div className="deux"><Champ label="Ville"><input value={f.ville} onChange={(x) => setF({ ...f, ville: x.target.value })} /></Champ><Champ label="Téléphone"><input inputMode="tel" value={f.telephone} onChange={(x) => setF({ ...f, telephone: x.target.value })} /></Champ></div>
             <div className="deux"><Champ label="Numéro Orange Money"><input inputMode="tel" value={f.orange_money_numero} onChange={(x) => setF({ ...f, orange_money_numero: x.target.value })} /></Champ><Champ label="Numéro MTN Money"><input inputMode="tel" value={f.mtn_money_numero} onChange={(x) => setF({ ...f, mtn_money_numero: x.target.value })} /></Champ></div>
             {d && <button className="btn plein mini">Enregistrer</button>}</fieldset></form></Sec>
-          <Sec i={PiUserCircleDuotone} ton="violet" t="Mon compte"><div className="compte-l"><Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span></div><button className="btn contour mini rouge" onClick={auth.deconnexion}><PiSignOutBold />Se déconnecter</button></Sec>
+          {role === 'fondateur' && <Sec i={PiStudentDuotone} ton="bleu" t="Taille de l'école">
+            <Champ label="Nombre d'élèves annoncé"><select value={etab.tranche_eleves || ''} onChange={(x) => e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, { tranche_eleves: x.target.value || null }); await recharger(); fait('Taille enregistrée'); })}><option value="">Non indiqué</option>{TRANCHES.map(([k, t]) => <option key={k} value={k}>{t}</option>)}</select></Champ>
+            {(() => { const n = Number((tb.data as any)?.[0]?.eleves || 0); const reel = trancheDe(n); const ordre = TRANCHES.map(([k]) => k); return <><div className="rappel-d"><span>Élèves inscrits cette année</span><span className="gnf"><b>{nb(n)}</b></span></div>{etab.tranche_eleves && ordre.indexOf(reel) > ordre.indexOf(etab.tranche_eleves) && <div className="alerte err">L'école a dépassé la tranche annoncée : elle compte maintenant dans « {TRANCHES.find(([k]) => k === reel)?.[1]} ».</div>}</>; })()}
+          </Sec>}
+          <Sec i={PiUserCircleDuotone} ton="violet" t="Mon compte"><div className="compte-l"><Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span></div><div className="ligne-btn"><button className="btn contour mini" onClick={() => setMdp(true)}><PiKeyDuotone />Changer le mot de passe</button><button className="btn contour mini rouge" onClick={auth.deconnexion}><PiSignOutBold />Se déconnecter</button></div></Sec>
         </div>
         <div className="param-c">
           {annee && can('directeur', 'comptable') && <Sec i={PiTargetDuotone} ton="vert" t={`Objectif financier ${annee.libelle}`}>
@@ -178,6 +184,15 @@ export function Parametres() {
           </Sec>
         </div>
       </div>
+      {mdp && <ChangerMdp fermer={() => setMdp(false)} fini={() => { setMdp(false); fait('Mot de passe changé'); }} />}
     </>
   );
+}
+
+function ChangerMdp({ fermer, fini }: any) {
+  const [a, setA] = useState(''); const [b, setB] = useState(''); const e = useEnvoi();
+  return <Modale titre="Changer le mot de passe" fermer={fermer}><form noValidate onSubmit={(x) => { x.preventDefault(); if (a.length < 8) return e.setE('Le mot de passe doit contenir au moins 8 caractères'); if (a !== b) return e.setE('Les deux mots de passe sont différents'); e.envoyer(async () => { await auth.nouveauMotDePasse(a); fini(); }); }}>
+    <Champ label="Nouveau mot de passe"><input type="password" autoComplete="new-password" value={a} onChange={(x) => setA(x.target.value)} autoFocus /></Champ>
+    <Champ label="Confirmer"><input type="password" autoComplete="new-password" value={b} onChange={(x) => setB(x.target.value)} /></Champ>
+    <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}>Enregistrer</button></form></Modale>;
 }

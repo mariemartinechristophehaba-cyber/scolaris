@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { PiArrowLeftBold, PiBellRingingDuotone, PiBuildingsDuotone, PiChartLineUpDuotone, PiEnvelopeSimpleDuotone, PiEyeDuotone, PiEyeSlashDuotone, PiLockKeyDuotone, PiPhoneDuotone, PiSealCheckFill, PiStudentDuotone, PiTargetDuotone, PiUserDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db } from './api';
-import { tel } from './lib';
+import { TRANCHES, tel } from './lib';
 import { Erreur, Gnf, Lien, Mot, Tuile, naviguer, useEnvoi } from './ui';
 
 // Écrans d'accès : même habillage bleu nuit que l'application (voir app.css, classes acc-*).
@@ -59,6 +59,10 @@ function Champ({ i, label, mdp, type, ...p }: any) {
   );
 }
 
+function ChoixTranche({ v, set }: any) {
+  return <div className="acc-tr" role="group" aria-label="Nombre d’élèves"><span>Nombre d’élèves dans l’école</span><div>{TRANCHES.map(([k, t]) => <button type="button" key={k} aria-pressed={v === k} className={v === k ? 'on' : ''} onClick={() => set(k)}>{t}</button>)}</div></div>;
+}
+
 export function Accueil() {
   return (
     <Cadre v="accueil" titre="Bienvenue sur Scolaris" sous="Gérez facilement les paiements et le suivi de votre établissement.">
@@ -99,19 +103,20 @@ export function Connexion() {
 }
 
 export function Inscription() {
-  const [f, setF] = useState({ ecole: '', resp: '', tel: '', email: '', m: '', m2: '', ok: false });
+  const [f, setF] = useState({ ecole: '', resp: '', tel: '', email: '', m: '', m2: '', tranche: '', ok: false });
   const [fin, setFin] = useState(false); const e = useEnvoi();
   const c = (k: string) => ({ value: (f as any)[k], onChange: (x: any) => setF({ ...f, [k]: x.target.value }) });
   const envoyer = (x: any) => {
     x.preventDefault();
     if (!f.ecole.trim() || !f.resp.trim() || !f.tel.trim() || !f.email.trim() || !f.m) return e.setE('Tous les champs sont obligatoires');
+    if (!f.tranche) return e.setE('Indiquez le nombre d’élèves de votre école');
     const t = tel(f.tel); if (t.length < 8) return e.setE('Numéro de téléphone invalide');
     if (f.m.length < 8) return e.setE('Le mot de passe doit contenir au moins 8 caractères');
     if (f.m !== f.m2) return e.setE('Les deux mots de passe sont différents');
     if (!f.ok) return e.setE('Acceptez les conditions d’utilisation pour continuer');
     const [prenom, ...reste] = f.resp.trim().split(/\s+/);
     e.envoyer(async () => {
-      const ouvert = await auth.inscription(f.email, f.m, { prenom, nom: reste.join(' '), telephone: t, etablissement: f.ecole.trim() });
+      const ouvert = await auth.inscription(f.email, f.m, { prenom, nom: reste.join(' '), telephone: t, etablissement: f.ecole.trim(), tranche_eleves: f.tranche });
       if (ouvert) naviguer('/tableau'); else setFin(true);
     });
   };
@@ -120,6 +125,7 @@ export function Inscription() {
     <Cadre v="compte" retour="/" titre="Créer un compte" sous="Inscrivez votre établissement">
       <form className="acc-form" noValidate onSubmit={envoyer}>
         <Champ i={PiBuildingsDuotone} label="Nom de l’établissement" placeholder="École Sainte-Marie" autoComplete="organization" {...c('ecole')} />
+        <ChoixTranche v={f.tranche} set={(tranche: string) => setF({ ...f, tranche })} />
         <Champ i={PiUserDuotone} label="Nom du responsable" placeholder="Prénom et nom" autoComplete="name" {...c('resp')} />
         <Champ i={PiPhoneDuotone} label="Téléphone" type="tel" inputMode="tel" placeholder="620 12 34 56" autoComplete="tel" {...c('tel')} />
         <Champ i={PiEnvelopeSimpleDuotone} label="Adresse e-mail" type="email" placeholder="direction@ecole.gn" autoComplete="email" autoCapitalize="none" spellCheck={false} {...c('email')} />
@@ -170,11 +176,12 @@ export function NouveauMdp({ fini }: any) {
 }
 
 export function PremierEtablissement({ fini }: any) {
-  const [n, setN] = useState(''); const e = useEnvoi();
+  const [n, setN] = useState(''); const [tr, setTr] = useState(''); const e = useEnvoi();
   return (
     <Cadre titre="Votre établissement" sous="Indiquez le nom de votre école pour commencer">
-      <form className="acc-form" noValidate onSubmit={(x) => { x.preventDefault(); if (!n.trim()) return e.setE('Indiquez le nom de votre établissement'); e.envoyer(async () => { await db.rpc('creer_etablissement', { p_nom: n.trim() }); fini(); }); }}>
+      <form className="acc-form" noValidate onSubmit={(x) => { x.preventDefault(); if (!n.trim()) return e.setE('Indiquez le nom de votre établissement'); if (!tr) return e.setE('Indiquez le nombre d’élèves de votre école'); e.envoyer(async () => { const id = await db.rpc('creer_etablissement', { p_nom: n.trim() }); await db.upd(`etablissements?id=eq.${id}`, { tranche_eleves: tr }); fini(); }); }}>
         <Champ i={PiBuildingsDuotone} label="Nom de l’établissement" placeholder="École Sainte-Marie" autoComplete="organization" value={n} onChange={(x: any) => setN(x.target.value)} />
+        <ChoixTranche v={tr} set={setTr} />
         <Erreur t={e.erreur} />
         <button className="btn plein" disabled={e.occupe}>Continuer</button>
         <button type="button" className="btn contour" onClick={auth.deconnexion}>Se déconnecter</button>

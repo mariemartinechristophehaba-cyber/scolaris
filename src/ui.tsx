@@ -48,13 +48,15 @@ export function Etat({ q, children }: { q: any; children: (d: any) => any }) {
 }
 
 export function Modale({ titre, fermer, children }: any) {
-  return (
+  // Rendu à la racine de la page : sinon la barre du bas passe au-dessus sur téléphone.
+  return createPortal(
     <div className="fond" onMouseDown={(e) => e.target === e.currentTarget && fermer()}>
       <div className="modale" role="dialog" aria-modal="true" aria-label={titre}>
         <div className="mod-t"><h2>{titre}</h2><button className="ico" onClick={fermer} aria-label="Fermer"><PiXBold /></button></div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

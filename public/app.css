@@ -117,6 +117,13 @@ button,input,select{font:inherit;color:inherit}input,select{width:100%;height:46
 @media(max-width:430px){.t-eleves th:first-child,.t-eleves td:first-child{display:none}.t-eleves th,.t-eleves td{padding-inline:6px}.t-eleves .ico{width:28px}}
 @media print{.menu,.haut,.noprint,.titre .btn,.barre-bas,.zone-bandeau .btn,.lignes{display:none!important}body,.pub,.app{background:#fff}.feuille{padding:0;border-radius:0;margin:0}.tete-page{color:var(--encre)}.tete-page h1{color:var(--encre)}.carte,.carte-pub{box-shadow:none}}
 
+/* Équipe, qui a fait quoi */
+.fond{z-index:200}.modale{max-height:calc(100dvh - 24px);overflow-y:auto}
+.choix-r{display:grid;gap:8px}.choix-r button{display:flex;align-items:center;gap:11px;padding:9px 12px;border:1.5px solid var(--bord);border-radius:14px;background:#fff;color:var(--encre);font:inherit;text-align:left;cursor:pointer}.choix-r button>span:nth-child(2){flex:1;min-width:0}.choix-r b{display:block;font-weight:600;font-size:14.5px}.choix-r small{display:block;font-size:12.5px;line-height:1.3;color:var(--gris)}.choix-r button.on{border-color:var(--bleu);background:var(--ciel)}.choix-r>button>svg{flex:none;font-size:22px;color:var(--bleu)}
+.ident-c{display:grid;gap:12px}.ident-c p{font-size:14.5px;color:var(--gris)}.ident-c p b{color:var(--encre);font-weight:600}.ident{margin:0;display:grid;gap:1px;border-radius:14px;overflow:hidden;background:var(--bord)}.ident div{padding:11px 14px;background:var(--fond)}.ident dt{font-size:12.5px;color:var(--gris)}.ident dd{margin:0;font:600 17px var(--pop)}.ident .code{letter-spacing:.06em;color:var(--bleu);user-select:all}.ident-c .btn.wa svg{font-size:20px}.puce.p-bleu{background:var(--ciel);color:var(--bleu)}tr.inactif,li.inactif{opacity:.55}.jr+.jr{margin-top:16px}.jr h2{font-size:15px;color:var(--gris);font-weight:600}.jr .hist p{font-size:14.5px;line-height:1.35;margin:0}.jr .hist p b{display:inline}.jr .hist .hr{flex:none;font-size:12.5px;color:var(--gris)}.jr .hist li>div{align-self:center}
+.acc-tr{display:grid;gap:6px}.acc-tr>span{font-size:12px;font-weight:500;color:var(--gris);padding-left:4px}.acc-tr div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.acc-tr button{height:44px;border:1.5px solid var(--bord);border-radius:14px;background:#fff;color:var(--encre);font:600 14px Inter,sans-serif;cursor:pointer}.acc-tr button.on{border-color:var(--bleu);background:var(--ciel);color:var(--bleu);box-shadow:0 0 0 3px rgba(21,87,240,.1)}
+@media(max-width:860px){.liste-p li.inactif .acts-l .btn{flex:none}}
+
 /* Accueil, connexion, création de compte */
 .acc{min-height:100dvh;display:flex;flex-direction:column;background:#fff;color:var(--encre)}
 .acc h1,.acc-t2{font:600 29px/1.2 var(--pop);letter-spacing:-.02em;margin:0}.acc p{margin:0}

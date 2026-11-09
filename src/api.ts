@@ -54,6 +54,21 @@ async function appel(url: string, init: RequestInit = {}) {
   return d;
 }
 
+export const equipeApi = (b: any) => appel('/functions/v1/equipe', { method: 'POST', body: JSON.stringify(b) });
+
+// Réduit les photos avant l'envoi : un justificatif reste lisible et prend dix fois moins de place.
+async function compresser(f: File, max = 1600, q = 0.72): Promise<File> {
+  if (!f.type.startsWith('image/') || f.type === 'image/gif' || f.size < 250 * 1024) return f;
+  try {
+    const img = await createImageBitmap(f, { imageOrientation: 'from-image' } as any);
+    const r = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+    const g = c.getContext('2d')!; g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); img.close();
+    const b = await new Promise<Blob | null>((ok) => c.toBlob(ok, 'image/jpeg', q));
+    return b && b.size < f.size ? new File([b], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }) : f;
+  } catch { return f; }
+}
+
 export const db = {
   get: (q: string) => appel(`/rest/v1/${q}`),
   // Supabase coupe à 1000 lignes : on lit par pages pour que les totaux restent exacts. La requête doit avoir un ordre stable.
@@ -63,7 +78,8 @@ export const db = {
   upd: (q: string, b: any) => appel(`/rest/v1/${q}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(b) }),
   del: (q: string) => appel(`/rest/v1/${q}`, { method: 'DELETE' }),
   rpc: (f: string, a: any = {}) => appel(`/rest/v1/rpc/${f}`, { method: 'POST', body: JSON.stringify(a) }),
-  fichier: async (etab: string, f: File) => {
+  fichier: async (etab: string, brut: File) => {
+    const f = await compresser(brut);
     const chemin = `${etab}/${crypto.randomUUID()}-${f.name.replace(/[^\w.-]/g, '_')}`;
     await appel(`/storage/v1/object/justificatifs/${chemin}`, { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
     return chemin;
@@ -88,7 +104,7 @@ export const auth = {
     if (id.includes('@')) await appel(`/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`, { method: 'POST', body: JSON.stringify({ email: id.trim() }) });
     else await appel('/functions/v1/connexion-telephone', { method: 'POST', body: JSON.stringify({ action: 'recuperation', telephone: id, redirect }) });
   },
-  nouveauMotDePasse: (mdp: string) => appel('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password: mdp }) }),
+  nouveauMotDePasse: async (mdp: string) => { const u = await appel('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password: mdp, data: { mdp_temporaire: false } }) }); if (session) poser({ ...session, user: u }); return u; },
   google: async () => {
     const s = await appel('/auth/v1/settings');
     if (!s?.external?.google) throw new Error('La connexion avec Google n\'est pas encore activée');

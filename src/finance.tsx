@@ -84,7 +84,7 @@ export function Tableau() {
           <div className="kpi"><div><Tuile i={PiStudentDuotone} ton="bleu" t={34} /><span>Élèves inscrits</span></div><span className="gnf"><b>{nb(tot)}</b></span></div>
           <div className="kpi"><div><Tuile i={PiCoinsDuotone} ton="vert" t={34} /><span>Total des frais</span></div><Gnf n={frais} /></div>
           <div className="kpi"><div><Tuile i={PiHourglassMediumDuotone} ton="rouge" t={34} /><span>Reste à encaisser</span></div><span className="rg"><Gnf n={reste} /></span></div>
-          <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Trésorerie</span></div><Gnf n={d.t.tresorerie} /></div>
+          {can('directeur', 'comptable', 'caissier') && <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Trésorerie</span></div><Gnf n={d.t.tresorerie} /></div>}
         </div>
         <div className="rang">
           <section className="carte c-large"><div className="tete-carte"><h2>Encaissements cumulés</h2>{objectif > 0 && <div className="legende"><span><i className="trait" />Encaissé</span><span><i className="pts" />Rythme prévu</span></div>}</div>
@@ -104,8 +104,8 @@ export function Tableau() {
         <div className="minis">
           <div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="rouge" t={44} /><div><span>Impayés échus</span><Gnf n={echu} /></div></div>
           <div className="carte mini-c"><Tuile i={PiHandCoinsDuotone} ton="bleu" t={44} /><div><span>Avances</span><Gnf n={avances} /></div></div>
-          <div className="carte mini-c"><Tuile i={PiShoppingCartDuotone} ton="orange" t={44} /><div><span>Dépenses</span><Gnf n={d.t.depenses_payees} /></div></div>
-          <div className="carte mini-c tres"><Tuile i={PiPiggyBankDuotone} ton="vert" t={44} /><div><span>Trésorerie</span><Gnf n={d.t.tresorerie} /></div></div>
+          {can('directeur', 'comptable', 'caissier') && <div className="carte mini-c"><Tuile i={PiShoppingCartDuotone} ton="orange" t={44} /><div><span>Dépenses</span><Gnf n={d.t.depenses_payees} /></div></div>}
+          {can('directeur', 'comptable', 'caissier') && <div className="carte mini-c tres"><Tuile i={PiPiggyBankDuotone} ton="vert" t={44} /><div><span>Trésorerie</span><Gnf n={d.t.tresorerie} /></div></div>}
         </div>
         <div className="rang">
           <section className="carte c-large"><div className="tete-carte"><h2>Activités récentes</h2><Lien to="/paiements" className="voir">Voir tout</Lien></div>

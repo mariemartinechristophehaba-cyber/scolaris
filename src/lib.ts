@@ -3,6 +3,8 @@ export const gnf = (n: any) => `${nb(n)} GNF`;
 export const entier = (s: any) => Number(String(s ?? '').replace(/\D/g, '')) || 0;
 export const dateFr = (d: any) => (d ? new Date(String(d).length === 10 ? d + 'T00:00:00' : d).toLocaleDateString('fr-FR') : '');
 export const heure = (d: any) => (d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '');
+export const TRANCHES: [string, string][] = [['moins_200', 'Moins de 200'], ['201_500', '201 à 500'], ['501_1000', '501 à 1 000'], ['plus_1000', 'Plus de 1 000']];
+export const trancheDe = (n: number) => (n < 201 ? 'moins_200' : n <= 500 ? '201_500' : n <= 1000 ? '501_1000' : 'plus_1000');
 export const auj = () => new Date().toISOString().slice(0, 10);
 export const tel = (v: any) => { let t = String(v ?? '').replace(/\D/g, '').replace(/^00/, ''); if (/^224\d{9}$/.test(t)) t = t.slice(3); return t; };
 export const telAff = (v: any) => { const t = String(v ?? ''); return /^\d{9}$/.test(t) ? `${t.slice(0, 3)} ${t.slice(3, 5)} ${t.slice(5, 7)} ${t.slice(7)}` : t; };

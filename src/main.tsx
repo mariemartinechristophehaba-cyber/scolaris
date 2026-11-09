@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiDotsThreeCircleDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiReceiptDuotone, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
+import { PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiDotsThreeCircleDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiReceiptDuotone, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
 import { auth, db, getSession, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, Inscription, NouveauMdp, Oublie, PremierEtablissement } from './acces';
@@ -8,6 +8,7 @@ import { Conditions, FamillePublic, RecuPublic } from './public';
 import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
+import { Activite, Equipe } from './equipe';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 const MENU: [string, string, any, string[]?, string?][] = [
@@ -20,9 +21,11 @@ const MENU: [string, string, any, string[]?, string?][] = [
   ['/rapports', 'Rapports', PiChartBarDuotone, ['directeur', 'comptable']],
   ['/relances', 'Relances', PiMegaphoneDuotone, STAFF, 'retard'],
   ['/importation', 'Importation', PiFileArrowUpDuotone, ['directeur', 'secretaire']],
+  ['/equipe', 'Équipe', PiUsersFourDuotone, ['fondateur']],
+  ['/activite', 'Qui a fait quoi', PiClockCounterClockwiseDuotone, ['fondateur']],
   ['/parametres', 'Paramètres', PiGearSixDuotone],
 ];
-const ROLES: any = { directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
+const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
 
 function BarreBas({ chemin, can, ouvrir }: any) {
   const fin = can(...STAFF);
@@ -47,7 +50,7 @@ function Coque({ m, annees, recharger }: any) {
   useEffect(() => { const f = () => { setC(location.pathname); setO(false); }; addEventListener('popstate', f); return () => removeEventListener('popstate', f); }, []);
   const annee = annees.find((a: any) => a.id === anneeId) || annees.find((a: any) => a.statut === 'active') || annees[0];
   const role = m.role;
-  const can = (...r: string[]) => r.includes(role);
+  const can = (...r: string[]) => role === 'fondateur' || r.includes(role);
   const etab = m.etablissements; const eid = m.etablissement_id;
   const s = getSession();
   const notif = useQ(async () => {
@@ -69,6 +72,8 @@ function Coque({ m, annees, recharger }: any) {
   else if (seg[0] === 'rapports') page = <Rapports />;
   else if (seg[0] === 'relances') page = <Relances />;
   else if (seg[0] === 'importation') page = <Importation />;
+  else if (seg[0] === 'equipe' && role === 'fondateur') page = <Equipe />;
+  else if (seg[0] === 'activite' && role === 'fondateur') page = <Activite />;
   else if (seg[0] === 'parametres') page = <Parametres />;
   const md = s?.user?.user_metadata || {};
   const nom = `${md.prenom || ''} ${md.nom || ''}`.trim() || s?.user?.email || etab.nom;
@@ -80,7 +85,7 @@ function Coque({ m, annees, recharger }: any) {
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
-          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || x[3].includes(role)).map(([to, t, I, , cle]) => <Lien key={to} to={to} className={chemin.startsWith(to) ? 'actif' : ''}><I aria-hidden="true" /><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien>)}</nav>
+          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle]) => <Lien key={to} to={to} className={chemin.startsWith(to) ? 'actif' : ''}><I aria-hidden="true" /><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien>)}</nav>
           <div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">
@@ -108,7 +113,7 @@ function Espace() {
     let l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)&order=cree_le`);
     if (!l.length) {
       const nom = getSession()?.user?.user_metadata?.etablissement;
-      if (nom) { await db.rpc('creer_etablissement', { p_nom: nom }); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
+      if (nom) { const id = await db.rpc('creer_etablissement', { p_nom: nom }); const tr = getSession()?.user?.user_metadata?.tranche_eleves; if (tr) await db.upd(`etablissements?id=eq.${id}`, { tranche_eleves: tr }); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
     }
     if (!l.length) return { m: null, annees: [] };
     const annees = await db.get(`annees_scolaires?etablissement_id=eq.${l[0].etablissement_id}&order=date_debut.desc`);
@@ -139,6 +144,7 @@ function Racine() {
   if (c === '/conditions') return <Conditions />;
   const connecte = !!getSession()?.access_token;
   if (recup && connecte) return <NouveauMdp fini={() => { setR(false); naviguer('/tableau'); }} />;
+  if (connecte && getSession()?.user?.user_metadata?.mdp_temporaire) return <NouveauMdp fini={() => naviguer('/tableau')} />;
   if (connecte) { if (PUB.includes(c)) { history.replaceState(null, '', '/tableau'); } return <Espace />; }
   if (c === '/connexion') return <Connexion />;
   if (c === '/inscription') return <Inscription />;

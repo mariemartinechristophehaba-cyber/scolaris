@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCoinsDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiPhoneDuotone, PiReceiptDuotone, PiStudentDuotone, PiWarningCircleFill, PiWarningDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
-import { db } from './api';
+import { PiSignOutBold, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCoinsDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiPhoneDuotone, PiReceiptDuotone, PiStudentDuotone, PiWarningCircleFill, PiWarningDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
+import { auth, db } from './api';
 import { auj, dateFr, gnf, nb, tel, telAff } from './lib';
-import { Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
+import { Chargement, Champ, Ctx, Erreur, Etat, Gnf, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
 
 const LIB_T: any = { moins_200: "Jusqu'à 200 élèves", '201_500': '201 à 500 élèves', '501_1000': '501 à 1 000 élèves', plus_1000: 'Plus de 1 000 élèves' };
 const SIT: any = { essai: ['partiel', 'Essai gratuit'], actif: ['a_jour', 'Actif'], grace: ['retard', 'Terminé'], expire: ['rien', 'Expiré'], suspendu: ['rien', 'Suspendu'] };
@@ -108,7 +108,27 @@ function Reglages({ d, fini }: any) {
   </form>;
 }
 
-export function Administration() {
+export function EspaceAdmin() {
+  const [zoneBandeau, setZB] = useState<HTMLDivElement | null>(null);
+  const q = useQ(() => db.rpc('suis_je_admin'), []);
+  if (q.erreur && q.data == null) return <main className="pub"><section className="carte-pub"><Logo /><Erreur t={q.erreur} /><button className="btn plein" onClick={q.reload}>Réessayer</button><button className="btn lien" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
+  if (q.data == null) return <main className="pub"><Chargement /></main>;
+  if (q.data !== true) return <main className="pub"><section className="carte-pub"><Logo /><h1>Accès réservé</h1><p className="intro">Cette page n'est pas accessible avec ce compte.</p><button className="btn plein" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
+  return (
+    <Ctx.Provider value={{ zoneBandeau, zoneFiltres: null, can: () => false }}>
+      <div className="app adm">
+        <div className="corps">
+          <div className="lignes" aria-hidden="true" />
+          <header className="haut"><img className="adm-logo" src="/img/icone.png" alt="" /><Mot taille={24} /><div className="esp" /><button className="btn contour mini adm-sortie" onClick={auth.deconnexion} aria-label="Se déconnecter"><PiSignOutBold aria-hidden="true" /><span className="bureau-seul-t">Se déconnecter</span></button></header>
+          <div className="zone-bandeau" ref={setZB} />
+          <main className="feuille"><Administration /></main>
+        </div>
+      </div>
+    </Ctx.Provider>
+  );
+}
+
+function Administration() {
   const [o, setO] = useState('ecoles'); const [t, setT] = useState(''); const [pro, setPro] = useState<any>(null); const [prix, setPrix] = useState<any>(null); const [sus, setSus] = useState<any>(null); const [rej, setRej] = useState<any>(null); const e = useEnvoi();
   const q = useQ(async () => { const [ecoles, pay, reg] = await Promise.all([db.rpc('admin_ecoles'), db.rpc('admin_paiements', { p_limite: 200 }), db.rpc('admin_reglages')]); return { ecoles, pay, reg }; }, []);
   const activite = (d: any) => { if (!d) return 'Aucune'; const j = String(d).slice(0, 10); return j === auj() ? "Aujourd'hui" : dateFr(d); };

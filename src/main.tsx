@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PiCrownSimpleDuotone, PiShieldStarDuotone, PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiDotsThreeCircleDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiReceiptDuotone, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
+import { PiCrownSimpleDuotone, PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiDotsThreeCircleDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiReceiptDuotone, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
 import { auth, db, getSession, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
-import { Accueil, Connexion, Inscription, NouveauMdp, Oublie, PremierEtablissement } from './acces';
+import { Accueil, Connexion, ConnexionAdmin, Inscription, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, FamillePublic, RecuPublic } from './public';
 import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
-import { Abonnement, Administration, BandeauAbonnement } from './abonnement';
+import { Abonnement, BandeauAbonnement, EspaceAdmin } from './abonnement';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 const MENU: [string, string, any, string[]?, string?][] = [
@@ -43,7 +43,7 @@ function BarreBas({ chemin, can, ouvrir }: any) {
   );
 }
 
-function Coque({ m, annees, recharger, abo, admin }: any) {
+function Coque({ m, annees, recharger, abo }: any) {
   const [ouvert, setO] = useState(false);
   const [chemin, setC] = useState(location.pathname);
   const [anneeId, setA] = useState<string>(() => { try { return localStorage.getItem('scolaris_annee') || ''; } catch { return ''; } });
@@ -61,8 +61,7 @@ function Coque({ m, annees, recharger, abo, admin }: any) {
     return { attente: p.length, retard: v.length };
   }, [annee?.id, chemin]);
   poserLectureSeule(!!abo?.lecture_seule);
-  const menu: any[] = admin ? [...MENU, ['/admin', 'Administration', PiShieldStarDuotone]] : MENU;
-  const ctx = { abo, admin, eid, etab, role, can, annee, annees, zoneBandeau, zoneFiltres, setAnnee: (id: string) => { setA(id); try { localStorage.setItem('scolaris_annee', id); } catch { /* ignoré */ } }, recharger, majNotif: notif.reload };
+  const ctx = { abo, eid, etab, role, can, annee, annees, zoneBandeau, zoneFiltres, setAnnee: (id: string) => { setA(id); try { localStorage.setItem('scolaris_annee', id); } catch { /* ignoré */ } }, recharger, majNotif: notif.reload };
   const seg = chemin.split('/').filter(Boolean);
   let page: any = <Tableau />;
   if (!annee) page = <Parametres />;
@@ -79,7 +78,6 @@ function Coque({ m, annees, recharger, abo, admin }: any) {
   else if (seg[0] === 'equipe' && role === 'fondateur') page = <Equipe />;
   else if (seg[0] === 'activite' && role === 'fondateur') page = <Activite />;
   else if (seg[0] === 'abonnement' && role === 'fondateur') page = <Abonnement />;
-  else if (seg[0] === 'admin' && admin) page = <Administration />;
   else if (seg[0] === 'parametres') page = <Parametres />;
   const md = s?.user?.user_metadata || {};
   const nom = `${md.prenom || ''} ${md.nom || ''}`.trim() || s?.user?.email || etab.nom;
@@ -91,7 +89,7 @@ function Coque({ m, annees, recharger, abo, admin }: any) {
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
-          <nav aria-label="Menu">{menu.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle]) => <Lien key={to} to={to} className={chemin.startsWith(to) ? 'actif' : ''}><I aria-hidden="true" /><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien>)}</nav>
+          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle]) => <Lien key={to} to={to} className={chemin.startsWith(to) ? 'actif' : ''}><I aria-hidden="true" /><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien>)}</nav>
           <div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">
@@ -123,14 +121,14 @@ function Espace() {
     }
     if (!l.length) return { m: null, annees: [] };
     const annees = await db.get(`annees_scolaires?etablissement_id=eq.${l[0].etablissement_id}&order=date_debut.desc`);
-    const [abo, admin] = await Promise.all([db.rpc('abonnement_etat', { p_etab: l[0].etablissement_id }).catch(() => null), db.rpc('suis_je_admin').catch(() => false)]);
-    return { m: l[0], annees, abo, admin };
+    const abo = await db.rpc('abonnement_etat', { p_etab: l[0].etablissement_id }).catch(() => null);
+    return { m: l[0], annees, abo };
   }, [uid]);
   if (q.erreur && !q.data) return <main className="pub"><section className="carte-pub"><Logo /><Erreur t={q.erreur} /><button className="btn plein" onClick={q.reload}>Réessayer</button><button className="btn lien" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
   if (!q.data) return <main className="pub"><Chargement /></main>;
   const d: any = q.data;
   if (!d.m) return <PremierEtablissement fini={q.reload} />;
-  return <Coque m={d.m} annees={d.annees} recharger={q.reload} abo={d.abo} admin={d.admin} />;
+  return <Coque m={d.m} annees={d.annees} recharger={q.reload} abo={d.abo} />;
 }
 
 const PUB = ['/', '/connexion', '/inscription', '/mot-de-passe-oublie'];
@@ -151,7 +149,9 @@ function Racine() {
   if (c === '/conditions') return <Conditions />;
   const connecte = !!getSession()?.access_token;
   if (recup && connecte) return <NouveauMdp fini={() => { setR(false); naviguer('/tableau'); }} />;
-  if (connecte && getSession()?.user?.user_metadata?.mdp_temporaire) return <NouveauMdp fini={() => naviguer('/tableau')} />;
+  if (connecte && getSession()?.user?.user_metadata?.mdp_temporaire) return <NouveauMdp fini={() => naviguer(seg[0] === 'admin' ? '/admin' : '/tableau')} />;
+  // Espace réservé à Scolaris : adresse et connexion séparées, aucun lien depuis l'application des écoles.
+  if (seg[0] === 'admin') return connecte ? <EspaceAdmin /> : <ConnexionAdmin />;
   if (connecte) { if (PUB.includes(c)) { history.replaceState(null, '', '/tableau'); } return <Espace />; }
   if (c === '/connexion') return <Connexion />;
   if (c === '/inscription') return <Inscription />;

@@ -21,7 +21,7 @@ function Apercu() {
   );
 }
 
-function Cadre({ v = 'logo', retour, titre, sous, children }: any) {
+function Cadre({ v = 'logo', retour, titre, sous, simple, children }: any) {
   return (
     <main className={`acc acc-${v}`}>
       <section className="acc-c">
@@ -34,7 +34,7 @@ function Cadre({ v = 'logo', retour, titre, sous, children }: any) {
             <p>La scolarité, sans impayés</p>
             <svg className="acc-sw" viewBox="0 0 200 18" preserveAspectRatio="none" aria-hidden="true"><path d="M2 16C60-4 142-3 198 10 142 3 62 5 2 16Z" fill="currentColor" /></svg>
           </div>
-          <Apercu />
+          {!simple && <Apercu />}
           {v === 'compte' && <div className="acc-tt"><h1>{titre}</h1><p>{sous}</p></div>}
         </div>
       </section>
@@ -98,6 +98,21 @@ export function Connexion() {
       <div className="acc-ou"><span>ou</span></div>
       <button type="button" className="btn contour acc-g" disabled={e.occupe} onClick={() => e.envoyer(() => auth.google())}><FcGoogle aria-hidden="true" />Se connecter avec Google</button>
       <p className="acc-bas">Pas encore de compte ? <Lien to="/inscription">Créer un compte</Lien></p>
+    </Cadre>
+  );
+}
+
+export function ConnexionAdmin() {
+  const [id, setId] = useState(''); const [m, setM] = useState(''); const e = useEnvoi();
+  const envoyer = (x: any) => { x.preventDefault(); if (!id.trim() || !m) return e.setE('Indiquez votre identifiant et votre mot de passe'); e.envoyer(() => auth.connexion(id, m)); };
+  return (
+    <Cadre simple titre="Administration" sous="Accès réservé à Scolaris">
+      <form className="acc-form" noValidate onSubmit={envoyer}>
+        <Champ i={PiEnvelopeSimpleDuotone} label="E-mail ou téléphone" placeholder="620 12 34 56" autoComplete="username" autoCapitalize="none" spellCheck={false} value={id} onChange={(x: any) => setId(x.target.value)} />
+        <Champ i={PiLockKeyDuotone} label="Mot de passe" mdp placeholder="Votre mot de passe" autoComplete="current-password" value={m} onChange={(x: any) => setM(x.target.value)} />
+        <Erreur t={e.erreur} />
+        <button className="btn plein" disabled={e.occupe}>{e.occupe ? 'Connexion…' : 'Se connecter'}</button>
+      </form>
     </Cadre>
   );
 }

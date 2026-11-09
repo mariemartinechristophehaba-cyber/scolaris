@@ -62,8 +62,8 @@ export function Modale({ titre, fermer, children }: any) {
 
 export const Champ = ({ label, children, aide }: any) => <label className="champ"><span>{label}</span>{children}{aide && <small>{aide}</small>}</label>;
 
-export function Montant({ value, onChange, placeholder }: any) {
-  return <div className="montant"><input inputMode="numeric" value={value ? nb(value) : ''} placeholder={placeholder || '0'} onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, '')) || 0)} /><b>GNF</b></div>;
+export function Montant({ value, onChange, placeholder, label }: any) {
+  return <div className="montant"><input inputMode="numeric" aria-label={label} value={value ? nb(value) : ''} placeholder={placeholder || '0'} onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, '')) || 0)} /><b>GNF</b></div>;
 }
 
 // Formulaire avec envoi, erreur et bouton occupé

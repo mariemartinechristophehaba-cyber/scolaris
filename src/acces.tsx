@@ -165,7 +165,7 @@ function Message({ t, st }: any) {
 
 export function Oublie() {
   const [id, setId] = useState(''); const [fin, setFin] = useState(false); const e = useEnvoi();
-  if (fin) return <Message t="Lien envoyé" st="Si ce compte existe, un lien lui a été envoyé par e-mail." />;
+  if (fin) return <Message t="Lien envoyé" st="Si ce compte a une adresse e-mail, un lien lui a été envoyé. Sinon, demandez un nouveau mot de passe à votre fondateur." />;
   return (
     <Cadre retour="/connexion" titre="Mot de passe oublié" sous="Recevez un lien pour le réinitialiser">
       <form className="acc-form" noValidate onSubmit={(x) => { x.preventDefault(); if (!id.trim()) return e.setE('Indiquez votre e-mail ou votre téléphone'); e.envoyer(async () => { await auth.recuperation(id); setFin(true); }); }}>

@@ -183,13 +183,14 @@ function Motif({ titre, fermer, valider }: any) {
 }
 
 export function Paiements() {
-  const { annee, can, majNotif } = useApp(); const [f, setF] = useState('en_attente'); const e = useEnvoi(); const [mot, setMot] = useState<any>(null);
+  const { annee, can, majNotif } = useApp(); const [f, setF] = useState('en_attente'); const e = useEnvoi(); const [mot, setMot] = useState<any>(null); const [max, setMax] = useState(100);
   const q = useQ(async () => {
-    const [l, jet] = await Promise.all([db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&order=date_paiement.desc,id`), db.tout(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,jeton_public&order=id`)]);
-    const j = Object.fromEntries(jet.map((x: any) => [x.id, x.jeton_public])); return { l, j };
+    const [l, jet] = await Promise.all([db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&order=date_paiement.desc,id`), db.tout(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,jeton_public,justificatif_chemin&order=id`)]);
+    const j = Object.fromEntries(jet.map((x: any) => [x.id, x.jeton_public])); const pj = Object.fromEntries(jet.filter((x: any) => x.justificatif_chemin).map((x: any) => [x.id, x.justificatif_chemin])); return { l, j, pj };
   }, [annee.id]);
   const act = async (id: string, b: any) => { await db.upd(`paiements?id=eq.${id}`, b); await q.reload(); majNotif(); };
   const v = can('directeur', 'comptable');
+  const voirPj = (c: string) => { const w = window.open('about:blank', '_blank'); e.envoyer(async () => { const u = await db.voirFichier(c); if (w) w.location.href = u; else location.href = u; }); };
   return (
     <>
       <Titre t="Paiements"><Lien to="/paiements/nouveau" className="btn plein mini"><PiPlusBold />Enregistrer</Lien></Titre>
@@ -200,6 +201,7 @@ export function Paiements() {
         const ce = auj().slice(0, 7); const mois = val.filter((p: any) => String(p.date_paiement).startsWith(ce));
         const l = f === 'tous' ? d.l : d.l.filter((p: any) => p.statut === f);
         const actions = (p: any) => <>
+          {d.pj[p.id] && <button className="btn contour mini" onClick={() => voirPj(d.pj[p.id])}><PiPaperclipDuotone aria-hidden="true" />Justificatif</button>}
           {p.statut === 'en_attente' && v && <><button className="btn plein mini" onClick={() => e.envoyer(() => act(p.id, { statut: 'valide' }))}><PiCheckBold />Valider</button><button className="btn contour mini rouge" onClick={() => setMot({ t: 'Rejeter ce paiement', b: (m: string) => act(p.id, { statut: 'rejete', motif_rejet: m }) })}>Rejeter</button></>}
           {p.numero_recu && <Lien className="btn contour mini" to={`/r/${d.j[p.id]}`}><PiReceiptDuotone />Reçu</Lien>}
           {p.statut === 'valide' && v && <button className="ico rouge" aria-label="Annuler ce paiement" title="Annuler" onClick={() => setMot({ t: 'Annuler ce paiement', b: (m: string) => act(p.id, { statut: 'annule', annule_motif: m }) })}><PiXCircleFill /></button>}
@@ -209,9 +211,10 @@ export function Paiements() {
           <div className="segment" role="tablist">{[['en_attente', 'En attente', att.length], ['valide', 'Validés', val.length], ['tous', 'Tous', d.l.length]].map(([k, t, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{t}<em>{nb(n)}</em></button>)}</div>
           <section className="carte c-table">
             {l.length === 0 ? <Vide t={f === 'en_attente' ? 'Aucun paiement à vérifier.' : 'Aucun paiement ici.'} /> : <>
-              <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Élève</th><th className="dr">Montant</th><th>Moyen</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, 200).map((p: any) => <tr key={p.id}>
+              <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Élève</th><th className="dr">Montant</th><th>Moyen</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, max).map((p: any) => <tr key={p.id}>
                 <td className="gr">{dateFr(p.date_paiement)}</td><td><Lien to={`/eleves/${p.eleve_id}`} className="nom-el"><Avatar nom={`${p.nom} ${p.prenom}`} /><span><b>{p.nom} {p.prenom}</b><small className="bloc">{p.classe}</small></span></Lien></td><td className="dr fort">{nb(p.montant)}</td><td>{p.moyen}{p.reference && <small className="bloc">{p.reference}</small>}</td><td><EtatPaiement s={p.statut} /></td><td><div className="acts-l">{actions(p)}</div></td></tr>)}</tbody></table></div>
-              <ul className="vue-tel liste-p">{l.slice(0, 200).map((p: any) => <li key={p.id}><div className="lp-h"><Avatar nom={`${p.nom} ${p.prenom}`} /><div><b>{p.nom} {p.prenom}</b><small>{dateFr(p.date_paiement)}, {p.moyen}</small></div><div className="fin"><span className="gnf"><b>{nb(p.montant)}</b></span><EtatPaiement s={p.statut} /></div></div>{(p.statut === 'en_attente' ? v : true) && (p.statut === 'en_attente' || p.numero_recu) && <div className="acts-l">{actions(p)}</div>}</li>)}</ul>
+              <ul className="vue-tel liste-p">{l.slice(0, max).map((p: any) => <li key={p.id}><div className="lp-h"><Avatar nom={`${p.nom} ${p.prenom}`} /><div><b>{p.nom} {p.prenom}</b><small>{dateFr(p.date_paiement)}, {p.moyen}</small></div><div className="fin"><span className="gnf"><b>{nb(p.montant)}</b></span><EtatPaiement s={p.statut} /></div></div>{(p.statut === 'en_attente' ? v : true) && (p.statut === 'en_attente' || p.numero_recu) && <div className="acts-l">{actions(p)}</div>}</li>)}</ul>
+              {l.length > max && <div className="plus-l"><button className="btn contour mini" onClick={() => setMax(max + 100)}>Voir la suite ({nb(l.length - max)})</button></div>}
             </>}
           </section>
           <p className="note ctr">Un paiement en attente n'est pas compté dans l'encaissé tant qu'il n'est pas validé.</p>
@@ -229,7 +232,7 @@ const som = (l: any[]) => l.reduce((t, x) => t + Number(x.montant), 0);
 const Mini = ({ i, ton, t, children }: any) => <div className="carte mini-c"><Tuile i={i} ton={ton} t={44} /><div><span>{t}</span>{children}</div></div>;
 
 export function Depenses() {
-  const { annee, eid, can } = useApp(); const [aj, setAj] = useState(false); const [mv, setMv] = useState(false); const [f, setF] = useState('traiter'); const [rej, setRej] = useState<any>(null); const [pay, setPay] = useState<any>(null); const e = useEnvoi();
+  const { annee, eid, can } = useApp(); const [aj, setAj] = useState(false); const [mv, setMv] = useState(false); const [f, setF] = useState('traiter'); const [rej, setRej] = useState<any>(null); const [max, setMax] = useState(100); const [pay, setPay] = useState<any>(null); const e = useEnvoi();
   const q = useQ(async () => {
     const [l, cat, cai] = await Promise.all([db.tout(`depenses?annee_scolaire_id=eq.${annee.id}&select=*,categories_depense(libelle)&order=date_depense.desc,cree_le.desc,id`), db.get(`categories_depense?etablissement_id=eq.${eid}&order=libelle`), db.get(`v_tresorerie_caisses?etablissement_id=eq.${eid}&order=nom`)]);
     return { l, cat, cai };
@@ -255,9 +258,10 @@ export function Depenses() {
           <div className="segment" role="tablist">{[['traiter', 'À traiter', att.length], ['payee', 'Payées', payees.length], ['toutes', 'Toutes', d.l.length]].map(([k, t, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{t}<em>{nb(n)}</em></button>)}</div>
           <section className="carte c-table">
             {l.length === 0 ? <Vide t={f === 'traiter' ? 'Aucune dépense à traiter.' : 'Aucune dépense ici.'} /> : <>
-              <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Dépense</th><th>Bénéficiaire</th><th className="dr">Montant</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, 200).map((x: any) => <tr key={x.id}>
+              <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Dépense</th><th>Bénéficiaire</th><th className="dr">Montant</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, max).map((x: any) => <tr key={x.id}>
                 <td className="gr">{dateFr(x.date_depense)}</td><td><div className="nom-el"><Tuile i={iconeDep(x.categories_depense?.libelle)} ton="bleu" t={40} /><span><b>{x.libelle}</b><small className="bloc">{x.categories_depense?.libelle}</small></span></div></td><td>{x.beneficiaire || <span className="gr">Non renseigné</span>}</td><td className="dr fort">{nb(x.montant)}</td><td>{statut(x)}</td><td><div className="acts-l">{actions(x)}</div></td></tr>)}</tbody></table></div>
-              <ul className="vue-tel liste-p">{l.slice(0, 200).map((x: any) => <li key={x.id}><div className="lp-h"><Tuile i={iconeDep(x.categories_depense?.libelle)} ton="bleu" t={40} /><div><b>{x.libelle}</b><small>{dateFr(x.date_depense)}, {x.categories_depense?.libelle}</small></div><div className="fin"><span className="gnf"><b>{nb(x.montant)}</b></span>{statut(x)}</div></div>{agir(x) && <div className="acts-l">{actions(x)}</div>}</li>)}</ul>
+              <ul className="vue-tel liste-p">{l.slice(0, max).map((x: any) => <li key={x.id}><div className="lp-h"><Tuile i={iconeDep(x.categories_depense?.libelle)} ton="bleu" t={40} /><div><b>{x.libelle}</b><small>{dateFr(x.date_depense)}, {x.categories_depense?.libelle}</small></div><div className="fin"><span className="gnf"><b>{nb(x.montant)}</b></span>{statut(x)}</div></div>{agir(x) && <div className="acts-l">{actions(x)}</div>}</li>)}</ul>
+              {l.length > max && <div className="plus-l"><button className="btn contour mini" onClick={() => setMax(max + 100)}>Voir la suite ({nb(l.length - max)})</button></div>}
             </>}
           </section>
           {aj && <FormDepense d={d} fermer={() => setAj(false)} fini={() => { setAj(false); q.reload(); }} />}

@@ -19,6 +19,8 @@ const TRAD: [RegExp, string][] = [
   [/already registered/i, 'Un compte existe déjà avec cette adresse e-mail'],
   [/password should be/i, 'Le mot de passe doit contenir au moins 6 caractères'],
   [/rate limit/i, 'Trop de tentatives, réessayez dans quelques minutes'],
+  [/too large|exceeded the maximum/i, 'Fichier trop lourd : 10 Mo maximum'],
+  [/mime type|invalid_mime/i, 'Format non accepté : envoyez une photo ou un PDF'],
   [/profils_telephone_key/i, 'Ce numéro de téléphone est déjà utilisé'],
   [/eleves_etablissement_id_matricule/i, 'Ce matricule existe déjà'],
   [/paiement_reference_unique/i, 'Cette référence de transaction a déjà été enregistrée'],
@@ -81,6 +83,7 @@ export const db = {
   upd: (q: string, b: any) => appel(`/rest/v1/${q}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(b) }),
   del: (q: string) => appel(`/rest/v1/${q}`, { method: 'DELETE' }),
   rpc: (f: string, a: any = {}) => appel(`/rest/v1/rpc/${f}`, { method: 'POST', body: JSON.stringify(a) }),
+  voirFichier: async (chemin: string) => { const r = await appel(`/storage/v1/object/sign/justificatifs/${chemin}`, { method: 'POST', body: JSON.stringify({ expiresIn: 300 }) }); return `${SUPA}/storage/v1${r.signedURL}`; },
   fichier: async (etab: string, brut: File) => {
     const f = await compresser(brut);
     const chemin = `${etab}/${crypto.randomUUID()}-${f.name.replace(/[^\w.-]/g, '_')}`;

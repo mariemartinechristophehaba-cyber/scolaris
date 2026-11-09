@@ -241,5 +241,6 @@ function FormTarif({ d, init, fermer, fini }: any) {
     <div className="tete-carte"><b>Tranches</b><button type="button" className="btn lien" onClick={() => setTr([...tr, { libelle: `Tranche ${tr.length + 1}`, montant: Math.max(montant - som, 0), date_limite: '' }])}><PiPlusBold /> Ajouter</button></div>
     {tr.map((y, i) => <div className="tranche" key={i}><input value={y.libelle} onChange={(v) => maj(i, 'libelle', v.target.value)} aria-label="Libellé" required /><Montant value={y.montant} onChange={(v: number) => maj(i, 'montant', v)} /><input type="date" value={y.date_limite} onChange={(v) => maj(i, 'date_limite', v.target.value)} aria-label="Date limite" required /><button type="button" className="ico" aria-label="Retirer" onClick={() => setTr(tr.filter((_, j) => j !== i))}><PiTrashDuotone /></button></div>)}
     {x && <p className="note">Un nouveau montant s'applique aux prochaines factures, pas à celles déjà émises.</p>}
+    <p className="note">S'applique à tous les élèves de la classe. Ceux qui ont déjà payé sur ce frais gardent leur montant.</p>
     <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}>Enregistrer</button></form></Modale>;
 }

@@ -26,8 +26,11 @@ const TRAD: [RegExp, string][] = [
   [/row-level security|permission denied/i, 'Action non autorisée pour votre rôle'],
   [/failed to fetch|networkerror/i, 'Connexion impossible. Vérifiez votre réseau'],
 ];
+let lectureSeule = false;
+export const poserLectureSeule = (v: boolean) => { lectureSeule = v; };
 export function message(e: any): string {
   const m = String(e?.message || e || 'Erreur');
+  if (lectureSeule && /row-level security|permission denied|non autorisée/i.test(m)) return 'Abonnement terminé : renouvelez-le pour continuer à enregistrer';
   for (const [r, t] of TRAD) if (r.test(m)) return t;
   return m;
 }

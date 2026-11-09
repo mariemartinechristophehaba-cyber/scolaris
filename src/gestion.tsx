@@ -160,7 +160,7 @@ export function Classes() {
   const fin = can(...FINANCE);
   return (
     <>
-      <Titre t="Classes et niveaux">{can('directeur', 'secretaire') && <button className="btn plein mini" onClick={() => setAj(true)}><PiPlusBold />Ajouter<span className="bureau-seul-t"> une classe</span></button>}</Titre>
+      <Titre t="Classes et niveaux">{can('directeur', 'secretaire') && <button className="btn plein mini" onClick={() => setAj(true)}><PiPlusBold /><span>Ajouter<span className="bureau-seul-t"> une classe</span></span></button>}</Titre>
       <Etat q={q}>{(d) => {
         const niveaux = Array.from(new Set(Object.values(d.nom).filter(Boolean))) as string[];
         const l = niv ? d.st.filter((c: any) => d.nom[c.classe_id] === niv) : d.st;

@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FaBuildingColumns, FaFileExcel, FaFilePdf, FaMagnifyingGlass, FaMoneyBillWave, FaMoneyBillTrendUp, FaMoneyBill1Wave, FaPlus, FaUser, FaWallet, FaMobileScreen, FaCheck, FaBan, FaCircleXmark } from 'react-icons/fa6';
-import { PiBankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
+import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { auj, dateFr, entier, gnf, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
 import { EtatPaiement } from './gestion';
-import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, SelAnnee, Titre, Tuile, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, SelAnnee, Titre, Tuile, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
@@ -223,34 +222,61 @@ export function Paiements() {
   );
 }
 
+const iconeDep = (l = '') => (/salaire/i.test(l) ? PiUsersThreeDuotone : /fourn/i.test(l) ? PiBooksDuotone : /loyer|bail/i.test(l) ? PiHouseLineDuotone : /[ée]lec|eau|courant/i.test(l) ? PiLightningDuotone : /transp|carbur/i.test(l) ? PiBusDuotone : PiReceiptDuotone);
+const typeCaisse = (c: any) => { const t = `${c.type} ${c.nom}`.toLowerCase(); return /orange/.test(t) ? 'orange_money' : /mtn/.test(t) ? 'mtn_money' : /banq|virement/.test(t) ? 'virement' : 'especes'; };
+const ST_D: any = { soumise: ['retard', 'À autoriser'], autorisee: ['partiel', 'À payer'], payee: ['a_jour', 'Payée'], rejetee: ['rien', 'Rejetée'], annulee: ['sans', 'Annulée'] };
+const som = (l: any[]) => l.reduce((t, x) => t + Number(x.montant), 0);
+const Mini = ({ i, ton, t, children }: any) => <div className="carte mini-c"><Tuile i={i} ton={ton} t={44} /><div><span>{t}</span>{children}</div></div>;
+
 export function Depenses() {
-  const { annee, eid, can } = useApp(); const [aj, setAj] = useState(false); const [mv, setMv] = useState(false); const e = useEnvoi();
+  const { annee, eid, can } = useApp(); const [aj, setAj] = useState(false); const [mv, setMv] = useState(false); const [f, setF] = useState('traiter'); const [rej, setRej] = useState<any>(null); const [pay, setPay] = useState<any>(null); const e = useEnvoi();
   const q = useQ(async () => {
-    const [l, cat, cai, tb] = await Promise.all([db.get(`depenses?annee_scolaire_id=eq.${annee.id}&select=*,categories_depense(libelle)&order=date_depense.desc,cree_le.desc`), db.get(`categories_depense?etablissement_id=eq.${eid}&order=libelle`), db.get(`v_tresorerie_caisses?etablissement_id=eq.${eid}&order=nom`), db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}&select=depenses_payees`)]);
-    return { l, cat, cai, tot: tb[0]?.depenses_payees || 0 };
+    const [l, cat, cai] = await Promise.all([db.tout(`depenses?annee_scolaire_id=eq.${annee.id}&select=*,categories_depense(libelle)&order=date_depense.desc,cree_le.desc,id`), db.get(`categories_depense?etablissement_id=eq.${eid}&order=libelle`), db.get(`v_tresorerie_caisses?etablissement_id=eq.${eid}&order=nom`)]);
+    return { l, cat, cai };
   }, [annee.id]);
-  const maj = (id: string, b: any) => e.envoyer(async () => { await db.upd(`depenses?id=eq.${id}`, b); await q.reload(); });
+  const maj = async (id: string, b: any) => { await db.upd(`depenses?id=eq.${id}`, b); await q.reload(); };
   return (
     <>
-      <Titre t="Dépenses et caisse">{can('directeur', 'comptable') && <button className="btn contour mini" onClick={() => setMv(true)}>Mouvement</button>}<button className="btn plein mini" onClick={() => setAj(true)}><FaPlus /> Ajouter</button></Titre>
+      <Titre t="Dépenses">{can('directeur', 'comptable') && <button className="btn contour mini" aria-label="Mouvement de caisse" onClick={() => setMv(true)}><PiArrowsLeftRightBold /><span className="bureau-seul-t">Mouvement de caisse</span></button>}<button className="btn plein mini" onClick={() => setAj(true)}><PiPlusBold />Ajouter</button></Titre>
       <Erreur t={e.erreur} />
       <Etat q={q}>{(d) => {
-        const solde = d.cai.reduce((s: number, c: any) => s + c.solde, 0);
+        const payees = d.l.filter((x: any) => x.statut === 'payee'); const att = d.l.filter((x: any) => x.statut === 'soumise' || x.statut === 'autorisee');
+        const solde = d.cai.reduce((t: number, c: any) => t + Number(c.solde), 0);
+        const l = f === 'traiter' ? att : f === 'payee' ? payees : d.l;
+        const statut = (x: any) => <Pastille k={ST_D[x.statut][0]} t={ST_D[x.statut][1]} />;
+        const actions = (x: any) => <>
+          {x.statut === 'soumise' && can('directeur') && <><button className="btn plein mini" onClick={() => e.envoyer(() => maj(x.id, { statut: 'autorisee' }))}><PiCheckBold />Autoriser</button><button className="btn contour mini rouge" onClick={() => setRej(x)}>Rejeter</button></>}
+          {x.statut === 'autorisee' && can('directeur', 'comptable', 'caissier') && <button className="btn plein mini" onClick={() => setPay(x)}><PiHandCoinsDuotone />Payer</button>}
+        </>;
+        const agir = (x: any) => (x.statut === 'soumise' && can('directeur')) || (x.statut === 'autorisee' && can('directeur', 'comptable', 'caissier'));
         return <>
-          <div className="stats deux-s"><div className="stat bleu"><FaMoneyBillTrendUp /><span>Dépenses totales</span><b>{nb(d.tot)}</b><small>GNF</small></div><div className="stat vert"><FaWallet /><span>Solde de caisse</span><b>{nb(solde)}</b><small>GNF</small></div></div>
-          <section className="carte"><h2>Caisses</h2><div className="caisses">{d.cai.map((c: any) => <div key={c.caisse_id}><span>{c.nom}</span><b>{gnf(c.solde)}</b></div>)}</div></section>
-          <section className="carte"><h2>Dernières dépenses</h2>{d.l.length === 0 ? <Vide t="Aucune dépense enregistrée." /> : <ul className="liste">{d.l.map((x: any) => <li key={x.id}><div><b>{x.libelle}</b><small>{x.categories_depense?.libelle}{x.beneficiaire ? ` · ${x.beneficiaire}` : ''} · {dateFr(x.date_depense)}</small></div>
-            <span className="d-fin"><b>{gnf(x.montant)}</b>
-              {x.statut === 'soumise' && (can('directeur') ? <><button className="btn lien" onClick={() => maj(x.id, { statut: 'autorisee' })}>Autoriser</button><button className="btn lien rouge" onClick={() => { const m = prompt('Motif du rejet'); if (m) maj(x.id, { statut: 'rejetee', motif_statut: m }); }}>Rejeter</button></> : <span className="st orange">À autoriser</span>)}
-              {x.statut === 'autorisee' && (can('directeur', 'comptable', 'caissier') ? <select aria-label="Payer depuis la caisse" value="" onChange={(ev) => ev.target.value && maj(x.id, { statut: 'payee', caisse_id: ev.target.value })}><option value="">Payer depuis…</option>{d.cai.map((c: any) => <option key={c.caisse_id} value={c.caisse_id}>{c.nom}</option>)}</select> : <span className="st bleu">Autorisée</span>)}
-              {x.statut === 'payee' && <span className="st vert">Payée</span>}{x.statut === 'rejetee' && <span className="st rouge">Rejetée</span>}{x.statut === 'annulee' && <span className="st gris">Annulée</span>}
-            </span></li>)}</ul>}</section>
+          <div className="minis"><Mini i={PiShoppingCartDuotone} ton="rouge" t="Dépenses payées"><Gnf n={som(payees)} /></Mini><Mini i={PiHourglassMediumDuotone} ton="orange" t={`À traiter (${nb(att.length)})`}><Gnf n={som(att)} /></Mini><Mini i={PiPiggyBankDuotone} ton="vert" t="Trésorerie disponible"><Gnf n={solde} /></Mini></div>
+          {d.cai.length > 0 && <div className="minis caisses-m">{d.cai.map((c: any) => <div className="carte mini-c" key={c.caisse_id}><TuileMoyen type={typeCaisse(c)} /><div><span>{c.nom}</span><Gnf n={c.solde} /></div></div>)}</div>}
+          <div className="segment" role="tablist">{[['traiter', 'À traiter', att.length], ['payee', 'Payées', payees.length], ['toutes', 'Toutes', d.l.length]].map(([k, t, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{t}<em>{nb(n)}</em></button>)}</div>
+          <section className="carte c-table">
+            {l.length === 0 ? <Vide t={f === 'traiter' ? 'Aucune dépense à traiter.' : 'Aucune dépense ici.'} /> : <>
+              <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Dépense</th><th>Bénéficiaire</th><th className="dr">Montant</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, 200).map((x: any) => <tr key={x.id}>
+                <td className="gr">{dateFr(x.date_depense)}</td><td><div className="nom-el"><Tuile i={iconeDep(x.categories_depense?.libelle)} ton="bleu" t={40} /><span><b>{x.libelle}</b><small className="bloc">{x.categories_depense?.libelle}</small></span></div></td><td>{x.beneficiaire || <span className="gr">Non renseigné</span>}</td><td className="dr fort">{nb(x.montant)}</td><td>{statut(x)}</td><td><div className="acts-l">{actions(x)}</div></td></tr>)}</tbody></table></div>
+              <ul className="vue-tel liste-p">{l.slice(0, 200).map((x: any) => <li key={x.id}><div className="lp-h"><Tuile i={iconeDep(x.categories_depense?.libelle)} ton="bleu" t={40} /><div><b>{x.libelle}</b><small>{dateFr(x.date_depense)}, {x.categories_depense?.libelle}</small></div><div className="fin"><span className="gnf"><b>{nb(x.montant)}</b></span>{statut(x)}</div></div>{agir(x) && <div className="acts-l">{actions(x)}</div>}</li>)}</ul>
+            </>}
+          </section>
           {aj && <FormDepense d={d} fermer={() => setAj(false)} fini={() => { setAj(false); q.reload(); }} />}
           {mv && <FormMouvement d={d} fermer={() => setMv(false)} fini={() => { setMv(false); q.reload(); }} />}
+          {rej && <Motif titre="Rejeter cette dépense" fermer={() => setRej(null)} valider={(m: string) => maj(rej.id, { statut: 'rejetee', motif_statut: m })} />}
+          {pay && <PayerDepense x={pay} cai={d.cai} fermer={() => setPay(null)} valider={(c: string) => maj(pay.id, { statut: 'payee', caisse_id: c })} />}
         </>;
       }}</Etat>
     </>
   );
+}
+
+function PayerDepense({ x, cai, fermer, valider }: any) {
+  const [c, setC] = useState(cai[0]?.caisse_id); const e = useEnvoi(); const choisie = cai.find((y: any) => y.caisse_id === c);
+  return <Modale titre="Payer cette dépense" fermer={fermer}><form onSubmit={(v) => { v.preventDefault(); if (!c) return e.setE('Choisissez une caisse'); e.envoyer(async () => { await valider(c); fermer(); }); }}>
+    <div className="rappel-d"><span>{x.libelle}</span><Gnf n={x.montant} /></div>
+    <div className="champ"><span>Payer depuis</span><div className="choix-c">{cai.map((y: any) => <button type="button" key={y.caisse_id} aria-pressed={c === y.caisse_id} className={c === y.caisse_id ? 'on' : ''} onClick={() => setC(y.caisse_id)}><TuileMoyen type={typeCaisse(y)} /><span>{y.nom}</span><b>{nb(y.solde)}</b></button>)}</div></div>
+    {choisie && Number(choisie.solde) < Number(x.montant) && <div className="alerte err">Le solde de cette caisse est inférieur au montant de la dépense.</div>}
+    <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}><PiCheckBold />{e.occupe ? 'Enregistrement…' : 'Confirmer le paiement'}</button></form></Modale>;
 }
 
 function FormDepense({ d, fermer, fini }: any) {
@@ -272,38 +298,59 @@ function FormMouvement({ d, fermer, fini }: any) {
     <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}>Enregistrer</button></form></Modale>;
 }
 
+const Taux = ({ v }: { v: number }) => { const t = Math.round(v); return <span className="taux-b"><u><i className={t >= 80 ? 'vert' : t >= 60 ? 'orange' : 'rouge'} style={{ width: `${Math.min(t, 100)}%` }} /></u><b>{t} %</b></span>; };
+
 export function Rapports() {
-  const { annee, eid, can } = useApp(); const [o, setO] = useState('recettes'); const [mois, setM] = useState('');
+  const { annee } = useApp(); const [o, setO] = useState('recettes'); const [mois, setM] = useState(''); const [txt, setT] = useState('');
   const q = useQ(async () => {
-    const [p, s, c, dep] = await Promise.all([db.get(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.valide&order=date_paiement`), db.get(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom`), db.get(`v_stats_classes?annee_scolaire_id=eq.${annee.id}&order=ordre,nom`), db.get(`depenses?annee_scolaire_id=eq.${annee.id}&statut=eq.payee&select=*,categories_depense(libelle)&order=date_depense`)]);
+    const [p, s, c, dep] = await Promise.all([db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.valide&order=date_paiement,id`), db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom,inscription_id`), db.get(`v_stats_classes?annee_scolaire_id=eq.${annee.id}&order=ordre,nom`), db.tout(`depenses?annee_scolaire_id=eq.${annee.id}&statut=eq.payee&select=*,categories_depense(libelle)&order=date_depense,id`)]);
     return { p, s, c, dep };
   }, [annee.id]);
+  const ONGLETS = [['recettes', 'Recettes'], ['eleves', 'Élèves'], ['classes', 'Classes'], ['depenses', 'Dépenses']];
   const nom = `scolaris-${o}-${annee.libelle}${mois ? '-' + mois : ''}`;
   return (
     <>
-      <Titre t="Rapports et statistiques" />
+      <Titre t="Rapports" />
       <Etat q={q}>{(d) => {
         const dansMois = (x: string) => !mois || String(x).startsWith(mois);
         const p = d.p.filter((x: any) => dansMois(x.date_paiement)); const dep = d.dep.filter((x: any) => dansMois(x.date_depense));
-        const moyens = Object.entries(p.reduce((a: any, x: any) => ({ ...a, [x.moyen]: (a[x.moyen] || 0) + x.montant }), {})).map(([label, valeur]: any) => ({ label, valeur }));
-        const cats = Object.entries(dep.reduce((a: any, x: any) => { const k = x.categories_depense?.libelle || 'Autres'; return { ...a, [k]: (a[k] || 0) + x.montant }; }, {})).map(([label, valeur]: any) => ({ label, valeur }));
-        const som = (l: any[]) => l.reduce((s, x) => s + x.montant, 0);
+        const groupe = (l: any[], cle: (x: any) => string) => Object.entries(l.reduce((a: any, x: any) => { const k = cle(x); a[k] = (a[k] || 0) + Number(x.montant); return a; }, {})).map(([label, valeur]: any) => ({ label, valeur }));
+        const moyens = groupe(p, (x) => x.moyen); const cats = groupe(dep, (x) => x.categories_depense?.libelle || 'Autres');
+        const base = o === 'classes' ? d.c : d.s; const cumul = (k: string) => base.reduce((t: number, x: any) => t + Number(x[k]), 0);
+        const t = txt.trim().toLowerCase(); const eleves = t ? d.s.filter((x: any) => `${x.matricule} ${x.nom} ${x.prenom} ${x.classe}`.toLowerCase().includes(t)) : d.s;
         const excel = () => {
           if (o === 'recettes') telechargerExcel(nom, [['Date', 'Reçu', 'Élève', 'Classe', 'Moyen', 'Montant GNF'], ...p.map((x: any) => [x.date_paiement, x.numero_recu, `${x.nom} ${x.prenom}`, x.classe || '', x.moyen, x.montant])]);
           if (o === 'eleves') telechargerExcel(nom, [['Matricule', 'Élève', 'Classe', 'Frais', 'Payé', 'Reste', 'Impayé échu', 'Avance'], ...d.s.map((x: any) => [x.matricule || '', `${x.nom} ${x.prenom}`, x.classe, x.facture_net, x.regle, x.reste, x.impaye_echu, x.avance])]);
           if (o === 'classes') telechargerExcel(nom, [['Classe', 'Effectif', 'Frais', 'Payé', 'Reste', 'Impayé échu', 'Taux %'], ...d.c.map((x: any) => [x.nom, x.effectif, x.facture_net, x.regle, x.reste, x.impaye_echu, Number(x.taux_recouvrement)])]);
           if (o === 'depenses') telechargerExcel(nom, [['Date', 'Libellé', 'Catégorie', 'Bénéficiaire', 'Montant GNF'], ...dep.map((x: any) => [x.date_depense, x.libelle, x.categories_depense?.libelle || '', x.beneficiaire || '', x.montant])]);
         };
-        return <section className="carte">
-          <div className="onglets noprint">{[['recettes', 'Recettes'], ['eleves', 'Élèves'], ['classes', 'Classes'], ['depenses', 'Dépenses']].map(([k, t]) => <button key={k} className={o === k ? 'on' : ''} onClick={() => setO(k)}>{t}</button>)}</div>
-          <div className="filtres noprint"><select value={mois} onChange={(e) => setM(e.target.value)} aria-label="Mois"><option value="">Tous les mois</option>{moisAnnee(annee).map((m) => <option key={m.cle} value={m.cle}>{m.label} {m.cle.slice(0, 4)}</option>)}</select></div>
-          {o === 'recettes' && <><div className="grille-2 sans"><div><h2>Recettes mensuelles</h2><Barres data={parMois(annee, mois ? p : d.p, 'date_paiement')} /></div><div><h2>Répartition des paiements</h2>{moyens.length ? <Anneau data={moyens} /> : <Vide t="Aucune recette." />}</div></div>
-            <p className="total">Total validé : <b>{gnf(som(p))}</b></p></>}
-          {o === 'eleves' && <div className="table"><table><thead><tr><th>Élève</th><th>Classe</th><th>Frais</th><th>Payé</th><th>Reste</th><th>Avance</th></tr></thead><tbody>{d.s.map((x: any) => <tr key={x.inscription_id}><td>{x.nom} {x.prenom}</td><td>{x.classe}</td><td>{nb(x.facture_net)}</td><td>{nb(x.regle)}</td><td className={x.en_retard ? 'rouge' : ''}>{nb(x.reste)}</td><td>{nb(x.avance)}</td></tr>)}</tbody></table></div>}
-          {o === 'classes' && <div className="table"><table><thead><tr><th>Classe</th><th>Effectif</th><th>Frais</th><th>Payé</th><th>Reste</th><th>Taux</th></tr></thead><tbody>{d.c.map((x: any) => <tr key={x.classe_id}><td>{x.nom}</td><td>{x.effectif}</td><td>{nb(x.facture_net)}</td><td>{nb(x.regle)}</td><td>{nb(x.reste)}</td><td>{Math.round(x.taux_recouvrement)} %</td></tr>)}</tbody></table></div>}
-          {o === 'depenses' && <><div className="grille-2 sans"><div><h2>Dépenses mensuelles</h2><Barres data={parMois(annee, mois ? dep : d.dep, 'date_depense')} /></div><div><h2>Par catégorie</h2>{cats.length ? <Anneau data={cats} /> : <Vide t="Aucune dépense." />}</div></div><p className="total">Total payé : <b>{gnf(som(dep))}</b></p></>}
-          <div className="ligne-btn noprint"><button className="btn contour mini" onClick={() => print()}><FaFilePdf /> Exporter en PDF</button><button className="btn contour mini" onClick={excel}><FaFileExcel /> Exporter en Excel</button></div>
-        </section>;
+        return <>
+          <div className="segment noprint" role="tablist">{ONGLETS.map(([k, l]) => <button key={k} role="tab" aria-selected={o === k} className={o === k ? 'on' : ''} onClick={() => setO(k)}>{l}</button>)}</div>
+          <div className="barre-outils noprint">
+            {(o === 'recettes' || o === 'depenses') && <select value={mois} onChange={(x) => setM(x.target.value)} aria-label="Mois"><option value="">Toute l'année</option>{moisAnnee(annee).map((m) => <option key={m.cle} value={m.cle}>{m.label} {m.cle.slice(0, 4)}</option>)}</select>}
+            {o === 'eleves' && <div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={txt} onChange={(x) => setT(x.target.value)} placeholder="Rechercher un élève ou une classe" aria-label="Rechercher" /></div>}
+            <div className="exports"><button className="btn contour mini" onClick={() => print()}><PiFilePdfDuotone />PDF</button><button className="btn contour mini" onClick={excel}><PiFileXlsDuotone />Excel</button></div>
+          </div>
+          <h2 className="seul-print">Rapport {ONGLETS.find(([k]) => k === o)?.[1]}, {annee.libelle}</h2>
+          {o === 'recettes' && <>
+            <div className="minis"><Mini i={PiCoinsDuotone} ton="vert" t="Total encaissé"><Gnf n={som(p)} /></Mini><Mini i={PiReceiptDuotone} ton="bleu" t="Paiements validés"><span className="gnf"><b>{nb(p.length)}</b></span></Mini></div>
+            <div className="rang"><section className="carte c-large"><h2>Recettes par mois</h2><Barres data={parMois(annee, mois ? p : d.p, 'date_paiement')} /></section><section className="carte c-etat"><h2>Par moyen de paiement</h2>{moyens.length ? <Anneau data={moyens} /> : <Vide t="Aucune recette." />}</section></div>
+          </>}
+          {o === 'depenses' && <>
+            <div className="minis"><Mini i={PiShoppingCartDuotone} ton="rouge" t="Total payé"><Gnf n={som(dep)} /></Mini><Mini i={PiReceiptDuotone} ton="bleu" t="Dépenses payées"><span className="gnf"><b>{nb(dep.length)}</b></span></Mini></div>
+            <div className="rang"><section className="carte c-large"><h2>Dépenses par mois</h2><Barres data={parMois(annee, mois ? dep : d.dep, 'date_depense')} /></section><section className="carte c-etat"><h2>Par catégorie</h2>{cats.length ? <Anneau data={cats} /> : <Vide t="Aucune dépense." />}</section></div>
+          </>}
+          {(o === 'eleves' || o === 'classes') && <div className="minis"><Mini i={PiStudentDuotone} ton="bleu" t="Frais dus"><Gnf n={cumul('facture_net')} /></Mini><Mini i={PiCoinsDuotone} ton="vert" t="Payé"><Gnf n={cumul('regle')} /></Mini><Mini i={PiWarningDuotone} ton="orange" t="Reste à payer"><Gnf n={cumul('reste')} /></Mini></div>}
+          {o === 'eleves' && <section className="carte c-table">{eleves.length === 0 ? <Vide t="Aucun élève trouvé." /> : <>
+            <div className="table vue-bureau"><table><thead><tr><th>Élève</th><th>Classe</th><th className="dr">Frais</th><th className="dr">Payé</th><th className="dr">Reste</th><th className="dr">Avance</th></tr></thead><tbody>{eleves.slice(0, 100).map((x: any) => <tr key={x.inscription_id}><td><div className="nom-el"><Avatar nom={`${x.nom} ${x.prenom}`} /><span><b>{x.nom} {x.prenom}</b><small className="bloc">{x.matricule}</small></span></div></td><td><span className="puce">{x.classe}</span></td><td className="dr">{nb(x.facture_net)}</td><td className="dr vert">{nb(x.regle)}</td><td className={x.en_retard ? 'dr fort rouge' : 'dr fort'}>{nb(x.reste)}</td><td className="dr">{nb(x.avance)}</td></tr>)}</tbody></table></div>
+            <ul className="vue-tel liste-p">{eleves.slice(0, 100).map((x: any) => <li key={x.inscription_id}><div className="lp-h"><Avatar nom={`${x.nom} ${x.prenom}`} /><div><b>{x.nom} {x.prenom}</b><small>{x.classe}, payé {nb(x.regle)}</small></div><div className="fin"><span className={x.en_retard ? 'gnf rouge' : 'gnf'}><b>{nb(x.reste)}</b></span><small>reste</small></div></div></li>)}</ul>
+            {eleves.length > 100 && <p className="note ctr">100 premiers sur {nb(eleves.length)}. L'export Excel contient toute la liste.</p>}
+          </>}</section>}
+          {o === 'classes' && <section className="carte c-table">{d.c.length === 0 ? <Vide t="Aucune classe." /> : <>
+            <div className="table vue-bureau"><table><thead><tr><th>Classe</th><th className="dr">Effectif</th><th className="dr">Frais</th><th className="dr">Payé</th><th className="dr">Reste</th><th>Recouvrement</th></tr></thead><tbody>{d.c.map((x: any) => <tr key={x.classe_id}><td className="fort">{x.nom}</td><td className="dr">{nb(x.effectif)}</td><td className="dr">{nb(x.facture_net)}</td><td className="dr vert">{nb(x.regle)}</td><td className="dr fort">{nb(x.reste)}</td><td><Taux v={x.taux_recouvrement} /></td></tr>)}</tbody></table></div>
+            <ul className="vue-tel liste-p">{d.c.map((x: any) => <li key={x.classe_id}><div className="lp-h"><span className="puce">{x.nom}</span><div><b>Reste {nb(x.reste)}</b><small>{nb(x.effectif)} élèves</small></div><Taux v={x.taux_recouvrement} /></div></li>)}</ul>
+          </>}</section>}
+        </>;
       }}</Etat>
     </>
   );

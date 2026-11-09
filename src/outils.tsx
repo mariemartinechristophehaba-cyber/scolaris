@@ -1,16 +1,32 @@
 import { useMemo, useRef, useState } from 'react';
-import { FaBell, FaCloudArrowUp, FaMoneyBillWave, FaUserPlus, FaWhatsapp, FaCalendarCheck } from 'react-icons/fa6';
+import { PiBuildingsDuotone, PiCalendarBlankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiTargetDuotone, PiUserCircleDuotone, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, getSession, message } from './api';
 import { auj, dateFr, gnf, heure, lireTableau, nb, tel, telechargerExcel } from './lib';
-import { Champ, Erreur, Etat, Lien, Montant, Titre, Vide, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
+
+const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
+
+function FormPromesse({ r, resp, fermer, fini }: any) {
+  const { eid } = useApp(); const [d, setD] = useState(auj()); const [m, setM] = useState<number>(r.impaye_echu); const e = useEnvoi();
+  return <Modale titre="Promesse de paiement" fermer={fermer}><form onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.ins('promesses', { etablissement_id: eid, eleve_id: r.eleve_id, responsable_id: resp?.id || null, date_promise: d, montant: m || null }); fini(); }); }}>
+    <div className="rappel-d"><span>{r.prenom} {r.nom}, {r.classe}</span><Gnf n={r.impaye_echu} /></div>
+    <Champ label="Date promise par le parent"><input type="date" value={d} min={auj()} onChange={(x) => setD(x.target.value)} required /></Champ>
+    <Champ label="Montant promis"><Montant value={m} onChange={setM} /></Champ>
+    <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}><PiCheckBold />Enregistrer la promesse</button></form></Modale>;
+}
 
 export function Relances() {
-  const { annee, eid, etab, majNotif } = useApp(); const e = useEnvoi();
+  const { annee, eid, etab, majNotif } = useApp(); const e = useEnvoi(); const [f, setF] = useState('retards'); const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [pro, setPro] = useState<any>(null); const [n, setN] = useState(30);
   const q = useQ(async () => {
-    const [ret, att, ins] = await Promise.all([db.get(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&en_retard=is.true&order=impaye_echu.desc`), db.get(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.en_attente&order=date_paiement.desc&limit=10`), db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=5`)]);
-    const ids = ret.map((r: any) => r.eleve_id).join(',');
-    const [lien, rap] = ids ? await Promise.all([db.get(`eleve_responsables?eleve_id=in.(${ids})&select=eleve_id,principal,responsables(id,nom,telephone,jeton_public)&order=principal.desc`), db.get(`rappels?eleve_id=in.(${ids})&select=eleve_id,cree_le&order=cree_le.desc`)]) : [[], []];
-    return { ret, att, ins, lien, rap };
+    const [ret, att, ins, lien, rap, pr] = await Promise.all([
+      db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&en_retard=is.true&order=impaye_echu.desc,inscription_id`),
+      db.get(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.en_attente&order=date_paiement.desc&limit=30`),
+      db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=10`),
+      db.tout(`eleve_responsables?etablissement_id=eq.${eid}&select=eleve_id,principal,responsables(id,nom,telephone,jeton_public)&order=principal.desc,eleve_id,responsable_id`),
+      db.tout(`rappels?etablissement_id=eq.${eid}&select=eleve_id,cree_le&order=cree_le.desc,id`),
+      db.tout(`promesses?etablissement_id=eq.${eid}&select=eleve_id,date_promise&order=date_promise.desc,id`),
+    ]);
+    return { ret, att, ins, lien: premier(lien), rap: premier(rap), pro: premier(pr) };
   }, [annee.id]);
   const relancer = (r: any, resp: any) => {
     const msg = `Bonjour ${resp.nom}, ${etab.nom} vous rappelle que ${r.prenom} ${r.nom} (${r.classe}) a un retard de paiement de ${gnf(r.impaye_echu)}. Détail : ${location.origin}/f/${resp.jeton_public}`;
@@ -20,29 +36,37 @@ export function Relances() {
       await q.reload(); majNotif();
     });
   };
-  const promesse = (r: any, resp: any) => {
-    const d = prompt('Date promise par le parent (AAAA-MM-JJ)', auj()); if (!d) return;
-    e.envoyer(async () => { await db.ins('promesses', { etablissement_id: eid, eleve_id: r.eleve_id, responsable_id: resp?.id || null, date_promise: d }); });
-  };
   return (
     <>
-      <Titre t="Notifications et relances" />
+      <Titre t="Relances" />
       <Erreur t={e.erreur} />
       <Etat q={q}>{(d) => {
-        const vide = !d.ret.length && !d.att.length && !d.ins.length;
-        return <section className="carte">
-          {vide && <Vide t="Aucune notification." />}
-          <ul className="notifs">
-            {d.ret.map((r: any) => {
-              const resp = d.lien.find((l: any) => l.eleve_id === r.eleve_id)?.responsables; const dern = d.rap.find((x: any) => x.eleve_id === r.eleve_id);
-              const fait = dern && String(dern.cree_le).slice(0, 10) === auj();
-              return <li key={r.inscription_id}><i className="rouge"><FaBell /></i><div><b>Rappel : {r.prenom} {r.nom} en retard</b><small>{r.classe} · {gnf(r.impaye_echu)}{dern ? ` · Relancé le ${dateFr(dern.cree_le)}` : ''}</small></div>
-                <span className="d-fin">{resp ? <button className="btn contour mini" disabled={fait} onClick={() => relancer(r, resp)}><FaWhatsapp /> {fait ? 'Relancé' : 'Relancer'}</button> : <small>Pas de téléphone</small>}<button className="ico" title="Promesse de paiement" aria-label="Promesse de paiement" onClick={() => promesse(r, resp)}><FaCalendarCheck /></button></span></li>;
-            })}
-            {d.att.map((p: any) => <li key={p.id}><i className="vert"><FaMoneyBillWave /></i><div><b>Nouveau paiement reçu</b><small>{gnf(p.montant)} · {p.prenom} {p.nom} · à vérifier</small></div><span className="d-fin"><Lien to="/paiements" className="btn lien">Vérifier</Lien></span></li>)}
-            {d.ins.map((x: any) => <li key={x.id}><i className="orange"><FaUserPlus /></i><div><b>Nouvelle inscription</b><small>{x.eleves.prenom} {x.eleves.nom} · Classe {x.classes.nom}</small></div><span className="d-fin"><small>{dateFr(x.cree_le)}</small></span></li>)}
-          </ul>
-        </section>;
+        const jour = auj(); const som = d.ret.reduce((t: number, x: any) => t + Number(x.impaye_echu), 0);
+        const dernier = (r: any) => d.rap.get(r.eleve_id); const fait = (r: any) => String(dernier(r)?.cree_le || '').slice(0, 10) === jour;
+        const promis = (r: any) => { const p = d.pro.get(r.eleve_id); return p && p.date_promise >= jour ? p : null; };
+        const relances = d.ret.filter(fait).length; const promesses = d.ret.filter(promis).length;
+        const classes = [...new Set(d.ret.map((r: any) => r.classe))].sort() as string[];
+        const t = txt.trim().toLowerCase(); const l = d.ret.filter((r: any) => (!cl || r.classe === cl) && (!t || `${r.nom} ${r.prenom} ${r.matricule}`.toLowerCase().includes(t)));
+        const actions = (r: any) => { const resp = d.lien.get(r.eleve_id)?.responsables; return <>
+          {resp ? <button className="btn wa mini" disabled={fait(r)} onClick={() => relancer(r, resp)}>{fait(r) ? <PiCheckBold /> : <PiWhatsappLogoFill />}{fait(r) ? 'Relancé' : 'Relancer'}</button> : <small className="gr">Pas de téléphone</small>}
+          <button className="btn contour mini" onClick={() => setPro({ r, resp })}><PiCalendarCheckDuotone />Promesse</button>
+        </>; };
+        const suivi = (r: any) => { const dn = dernier(r); const p = promis(r); return <>{p ? <span className="puce p-vert">Promis le {dateFr(p.date_promise)}</span> : dn ? <small className="gr">Relancé le {dateFr(dn.cree_le)}</small> : <small className="gr">Jamais relancé</small>}</>; };
+        return <>
+          <div className="minis"><div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="rouge" t={44} /><div><span>En retard ({nb(d.ret.length)})</span><Gnf n={som} /></div></div><div className="carte mini-c"><Tuile i={PiWhatsappLogoDuotone} ton="vert" t={44} /><div><span>Relancés aujourd'hui</span><span className="gnf"><b>{nb(relances)}</b></span></div></div><div className="carte mini-c"><Tuile i={PiCalendarCheckDuotone} ton="bleu" t={44} /><div><span>Promesses en cours</span><span className="gnf"><b>{nb(promesses)}</b></span></div></div></div>
+          <div className="segment" role="tablist">{[['retards', 'Retards', d.ret.length], ['verifier', 'À vérifier', d.att.length], ['inscriptions', 'Inscriptions', d.ins.length]].map(([k, x, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{x}<em>{nb(n)}</em></button>)}</div>
+          {f === 'retards' && <>
+            <div className="barre-outils"><div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={txt} onChange={(x) => setT(x.target.value)} placeholder="Rechercher un élève" aria-label="Rechercher un élève" /></div><select value={cl} onChange={(x) => setCl(x.target.value)} aria-label="Classe"><option value="">Toutes les classes</option>{classes.map((c) => <option key={c}>{c}</option>)}</select></div>
+            <section className="carte c-table">{l.length === 0 ? <Vide t={d.ret.length ? 'Aucun élève trouvé.' : 'Aucun élève en retard.'} /> : <>
+              <div className="table vue-bureau"><table><thead><tr><th>Élève</th><th className="dr">En retard</th><th>Suivi</th><th /></tr></thead><tbody>{l.slice(0, n).map((r: any) => <tr key={r.inscription_id}><td><Lien to={`/eleves/${r.eleve_id}`} className="nom-el"><Avatar nom={`${r.nom} ${r.prenom}`} /><span><b>{r.nom} {r.prenom}</b><small className="bloc">{r.classe}</small></span></Lien></td><td className="dr fort rouge">{nb(r.impaye_echu)}</td><td>{suivi(r)}</td><td><div className="acts-l">{actions(r)}</div></td></tr>)}</tbody></table></div>
+              <ul className="vue-tel liste-p">{l.slice(0, n).map((r: any) => <li key={r.inscription_id}><div className="lp-h"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>{r.classe}</small></div><div className="fin"><span className="gnf rouge"><b>{nb(r.impaye_echu)}</b></span>{suivi(r)}</div></div><div className="acts-l">{actions(r)}</div></li>)}</ul>
+              {l.length > n && <div className="plus-l"><button className="btn contour mini" onClick={() => setN(n + 30)}>Voir la suite ({nb(l.length - n)})</button></div>}
+            </>}</section>
+          </>}
+          {f === 'verifier' && <section className="carte">{d.att.length === 0 ? <Vide t="Aucun paiement à vérifier." /> : <ul className="hist">{d.att.map((p: any) => <li key={p.id}><Tuile i={PiMoneyWavyDuotone} ton="orange" t={40} /><div><b>{p.prenom} {p.nom}</b><small>{dateFr(p.date_paiement)}, {p.moyen}</small></div><span className="gnf"><b>{nb(p.montant)}</b></span><Lien to="/paiements" className="btn contour mini">Vérifier</Lien></li>)}</ul>}</section>}
+          {f === 'inscriptions' && <section className="carte">{d.ins.length === 0 ? <Vide t="Aucune inscription récente." /> : <ul className="hist">{d.ins.map((x: any) => <li key={x.id}><Tuile i={PiUserPlusDuotone} ton="violet" t={40} /><div><b>{x.eleves.prenom} {x.eleves.nom}</b><small>Classe {x.classes.nom}</small></div><small>{dateFr(x.cree_le)}</small></li>)}</ul>}</section>}
+          {pro && <FormPromesse r={pro.r} resp={pro.resp} fermer={() => setPro(null)} fini={() => { setPro(null); q.reload(); }} />}
+        </>;
       }}</Etat>
     </>
   );
@@ -55,7 +79,7 @@ export function Importation() {
   const { annee, eid } = useApp();
   const [tab, setTab] = useState<string[][] | null>(null); const [nomF, setNF] = useState(''); const [map, setMap] = useState<Record<string, number>>({}); const [rap, setRap] = useState<any>(null); const [av, setAv] = useState(0); const [sur, setSur] = useState(false);
   const e = useEnvoi(); const inp = useRef<HTMLInputElement>(null);
-  const ex = useQ(async () => db.get(`eleves?etablissement_id=eq.${eid}&select=matricule,prenom,nom`), [eid, rap]);
+  const ex = useQ(async () => db.tout(`eleves?etablissement_id=eq.${eid}&select=id,matricule,prenom,nom&order=id`), [eid, rap]);
   const ouvrir = (f?: File | null) => { if (!f) return; setRap(null); e.envoyer(async () => {
     const t = await lireTableau(f); if (t.length < 2) throw new Error('Le fichier ne contient aucune ligne');
     const m: Record<string, number> = {}; COLS.forEach(([k, , r]) => { const i = t[0].findIndex((h, n) => r.test(h) && !Object.values(m).includes(n)); if (i >= 0) m[k] = i; });
@@ -91,30 +115,33 @@ export function Importation() {
   const modele = () => telechargerExcel('modele-import-eleves', [['Matricule', 'Prénom', 'Nom', 'Classe', 'Parent', 'Téléphone'], ['SC-0001', 'Alpha', 'Diallo', '6e A', 'Mamadou Diallo', '620123456']]);
   return (
     <>
-      <Titre t="Importation Excel" />
-      <section className="carte">
+      <Titre t="Importation" />
+      <div className="imp">
+        <ol className="etapes">{['Fichier', 'Contrôle', 'Résultat'].map((t, i) => { const n = tab ? 1 : rap ? 2 : 0; return <li key={t} className={i < n || (rap && i === 2) ? 'fait' : i === n ? 'on' : ''}><i>{i < n || (rap && i === 2) ? <PiCheckBold aria-hidden="true" /> : i + 1}</i><span>{t}</span></li>; })}</ol>
         <Erreur t={e.erreur} />
-        {rap && <div className="alerte ok"><b>Import terminé :</b> {rap.ok} élève(s) importé(s), {rap.ecartees} ligne(s) écartée(s), {rap.err.length} erreur(s).{rap.err.slice(0, 5).map((x: string) => <div key={x}>{x}</div>)}</div>}
+        {rap && <section className="carte res-imp"><Tuile i={PiCheckCircleFill} ton="vert" t={44} /><div><h2>Import terminé</h2><p>{nb(rap.ok)} élève(s) importé(s), {nb(rap.ecartees)} ligne(s) écartée(s), {nb(rap.err.length)} erreur(s).</p>{rap.err.slice(0, 5).map((x: string) => <small key={x} className="bloc rouge">{x}</small>)}</div></section>}
         {!tab ? <>
-          <div className={sur ? 'depot sur' : 'depot'} onDragOver={(x) => { x.preventDefault(); setSur(true); }} onDragLeave={() => setSur(false)} onDrop={(x) => { x.preventDefault(); setSur(false); ouvrir(x.dataTransfer.files[0]); }}>
-            <FaCloudArrowUp /><h2>Glissez votre fichier ici</h2><p>ou</p>
-            <button className="btn plein mini" onClick={() => inp.current?.click()} disabled={e.occupe}>Choisir un fichier</button>
+          <section className={sur ? 'carte depot sur' : 'carte depot'} onDragOver={(x) => { x.preventDefault(); setSur(true); }} onDragLeave={() => setSur(false)} onDrop={(x) => { x.preventDefault(); setSur(false); ouvrir(x.dataTransfer.files[0]); }}>
+            <PiCloudArrowUpDuotone aria-hidden="true" /><h2>Importez la liste de vos élèves</h2><p>Fichier Excel (.xlsx) ou CSV</p>
+            <button className="btn plein mini" onClick={() => inp.current?.click()} disabled={e.occupe}><PiFileArrowUpDuotone />Choisir un fichier</button>
             <input ref={inp} type="file" hidden accept=".xlsx,.csv" onChange={(x) => { ouvrir(x.target.files?.[0]); x.target.value = ''; }} />
-            <small>Formats acceptés : .xlsx, .csv</small>
-          </div>
-          <button className="btn lien centre" onClick={modele}>Télécharger un modèle</button>
+          </section>
+          <section className="carte modele-i"><div><h2>Colonnes attendues</h2><div className="puces g">{COLS.map(([k, t]) => <span className="puce" key={k}>{t}</span>)}</div></div><button className="btn contour mini" onClick={modele}><PiDownloadSimpleBold />Télécharger le modèle</button></section>
         </> : <>
-          <h2>Correspondance des colonnes</h2>
-          <div className="corresp">{COLS.map(([k, t]) => <Champ key={k} label={t}><select value={map[k] ?? ''} onChange={(x) => { const m = { ...map }; if (x.target.value === '') delete m[k]; else m[k] = Number(x.target.value); setMap(m); }}><option value="">Ignorer</option>{tab[0].map((h, i) => <option key={i} value={i}>{h}</option>)}</select></Champ>)}</div>
-          <h2>Prévisualisation</h2>
-          <p className="note">{bonnes.length} ligne(s) prête(s), {lignes.length - bonnes.length} écartée(s) sur {lignes.length}.</p>
-          <div className="table court"><table><thead><tr><th>Ligne</th><th>Nom</th><th>Prénom</th><th>Classe</th><th>Téléphone</th><th>Contrôle</th></tr></thead><tbody>{lignes.slice(0, 100).map((l) => <tr key={l.n}><td>{l.n}</td><td>{l.nom}</td><td>{l.prenom}</td><td>{l.classe}</td><td>{l.parent_telephone}</td><td>{l.etat ? <span className="st rouge">{l.etat}</span> : <span className="st vert">OK</span>}</td></tr>)}</tbody></table></div>
-          <div className="ligne-btn"><button className="btn contour mini" onClick={() => setTab(null)} disabled={e.occupe}>Annuler</button><button className="btn plein mini" onClick={lancer} disabled={e.occupe || !bonnes.length}>{e.occupe ? `Import… ${av}/${bonnes.length}` : `Importer ${bonnes.length} élève(s)`}</button></div>
+          <div className="minis"><div className="carte mini-c"><Tuile i={PiCheckCircleFill} ton="vert" t={44} /><div><span>Lignes prêtes</span><span className="gnf"><b>{nb(bonnes.length)}</b></span></div></div><div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="orange" t={44} /><div><span>Lignes écartées</span><span className="gnf"><b>{nb(lignes.length - bonnes.length)}</b></span></div></div></div>
+          <section className="carte"><h2>Correspondance des colonnes</h2><div className="corresp">{COLS.map(([k, t]) => <Champ key={k} label={t}><select value={map[k] ?? ''} onChange={(x) => { const m = { ...map }; if (x.target.value === '') delete m[k]; else m[k] = Number(x.target.value); setMap(m); }}><option value="">Ignorer</option>{tab[0].map((h, i) => <option key={i} value={i}>{h}</option>)}</select></Champ>)}</div></section>
+          <section className="carte c-table">
+            <div className="table court vue-bureau"><table><thead><tr><th>Ligne</th><th>Nom</th><th>Prénom</th><th>Classe</th><th>Téléphone</th><th>Contrôle</th></tr></thead><tbody>{lignes.slice(0, 100).map((l) => <tr key={l.n}><td className="gr">{l.n}</td><td>{l.nom}</td><td>{l.prenom}</td><td>{l.classe}</td><td>{l.parent_telephone}</td><td>{l.etat ? <Pastille k="rien" t={l.etat} /> : <Pastille k="a_jour" t="Prêt" />}</td></tr>)}</tbody></table></div>
+            <ul className="vue-tel liste-p">{lignes.slice(0, 100).map((l) => <li key={l.n}><div className="lp-h"><Avatar nom={`${l.nom} ${l.prenom}`} /><div><b>{l.nom} {l.prenom}</b><small>{l.classe}, {l.parent_telephone}</small></div><div className="fin">{l.etat ? <Pastille k="rien" t={l.etat} /> : <Pastille k="a_jour" t="Prêt" />}</div></div></li>)}</ul>
+          </section>
+          <div className="ligne-btn fin-imp"><button className="btn contour mini" onClick={() => setTab(null)} disabled={e.occupe}>Annuler</button><button className="btn plein mini" onClick={lancer} disabled={e.occupe || !bonnes.length}>{e.occupe ? `Import… ${av}/${bonnes.length}` : `Importer ${nb(bonnes.length)} élève(s)`}</button></div>
         </>}
-      </section>
+      </div>
     </>
   );
 }
+
+const Sec = ({ i, ton, t, children }: any) => <section className="carte para"><header><Tuile i={i} ton={ton} t={40} /><h2>{t}</h2></header>{children}</section>;
 
 export function Parametres() {
   const { annee, annees, eid, etab, can, recharger, role } = useApp();
@@ -124,20 +151,33 @@ export function Parametres() {
   const q = useQ(async () => (annee && can('directeur', 'comptable') ? db.get(`objectifs_financiers?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel&classe_id=is.null`) : []), [annee?.id]);
   const courant = q.data?.[0]; const valeur = obj ?? courant?.montant ?? 0; const d = can('directeur');
   const fait = (t: string) => { setOk(t); setTimeout(() => setOk(''), 3000); };
+  const u = getSession()?.user; const nomU = `${u?.user_metadata?.prenom || ''} ${u?.user_metadata?.nom || ''}`.trim() || u?.email || '';
   return (
     <>
       <Titre t="Paramètres" />
       <Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}
-      {annee && can('directeur', 'comptable') && <section className="carte"><h2>Objectif financier {annee.libelle}</h2>
-        <form className="ligne-f" onSubmit={(x) => { x.preventDefault(); if (!valeur) return e.setE('Indiquez un montant'); e.envoyer(async () => { if (courant) await db.upd(`objectifs_financiers?id=eq.${courant.id}`, { montant: valeur }); else await db.ins('objectifs_financiers', { etablissement_id: eid, annee_scolaire_id: annee.id, periode: 'annuel', montant: valeur }); await q.reload(); fait('Objectif enregistré'); }); }}>
-          <Montant value={valeur} onChange={setO} /><button className="btn plein mini" disabled={!d || e.occupe}>Enregistrer</button></form></section>}
-      <section className="carte"><h2>Établissement</h2><form onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, f); await recharger(); fait('Établissement enregistré'); }); }}><fieldset disabled={!d}>
-        <div className="deux"><Champ label="Nom"><input value={f.nom} onChange={(x) => setF({ ...f, nom: x.target.value })} required /></Champ><Champ label="Ville"><input value={f.ville} onChange={(x) => setF({ ...f, ville: x.target.value })} /></Champ></div>
-        <div className="deux"><Champ label="Téléphone"><input value={f.telephone} onChange={(x) => setF({ ...f, telephone: x.target.value })} /></Champ><Champ label="Numéro Orange Money"><input value={f.orange_money_numero} onChange={(x) => setF({ ...f, orange_money_numero: x.target.value })} /></Champ></div>
-        {d && <button className="btn plein mini">Enregistrer</button>}</fieldset></form></section>
-      <section className="carte"><h2>Années scolaires</h2><ul className="liste">{annees.map((a: any) => <li key={a.id}><div><b>{a.libelle}</b><small>{dateFr(a.date_debut)} → {dateFr(a.date_fin)}</small></div><span className="d-fin">{a.statut === 'active' ? <span className="st vert">Active</span> : a.statut === 'preparation' ? (d ? <button className="btn lien" onClick={() => e.envoyer(async () => { await db.rpc('activer_annee', { p_annee: a.id }); await recharger(); })}>Activer</button> : <span className="st gris">En préparation</span>) : <span className="st gris">Clôturée</span>}</span></li>)}</ul>
-        {d && <form className="ligne-f trois" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.ins('annees_scolaires', { ...na, etablissement_id: eid }); setNa({ libelle: '', date_debut: '', date_fin: '' }); await recharger(); }); }}><input placeholder="2027-2028" aria-label="Libellé" value={na.libelle} onChange={(x) => setNa({ ...na, libelle: x.target.value })} required /><input type="date" aria-label="Début" value={na.date_debut} onChange={(x) => setNa({ ...na, date_debut: x.target.value })} required /><input type="date" aria-label="Fin" value={na.date_fin} onChange={(x) => setNa({ ...na, date_fin: x.target.value })} required /><button className="btn contour mini">Ajouter</button></form>}</section>
-      <section className="carte"><h2>Mon compte</h2><p className="note">{getSession()?.user?.email} · {ROLES[role]}</p><button className="btn contour mini rouge" onClick={auth.deconnexion}>Se déconnecter</button></section>
+      <div className="param-g">
+        <div className="param-c">
+          <Sec i={PiBuildingsDuotone} ton="bleu" t="Établissement"><form onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, f); await recharger(); fait('Établissement enregistré'); }); }}><fieldset disabled={!d}>
+            <Champ label="Nom"><input value={f.nom} onChange={(x) => setF({ ...f, nom: x.target.value })} required /></Champ>
+            <div className="deux"><Champ label="Ville"><input value={f.ville} onChange={(x) => setF({ ...f, ville: x.target.value })} /></Champ><Champ label="Téléphone"><input inputMode="tel" value={f.telephone} onChange={(x) => setF({ ...f, telephone: x.target.value })} /></Champ></div>
+            <div className="deux"><Champ label="Numéro Orange Money"><input inputMode="tel" value={f.orange_money_numero} onChange={(x) => setF({ ...f, orange_money_numero: x.target.value })} /></Champ><Champ label="Numéro MTN Money"><input inputMode="tel" value={f.mtn_money_numero} onChange={(x) => setF({ ...f, mtn_money_numero: x.target.value })} /></Champ></div>
+            {d && <button className="btn plein mini">Enregistrer</button>}</fieldset></form></Sec>
+          <Sec i={PiUserCircleDuotone} ton="violet" t="Mon compte"><div className="compte-l"><Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span></div><button className="btn contour mini rouge" onClick={auth.deconnexion}><PiSignOutBold />Se déconnecter</button></Sec>
+        </div>
+        <div className="param-c">
+          {annee && can('directeur', 'comptable') && <Sec i={PiTargetDuotone} ton="vert" t={`Objectif financier ${annee.libelle}`}>
+            <form className="ligne-f" onSubmit={(x) => { x.preventDefault(); if (!valeur) return e.setE('Indiquez un montant'); e.envoyer(async () => { if (courant) await db.upd(`objectifs_financiers?id=eq.${courant.id}`, { montant: valeur }); else await db.ins('objectifs_financiers', { etablissement_id: eid, annee_scolaire_id: annee.id, periode: 'annuel', montant: valeur }); await q.reload(); fait('Objectif enregistré'); }); }}>
+              <Montant value={valeur} onChange={setO} /><button className="btn plein mini" disabled={!d || e.occupe}>Enregistrer</button></form></Sec>}
+          <Sec i={PiCalendarBlankDuotone} ton="orange" t="Années scolaires">
+            <ul className="hist">{annees.map((a: any) => <li key={a.id}><div><b>{a.libelle}</b><small>{dateFr(a.date_debut)} au {dateFr(a.date_fin)}</small></div>{a.statut === 'active' ? <Pastille k="a_jour" t="Active" /> : a.statut === 'preparation' ? (d ? <button className="btn contour mini" onClick={() => e.envoyer(async () => { await db.rpc('activer_annee', { p_annee: a.id }); await recharger(); })}>Activer</button> : <Pastille k="sans" t="En préparation" />) : <Pastille k="sans" t="Clôturée" />}</li>)}</ul>
+            {d && <form className="annee-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.ins('annees_scolaires', { ...na, etablissement_id: eid }); setNa({ libelle: '', date_debut: '', date_fin: '' }); await recharger(); }); }}>
+              <Champ label="Nouvelle année"><input placeholder="2027-2028" value={na.libelle} onChange={(x) => setNa({ ...na, libelle: x.target.value })} required /></Champ>
+              <div className="deux"><Champ label="Début"><input type="date" value={na.date_debut} onChange={(x) => setNa({ ...na, date_debut: x.target.value })} required /></Champ><Champ label="Fin"><input type="date" value={na.date_fin} onChange={(x) => setNa({ ...na, date_fin: x.target.value })} required /></Champ></div>
+              <button className="btn contour mini">Ajouter l'année</button></form>}
+          </Sec>
+        </div>
+      </div>
     </>
   );
 }

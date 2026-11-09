@@ -3,9 +3,10 @@ import { gnf, nb } from './lib';
 
 const court = (n: number) => (n >= 1e9 ? `${+(n / 1e9).toFixed(1)} Md` : n >= 1e6 ? `${+(n / 1e6).toFixed(n % 1e6 ? 1 : 0)} M` : n >= 1e3 ? `${Math.round(n / 1e3)} k` : String(n));
 function pasRond(max: number) { const m = Math.max(max, 3000000); const p = 10 ** Math.floor(Math.log10(m)); for (const f of [1.5, 3, 6, 9, 15]) if (f * p >= m) return f * p; return 15 * p; }
-const W = 560, H = 230, G = 46, B = 26, T = 12;
+const W0 = 560, H0 = 230, G0 = 46, B = 26, T = 12;
+const W = W0, H = H0, G = G0;
 
-function Axes({ max, n, labels, pas }: any) {
+function Axes({ max, n, labels, pas, W = W0, H = H0, G = G0 }: any) {
   const lignes = [0, 1, 2, 3].map((i) => (max / 3) * i);
   const dx = (W - G - 8) / n; const mod = n > 8 ? 2 : 1;
   return <>
@@ -37,21 +38,22 @@ export function Courbe({ data }: { data: any[] }) {
 
 export function Barres({ data }: { data: any[] }) {
   const [i, setI] = useState<number | null>(null);
+  const tel = window.innerWidth <= 860; const L = tel ? 350 : W0, Ht = tel ? 215 : H0, g = tel ? 40 : G0;
   const max = pasRond(Math.max(...data.map((d) => d.valeur), 0));
-  const dx = (W - G - 8) / data.length; const l = Math.min(26, dx - 6);
+  const dx = (L - g - 8) / data.length; const l = Math.min(26, dx - 6);
   return (
     <div className="graph">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Montants par mois">
-        <Axes max={max} n={data.length} labels={data.map((d) => d.label)} pas />
+      <svg viewBox={`0 0 ${L} ${Ht}`} role="img" aria-label="Montants par mois">
+        <Axes max={max} n={data.length} labels={data.map((d) => d.label)} pas W={L} H={Ht} G={g} />
         {data.map((d, k) => {
-          const h = (d.valeur / max) * (H - B - T); const x = G + dx * k + (dx - l) / 2;
+          const h = (d.valeur / max) * (Ht - B - T); const x = g + dx * k + (dx - l) / 2; const r = Math.min(4, h);
           return <g key={k} onMouseEnter={() => setI(k)} onMouseLeave={() => setI(null)} onClick={() => setI(k)}>
-            <rect x={G + dx * k} y={T} width={dx} height={H - B - T} fill="transparent" />
-            {h > 0 && <path className="barre" d={`M${x},${H - B} v${-(h - Math.min(4, h))} q0,${-Math.min(4, h)} ${Math.min(4, h)},${-Math.min(4, h)} h${l - 2 * Math.min(4, h)} q${Math.min(4, h)},0 ${Math.min(4, h)},${Math.min(4, h)} v${h - Math.min(4, h)} z`} />}
+            <rect x={g + dx * k} y={T} width={dx} height={Ht - B - T} fill="transparent" />
+            {h > 0 && <path className="barre" d={`M${x},${Ht - B} v${-(h - r)} q0,${-r} ${r},${-r} h${l - 2 * r} q${r},0 ${r},${r} v${h - r} z`} />}
           </g>;
         })}
       </svg>
-      {i !== null && <div className="bulle" style={{ left: `${((G + dx * (i + 0.5)) / W) * 100}%` }}><b>{gnf(data[i].valeur)}</b><span>{data[i].label}</span></div>}
+      {i !== null && <div className="bulle" style={{ left: `${((g + dx * (i + 0.5)) / L) * 100}%` }}><b>{gnf(data[i].valeur)}</b><span>{data[i].label}</span></div>}
     </div>
   );
 }

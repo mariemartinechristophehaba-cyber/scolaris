@@ -120,3 +120,35 @@ export async function lireTableau(f: File) {
   if (/\.csv$/i.test(f.name)) return csv((await f.text()).replace(/^﻿/, ''));
   throw new Error('Format accepté : .xlsx ou .csv');
 }
+
+// Classes rangées comme dans une école : Maternelle, Primaire, Collège, Lycée, puis dans l'ordre des années.
+const sansAccent = (s: any) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const NIVEAUX_ORDRE = ['maternelle', 'primaire', 'college', 'lycee'];
+function niveauDeduit(nom: string) {
+  const n = sansAccent(nom);
+  if (/section|maternelle/.test(n)) return 'maternelle';
+  if (/^(cp|ce|cm)\s?\d?/.test(n)) return 'primaire';
+  if (/terminale|^tle|^(11|12)\s?e|seconde|^2n?de/.test(n)) return 'lycee';
+  if (/^(7|8|9|10)\s?e/.test(n)) return 'college';
+  return '';
+}
+export const rangNiveau = (niveau: any, nom = '') => { const i = NIVEAUX_ORDRE.indexOf(sansAccent(niveau) || niveauDeduit(nom)); return i < 0 ? 9 : i; };
+function rangClasse(nom: string, niveau: any) {
+  const n = sansAccent(nom); const nv = NIVEAUX_ORDRE[rangNiveau(niveau, nom)] || '';
+  if (/terminale|^tle/.test(n)) return 99;
+  if (/petite/.test(n)) return 1; if (/moyenne/.test(n)) return 2; if (/grande/.test(n)) return 3;
+  const p = n.match(/^(cp|ce|cm)\s?(\d)?/); if (p) return { cp: 10, ce: 12, cm: 14 }[p[1] as 'cp']! + Math.max(Number(p[2] || 1) - 1, 0);
+  if (/^(seconde|2n?de)/.test(n)) return 40; if (nv === 'lycee' && /^(1ere|premiere|1re)/.test(n)) return 41;
+  const m = n.match(/^(\d{1,2})/); if (m) { const x = Number(m[1]); return nv === 'college' && x <= 6 ? 10 + (6 - x) : 20 + x; }
+  return 60;
+}
+export const nomNiveau = (c: any) => c?.niveaux?.nom || c?.niveau || '';
+export function trierClasses<T>(l: T[], niv: (c: T) => any = nomNiveau, nom: (c: T) => string = (c: any) => c.nom): T[] {
+  return [...l].sort((a, b) => rangNiveau(niv(a), nom(a)) - rangNiveau(niv(b), nom(b)) || rangClasse(nom(a), niv(a)) - rangClasse(nom(b), niv(b)) || nom(a).localeCompare(nom(b), 'fr', { numeric: true }));
+}
+const LIB_NIV = ['Maternelle', 'Primaire', 'Collège', 'Lycée'];
+export function grouperClasses<T>(l: T[], niv: (c: T) => any = nomNiveau, nom: (c: T) => string = (c: any) => c.nom): [string, T[]][] {
+  const r: [string, T[]][] = [];
+  for (const c of trierClasses(l, niv, nom)) { const lib = niv(c) || LIB_NIV[rangNiveau('', nom(c))] || 'Autres'; const g = r.find((x) => x[0] === lib); if (g) g[1].push(c); else r.push([lib, [c]]); }
+  return r;
+}

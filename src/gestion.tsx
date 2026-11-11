@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { PiBooksDuotone, PiBusDuotone, PiCoinsDuotone, PiGraduationCapDuotone, PiIdentificationBadgeDuotone, PiNotePencilDuotone, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiClockCountdownFill, PiEyeDuotone, PiFileArrowUpDuotone, PiHandCoinsDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiPencilSimpleDuotone, PiPhoneDuotone, PiPlusBold, PiReceiptDuotone, PiStudentDuotone, PiTrashDuotone, PiWhatsappLogoFill, PiCrownSimpleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Jauge } from './charts';
-import { dateFr, gnf, nb, tel, telAff } from './lib';
-import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { dateFr, gnf, grouperClasses, nb, rangNiveau, tel, telAff, trierClasses } from './lib';
+import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const etat = (s: any) => (s.situation === 'a_jour' ? 'a_jour' : s.situation === 'rien_paye' && s.facture_net > 0 ? 'rien' : s.en_retard ? 'retard' : s.situation === 'partiel' ? 'partiel' : 'sans');
 export const Statut = ({ s }: { s: any }) => <Pastille k={etat(s)} />;
@@ -18,7 +18,7 @@ function FormEleve({ init, classes, fermer, fini }: any) {
     <Modale titre={init ? 'Modifier l\'élève' : 'Ajouter un élève'} fermer={fermer}>
       <form onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.rpc('enregistrer_eleve', { p: { ...f, parent_telephone: tel(f.parent_telephone), etablissement_id: eid, annee_scolaire_id: annee.id } }); fini(); }); }}>
         <div className="deux"><Champ label="Prénom *"><input {...c('prenom', true)} /></Champ><Champ label="Nom *"><input {...c('nom', true)} /></Champ></div>
-        <Champ label="Classe *"><select {...c('classe_id', true)}><option value="">Choisir…</option>{classes.map((k: any) => <option key={k.id} value={k.id}>{k.nom}</option>)}</select></Champ>
+        <Champ label="Classe *"><select {...c('classe_id', true)}><option value="">Choisir…</option><OptClasses l={classes} /></select></Champ>
         <div className="deux"><Champ label="Matricule" aide="Automatique si vide"><input {...c('matricule')} /></Champ><Champ label="Date de naissance"><input type="date" {...c('date_naissance')} /></Champ></div>
         <div className="deux"><Champ label="Nom du parent"><input {...c('parent_nom')} /></Champ><Champ label="Téléphone du parent"><input inputMode="tel" {...c('parent_telephone')} /></Champ></div>
         <Erreur t={e.erreur} />
@@ -34,7 +34,7 @@ export function Eleves() {
   const { annee, can } = useApp();
   const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [f, setF] = useState('tous'); const [p, setP] = useState(1); const [aj, setAj] = useState(false);
   const q = useQ(async () => {
-    const [l, classes] = await Promise.all([db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom,inscription_id`), db.get(`classes?annee_scolaire_id=eq.${annee.id}&order=ordre,nom`)]);
+    const [l, classes] = await Promise.all([db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom,inscription_id`), db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=*,niveaux(nom)&order=ordre,nom`)]);
     return { l, classes };
   }, [annee.id]);
   const base = useMemo(() => {
@@ -52,7 +52,7 @@ export function Eleves() {
       <Etat q={q}>{(d) => <>
         <div className="barre-outils">
           <div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={txt} onChange={bouge(setT)} placeholder="Rechercher un élève ou un matricule" aria-label="Rechercher un élève" /></div>
-          <select value={cl} onChange={bouge(setCl)} aria-label="Classe"><option value="">Toutes les classes</option>{d.classes.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</select>
+          <select value={cl} onChange={bouge(setCl)} aria-label="Classe"><option value="">Toutes les classes</option><OptClasses l={d.classes} /></select>
         </div>
         <div className="segment" role="tablist">{FILTRES.map(([k, t]) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => { setF(k); setP(1); }}>{t}<em>{nb(compte(k))}</em></button>)}</div>
         <section className="carte c-table">
@@ -84,7 +84,7 @@ export function DetailEleve({ id }: { id: string }) {
       fin ? db.get(`v_paiements_detail?eleve_id=eq.${id}&order=date_paiement.desc`) : [],
       fin ? db.get(`v_echeances_soldes?eleve_id=eq.${id}&annee_scolaire_id=eq.${annee.id}&order=date_limite`) : [],
       fin ? db.get(`eleve_responsables?eleve_id=eq.${id}&select=principal,lien,responsables(*)&order=principal.desc`) : [],
-      db.get(`classes?annee_scolaire_id=eq.${annee.id}&order=ordre,nom`),
+      db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=*,niveaux(nom)&order=ordre,nom`),
       fin ? db.get(`paiements?eleve_id=eq.${id}&select=id,jeton_public`) : [],
     ]);
     return { el: el[0], sit: sit[0], pay, ech, res, classes, jet: Object.fromEntries(jet.map((x: any) => [x.id, x.jeton_public])) };
@@ -162,8 +162,9 @@ export function Classes() {
     <>
       <Titre t="Classes et niveaux">{can('directeur', 'secretaire') && <button className="btn plein mini" onClick={() => setAj(true)}><PiPlusBold /><span>Ajouter<span className="bureau-seul-t"> une classe</span></span></button>}</Titre>
       <Etat q={q}>{(d) => {
-        const niveaux = Array.from(new Set(Object.values(d.nom).filter(Boolean))) as string[];
-        const l = niv ? d.st.filter((c: any) => d.nom[c.classe_id] === niv) : d.st;
+        const niveaux = (Array.from(new Set(Object.values(d.nom).filter(Boolean))) as string[]).sort((a, b) => rangNiveau(a) - rangNiveau(b));
+        const tous = trierClasses(d.st, (c: any) => d.nom[c.classe_id]);
+        const l = niv ? tous.filter((c: any) => d.nom[c.classe_id] === niv) : tous;
         const meilleur = Math.max(...d.st.filter((c: any) => c.facture_net > 0).map((c: any) => Number(c.taux_recouvrement)), 0);
         return <>
           {niveaux.length > 0 && <div className="segment" role="tablist"><button role="tab" aria-selected={!niv} className={!niv ? 'on' : ''} onClick={() => setNiv('')}>Toutes<em>{d.st.length}</em></button>{niveaux.map((n) => <button key={n} role="tab" aria-selected={niv === n} className={niv === n ? 'on' : ''} onClick={() => setNiv(n)}>{n}<em>{d.st.filter((c: any) => d.nom[c.classe_id] === n).length}</em></button>)}</div>}
@@ -199,7 +200,7 @@ const iconeFrais = (l = '') => (/inscri/i.test(l) ? PiIdentificationBadgeDuotone
 export function Frais() {
   const { annee, can, eid } = useApp(); const pre = new URLSearchParams(location.search).get('classe') || ''; const [form, setF] = useState<any>(pre && can('directeur', 'comptable') ? { classe: pre } : null); const [sel, setSel] = useState(pre);
   const q = useQ(async () => {
-    const [classes, types, tarifs] = await Promise.all([db.get(`classes?annee_scolaire_id=eq.${annee.id}&order=ordre,nom`), db.get(`types_frais?etablissement_id=eq.${eid}&actif=is.true&order=ordre`), db.get(`tarifs?annee_scolaire_id=eq.${annee.id}&select=*,tarif_tranches(*)`)]);
+    const [classes, types, tarifs] = await Promise.all([db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=*,niveaux(nom)&order=ordre,nom`), db.get(`types_frais?etablissement_id=eq.${eid}&actif=is.true&order=ordre`), db.get(`tarifs?annee_scolaire_id=eq.${annee.id}&select=*,tarif_tranches(*)`)]);
     return { classes, types, tarifs };
   }, [annee.id]);
   const edit = can('directeur', 'comptable');
@@ -209,16 +210,16 @@ export function Frais() {
       <Etat q={q}>{(d) => {
         if (d.classes.length === 0) return <section className="carte"><Vide t="Créez d'abord une classe."><Lien to="/classes" className="btn contour mini">Créer une classe</Lien></Vide></section>;
         const totalDe = (id: string) => d.tarifs.filter((x: any) => x.classe_id === id).reduce((s: number, x: any) => s + x.montant, 0);
-        const c = d.classes.find((x: any) => x.id === sel) || d.classes[0];
+        const groupes = grouperClasses(d.classes); const c = d.classes.find((x: any) => x.id === sel) || groupes[0][1][0];
         const t = d.tarifs.filter((x: any) => x.classe_id === c.id);
         return <div className="frais-g">
-          <nav className="carte frais-l" aria-label="Classes">{d.classes.map((x: any) => <button key={x.id} className={x.id === c.id ? 'on' : ''} onClick={() => setSel(x.id)}><b>{x.nom}</b><span>{totalDe(x.id) ? nb(totalDe(x.id)) : 'À définir'}</span></button>)}</nav>
+          <nav className="carte frais-l" aria-label="Classes">{groupes.map(([n, cs]) => <div className="fl-g" key={n}><h3>{n}</h3><div className="fl-b">{cs.map((x: any) => <button key={x.id} className={x.id === c.id ? 'on' : ''} onClick={() => setSel(x.id)}><b>{x.nom}</b><span>{totalDe(x.id) ? `${nb(totalDe(x.id))} GNF` : 'À définir'}</span></button>)}</div></div>)}</nav>
           <section className="carte">
             <div className="tete-carte"><h2>{c.nom}</h2><div className="total-cl"><span>Total annuel</span><Gnf n={totalDe(c.id)} /></div></div>
             {t.length === 0 ? <Vide t="Aucun tarif défini pour cette classe.">{edit && <button className="btn contour mini" onClick={() => setF({ classe: c.id })}>Définir un tarif</button>}</Vide> : <ul className="tarifs">{t.map((x: any) => {
               const tr = [...x.tarif_tranches].sort((a: any, b: any) => a.ordre - b.ordre);
               return <li key={x.id}><Tuile i={iconeFrais(d.types.find((y: any) => y.id === x.type_frais_id)?.libelle)} ton="bleu" t={40} /><div className="tf-c"><div className="tf-l"><b>{d.types.find((y: any) => y.id === x.type_frais_id)?.libelle}</b><Gnf n={x.montant} />{edit && <button className="ico" aria-label="Modifier ce tarif" onClick={() => setF({ classe: c.id, x })}><PiPencilSimpleDuotone /></button>}</div>
-                {tr.length > 0 ? <div className="tf-tr">{tr.map((y: any) => <span key={y.id}><b>{y.libelle}</b>{nb(y.montant)}<small>{dateFr(y.date_limite)}</small></span>)}</div> : <small className="gr">Paiement unique</small>}</div></li>;
+                {tr.length > 0 ? <div className="tf-tr">{tr.map((y: any, i: number) => <span key={y.id}><b>{/^[\d\s.,]+$/.test(y.libelle) ? `Tranche ${i + 1}` : y.libelle}</b>{gnf(y.montant)}<small>avant le {dateFr(y.date_limite)}</small></span>)}</div> : <small className="gr">Paiement unique</small>}</div></li>;
             })}</ul>}
           </section>
         </div>;
@@ -230,16 +231,16 @@ export function Frais() {
 
 function FormTarif({ d, init, fermer, fini }: any) {
   const x = init.x; const e = useEnvoi();
-  const [classe, setC] = useState(init.classe || d.classes[0].id); const [type, setT] = useState(x?.type_frais_id || d.types[1]?.id || d.types[0].id); const [montant, setM] = useState(x?.montant || 0);
+  const [classe, setC] = useState(init.classe || trierClasses(d.classes)[0].id); const [type, setT] = useState(x?.type_frais_id || d.types[1]?.id || d.types[0].id); const [montant, setM] = useState(x?.montant || 0);
   const [tr, setTr] = useState<any[]>(x?.tarif_tranches?.length ? [...x.tarif_tranches].sort((a: any, b: any) => a.ordre - b.ordre).map((y: any) => ({ libelle: y.libelle, montant: y.montant, date_limite: y.date_limite })) : []);
   const som = tr.reduce((s, y) => s + y.montant, 0);
   const maj = (i: number, k: string, v: any) => setTr(tr.map((y, j) => (j === i ? { ...y, [k]: v } : y)));
-  return <Modale titre="Définir un tarif" fermer={fermer}><form onSubmit={(z) => { z.preventDefault(); if (!montant) return e.setE('Indiquez un montant'); if (tr.length && som !== montant) return e.setE(`La somme des tranches (${gnf(som)}) doit égaler le montant`); e.envoyer(async () => { await db.rpc('enregistrer_tarif', { p_classe: classe, p_type: type, p_montant: montant, p_tranches: tr }); fini(); }); }}>
-    <div className="deux"><Champ label="Classe"><select value={classe} onChange={(v) => setC(v.target.value)} disabled={!!x}>{d.classes.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</select></Champ>
+  return <Modale titre="Définir un tarif" fermer={fermer}><form onSubmit={(z) => { z.preventDefault(); if (!montant) return e.setE('Indiquez un montant'); if (tr.some((y) => /^[\d\s.,]*$/.test(y.libelle.trim()))) return e.setE('Donnez un nom à chaque tranche, par exemple « 1er trimestre » : le montant se met dans la case Montant'); if (tr.length && som !== montant) return e.setE(`La somme des tranches (${gnf(som)}) doit égaler le montant`); e.envoyer(async () => { await db.rpc('enregistrer_tarif', { p_classe: classe, p_type: type, p_montant: montant, p_tranches: tr }); fini(); }); }}>
+    <div className="deux"><Champ label="Classe"><select value={classe} onChange={(v) => setC(v.target.value)} disabled={!!x}><OptClasses l={d.classes} /></select></Champ>
       <Champ label="Type de frais"><select value={type} onChange={(v) => setT(v.target.value)} disabled={!!x}>{d.types.map((c: any) => <option key={c.id} value={c.id}>{c.libelle}</option>)}</select></Champ></div>
     <Champ label="Montant total *"><Montant value={montant} onChange={setM} /></Champ>
     <div className="tete-carte"><b>Tranches</b><button type="button" className="btn lien" onClick={() => setTr([...tr, { libelle: `Tranche ${tr.length + 1}`, montant: Math.max(montant - som, 0), date_limite: '' }])}><PiPlusBold /> Ajouter</button></div>
-    {tr.map((y, i) => <div className="tranche" key={i}><input value={y.libelle} onChange={(v) => maj(i, 'libelle', v.target.value)} aria-label="Libellé" required /><Montant value={y.montant} onChange={(v: number) => maj(i, 'montant', v)} /><input type="date" value={y.date_limite} onChange={(v) => maj(i, 'date_limite', v.target.value)} aria-label="Date limite" required /><button type="button" className="ico" aria-label="Retirer" onClick={() => setTr(tr.filter((_, j) => j !== i))}><PiTrashDuotone /></button></div>)}
+    {tr.map((y, i) => <div className="tranche2" key={i}><div className="tr2-h"><b>Tranche {i + 1}</b><button type="button" className="ico" aria-label={`Retirer la tranche ${i + 1}`} onClick={() => setTr(tr.filter((_, j) => j !== i))}><PiTrashDuotone /></button></div><label><span>Nom</span><input value={y.libelle} onChange={(v) => maj(i, 'libelle', v.target.value)} placeholder="Ex. : 1er trimestre" required /></label><label><span>Montant</span><Montant value={y.montant} onChange={(v: number) => maj(i, 'montant', v)} /></label><label><span>À payer avant le</span><input type="date" value={y.date_limite} onChange={(v) => maj(i, 'date_limite', v.target.value)} required /></label></div>)}
     {x && <p className="note">Un nouveau montant s'applique aux prochaines factures, pas à celles déjà émises.</p>}
     <p className="note">S'applique à tous les élèves de la classe. Ceux qui ont déjà payé sur ce frais gardent leur montant.</p>
     <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}>Enregistrer</button></form></Modale>;

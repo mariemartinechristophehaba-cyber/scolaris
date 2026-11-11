@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { createPortal } from 'react-dom';
 import { PiArrowLeftBold, PiCaretDownBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiXBold, PiXCircleFill } from 'react-icons/pi';
 import { message } from './api';
-import { nb } from './lib';
+import { grouperClasses, nb } from './lib';
 
 export const Ctx = createContext<any>(null);
 export const useApp = () => useContext(Ctx);
@@ -123,3 +123,6 @@ export function Pastille({ k, t }: { k: string; t?: string }) {
   const [c, I, l] = ST[k];
   return <span className={`pastille ${c}`}><I aria-hidden="true" />{t || l}</span>;
 }
+
+// Options d'un menu de classes, regroupées par niveau.
+export const OptClasses = ({ l }: { l: any[] }) => <>{grouperClasses(l).map(([n, cs]) => <optgroup key={n} label={n}>{cs.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</optgroup>)}</>;

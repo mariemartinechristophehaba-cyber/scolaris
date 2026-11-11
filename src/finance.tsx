@@ -5,7 +5,7 @@ import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { auj, dateFr, entier, gnf, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
 import { EtatPaiement } from './gestion';
-import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
@@ -20,7 +20,7 @@ export function Tableau() {
       fin ? db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.valide&select=id,montant,date_paiement,classe_id&order=id`) : [],
       fin ? db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=inscription_id`) : [],
       fin ? db.get(`v_stats_classes?annee_scolaire_id=eq.${annee.id}&facture_net=gt.0&order=taux_recouvrement.desc&limit=5`) : [],
-      db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=id,nom&order=ordre,nom`),
+      db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=id,nom,niveaux(nom)&order=ordre,nom`),
       fin ? db.get(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,montant,cree_le,statut,eleves(prenom,nom)&order=cree_le.desc&limit=4`) : [],
       db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=3`),
       can('directeur', 'comptable', 'caissier') ? db.get(`depenses?annee_scolaire_id=eq.${annee.id}&select=id,libelle,montant,cree_le&order=cree_le.desc&limit=3`) : [],
@@ -30,7 +30,7 @@ export function Tableau() {
   const mois = moisAnnee(annee);
   const filtres = zoneFiltres && fin ? createPortal(<>
     <Verre value={per} onChange={setPer} label="Période"><option value="">Toute l'année</option>{mois.map((m) => <option key={m.cle} value={m.cle}>{m.label} {m.cle.slice(0, 4)}</option>)}</Verre>
-    {q.data && <Verre value={classe} onChange={setCl} label="Classe"><option value="">Toutes les classes</option>{(q.data as any).cls.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</Verre>}
+    {q.data && <Verre value={classe} onChange={setCl} label="Classe"><option value="">Toutes les classes</option><OptClasses l={(q.data as any).cls} /></Verre>}
   </>, zoneFiltres) : null;
   return <>{filtres}<Etat q={q}>{(d) => {
     const s = classe ? d.sit.filter((x: any) => x.classe_id === classe) : d.sit;

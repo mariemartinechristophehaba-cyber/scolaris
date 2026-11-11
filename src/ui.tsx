@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PiArrowLeftBold, PiCaretDownBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiXBold, PiXCircleFill } from 'react-icons/pi';
+import { PiArrowLeftBold, PiCalendarBlankDuotone, PiCaretDownBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiXBold, PiXCircleFill } from 'react-icons/pi';
 import { message } from './api';
 import { grouperClasses, nb } from './lib';
 
@@ -126,3 +126,36 @@ export function Pastille({ k, t }: { k: string; t?: string }) {
 
 // Options d'un menu de classes, regroupées par niveau.
 export const OptClasses = ({ l }: { l: any[] }) => <>{grouperClasses(l).map(([n, cs]) => <optgroup key={n} label={n}>{cs.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</optgroup>)}</>;
+
+// Sélecteur de date à molettes (jour, mois, année) : on fait glisser au lieu d'un calendrier.
+const MOIS_C = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const H_ROUE = 44;
+function Roue({ items, val, set, label }: { items: [number, string][]; val: number; set: (v: number) => void; label: string }) {
+  const ref = useRef<HTMLDivElement>(null); const t = useRef<any>(null);
+  const idx = Math.max(0, items.findIndex(([v]) => v === val));
+  useEffect(() => { const el = ref.current; if (el && Math.abs(el.scrollTop - idx * H_ROUE) > 2) el.scrollTop = idx * H_ROUE; }, [idx]);
+  const fin = () => { const el = ref.current; if (!el) return; const i = Math.min(items.length - 1, Math.max(0, Math.round(el.scrollTop / H_ROUE))); if (items[i] && items[i][0] !== val) set(items[i][0]); };
+  return <div className="roue" ref={ref} role="listbox" aria-label={label} tabIndex={0} onScroll={() => { clearTimeout(t.current); t.current = setTimeout(fin, 90); }}
+    onKeyDown={(e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = items[Math.min(items.length - 1, Math.max(0, idx + (e.key === 'ArrowDown' ? 1 : -1)))]; if (n) set(n[0]); } }}>
+    <div className="roue-pad" />{items.map(([v, l]) => <div key={v} role="option" aria-selected={v === val} className={v === val ? 'on' : ''} onClick={() => set(v)}>{l}</div>)}<div className="roue-pad" />
+  </div>;
+}
+export function DateRoue({ value, onChange, debut = 1950, fin = new Date().getFullYear(), defaut }: { value: string; onChange: (v: string) => void; debut?: number; fin?: number; defaut?: number }) {
+  const [ouvert, setO] = useState(false);
+  const p = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value.split('-').map(Number) : null;
+  const [a, setA] = useState(p ? p[0] : (defaut || fin - 10)); const [m, setM] = useState(p ? p[1] : 1); const [j, setJ] = useState(p ? p[2] : 1);
+  const nbJ = new Date(a, m, 0).getDate(); const jj = Math.min(j, nbJ);
+  const annees: [number, string][] = []; for (let y = fin; y >= debut; y--) annees.push([y, String(y)]);
+  const jours: [number, string][] = Array.from({ length: nbJ }, (_, i) => [i + 1, String(i + 1)]);
+  const mois: [number, string][] = MOIS_C.map((l, i) => [i + 1, l]);
+  const ouvrir = () => { if (p) { setA(p[0]); setM(p[1]); setJ(p[2]); } setO(true); };
+  const valider = () => { onChange(`${a}-${String(m).padStart(2, '0')}-${String(jj).padStart(2, '0')}`); setO(false); };
+  return <>
+    <button type="button" className={`date-roue${p ? '' : ' vide'}`} onClick={ouvrir}>{p ? `${p[2]} ${MOIS_C[p[1] - 1]} ${p[0]}` : 'Choisir'}<PiCalendarBlankDuotone aria-hidden="true" /></button>
+    {ouvert && createPortal(<div className="roue-fond" onClick={() => setO(false)}><div className="roue-feuille" role="dialog" aria-label="Choisir une date" onClick={(e) => e.stopPropagation()}>
+      <div className="roue-t"><button type="button" onClick={() => setO(false)}>Annuler</button><b>{jj} {MOIS_C[m - 1]} {a}</b><button type="button" className="ok" onClick={valider}>OK</button></div>
+      <div className="roues"><div className="roue-barre" aria-hidden="true" /><Roue items={jours} val={jj} set={setJ} label="Jour" /><Roue items={mois} val={m} set={setM} label="Mois" /><Roue items={annees} val={a} set={setA} label="Année" /></div>
+      {value && <button type="button" className="roue-eff" onClick={() => { onChange(''); setO(false); }}>Effacer la date</button>}
+    </div></div>, document.body)}
+  </>;
+}

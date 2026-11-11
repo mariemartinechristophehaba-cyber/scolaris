@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
-import { auj, dateFr, entier, gnf, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
+import { auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
 import { EtatPaiement } from './gestion';
 import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
@@ -184,10 +184,10 @@ function Motif({ titre, fermer, valider }: any) {
 }
 
 export function Paiements() {
-  const { annee, can, majNotif } = useApp(); const [f, setF] = useState('en_attente'); const e = useEnvoi(); const [mot, setMot] = useState<any>(null); const [max, setMax] = useState(100);
+  const { annee, can, majNotif } = useApp(); const [f, setF] = useState('en_attente'); const e = useEnvoi(); const [mot, setMot] = useState<any>(null); const [max, setMax] = useState(100); const [rech, setRech] = useState(''); const [niv, setNiv] = useState(''); const [cl, setCl] = useState('');
   const q = useQ(async () => {
-    const [l, jet] = await Promise.all([db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&order=date_paiement.desc,id`), db.tout(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,jeton_public,justificatif_chemin&order=id`)]);
-    const j = Object.fromEntries(jet.map((x: any) => [x.id, x.jeton_public])); const pj = Object.fromEntries(jet.filter((x: any) => x.justificatif_chemin).map((x: any) => [x.id, x.justificatif_chemin])); return { l, j, pj };
+    const [l, jet, cls] = await Promise.all([db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&order=date_paiement.desc,id`), db.tout(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,jeton_public,justificatif_chemin&order=id`), db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=id,nom,niveaux(nom)`)]);
+    const j = Object.fromEntries(jet.map((x: any) => [x.id, x.jeton_public])); const pj = Object.fromEntries(jet.filter((x: any) => x.justificatif_chemin).map((x: any) => [x.id, x.justificatif_chemin])); return { l, j, pj, cls };
   }, [annee.id]);
   const act = async (id: string, b: any) => { await db.upd(`paiements?id=eq.${id}`, b); await q.reload(); majNotif(); };
   const v = can('directeur', 'comptable');
@@ -200,7 +200,11 @@ export function Paiements() {
         const att = d.l.filter((p: any) => p.statut === 'en_attente'); const val = d.l.filter((p: any) => p.statut === 'valide');
         const som = (a: any[]) => a.reduce((s, x) => s + Number(x.montant), 0);
         const ce = auj().slice(0, 7); const mois = val.filter((p: any) => String(p.date_paiement).startsWith(ce));
-        const l = f === 'tous' ? d.l : d.l.filter((p: any) => p.statut === f);
+        const r0 = rech.trim().toLowerCase().replace(/^n[°o]\s*/, '');
+        const groupes = grouperClasses(d.cls); const nivDe: any = {}; groupes.forEach(([n, cs]) => cs.forEach((c: any) => { nivDe[c.id] = n; }));
+        const dansNiv = niv ? groupes.find(([n]) => n === niv)?.[1] || [] : d.cls; const okCl = (p: any) => (cl ? p.classe_id === cl : !niv || nivDe[p.classe_id] === niv);
+        const l0 = r0 ? d.l.filter((p: any) => `${p.nom || ''} ${p.prenom || ''} ${p.prenom || ''} ${p.nom || ''} ${p.matricule || ''} ${p.numero_recu ?? ''} ${p.reference || ''}`.toLowerCase().includes(r0) || String(p.numero_recu ?? '') === r0) : f === 'tous' ? d.l : d.l.filter((p: any) => p.statut === f);
+        const l = l0.filter(okCl);
         const actions = (p: any) => <>
           {d.pj[p.id] && <button className="btn contour mini" onClick={() => voirPj(d.pj[p.id])}><PiPaperclipDuotone aria-hidden="true" />Justificatif</button>}
           {p.statut === 'en_attente' && v && <><button className="btn plein mini" onClick={() => e.envoyer(() => act(p.id, { statut: 'valide' }))}><PiCheckBold />Valider</button><button className="btn contour mini rouge" onClick={() => setMot({ t: 'Rejeter ce paiement', b: (m: string) => act(p.id, { statut: 'rejete', motif_rejet: m }) })}>Rejeter</button></>}
@@ -210,11 +214,14 @@ export function Paiements() {
         return <>
           <div className="minis"><div className="carte mini-c"><Tuile i={PiHourglassMediumDuotone} ton="orange" t={44} /><div><span>À vérifier ({nb(att.length)})</span><Gnf n={som(att)} /></div></div><div className="carte mini-c"><Tuile i={PiCalendarCheckDuotone} ton="bleu" t={44} /><div><span>Validés ce mois</span><Gnf n={som(mois)} /></div></div><div className="carte mini-c"><Tuile i={PiCoinsDuotone} ton="vert" t={44} /><div><span>Encaissé sur l'année</span><Gnf n={som(val)} /></div></div></div>
           <div className="segment" role="tablist">{[['en_attente', 'En attente', att.length], ['valide', 'Validés', val.length], ['tous', 'Tous', d.l.length]].map(([k, t, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{t}<em>{nb(n)}</em></button>)}</div>
+          {groupes.length > 1 && <div className="niv-f" role="tablist" aria-label="Niveau">{[['', 'Tous les niveaux'], ...groupes.map(([n]) => [n, n])].map(([k, t]) => <button key={k} role="tab" aria-selected={niv === k} className={niv === k ? 'on' : ''} onClick={() => { setNiv(k); setCl(''); setMax(100); }}>{t}</button>)}</div>}
+          <div className="filtres-p"><select value={cl} onChange={(x) => { setCl(x.target.value); setMax(100); }} aria-label="Classe"><option value="">{niv ? `Toutes les classes du ${niv.toLowerCase()}` : 'Toutes les classes'}</option>{(niv ? [[niv, dansNiv]] as any[] : groupes).map(([n, cs]: any) => <optgroup key={n} label={n}>{cs.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</optgroup>)}</select>
+          <div className="recherche rp"><PiMagnifyingGlassBold aria-hidden="true" /><input value={rech} onChange={(x) => { setRech(x.target.value); setMax(100); }} placeholder="Élève, n° de reçu ou référence" aria-label="Rechercher un paiement" inputMode="search" /></div></div>
           <section className="carte c-table">
-            {l.length === 0 ? <Vide t={f === 'en_attente' ? 'Aucun paiement à vérifier.' : 'Aucun paiement ici.'} /> : <>
+            {l.length === 0 ? <Vide t={r0 ? 'Aucun paiement trouvé pour cette recherche.' : f === 'en_attente' ? 'Aucun paiement à vérifier.' : 'Aucun paiement ici.'} /> : <>
               <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Élève</th><th className="dr">Montant</th><th>Moyen</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, max).map((p: any) => <tr key={p.id}>
                 <td className="gr">{dateFr(p.date_paiement)}</td><td><Lien to={`/eleves/${p.eleve_id}`} className="nom-el"><Avatar nom={`${p.nom} ${p.prenom}`} /><span><b>{p.nom} {p.prenom}</b><small className="bloc">{p.classe}</small></span></Lien></td><td className="dr fort">{nb(p.montant)}</td><td>{p.moyen}{p.reference && <small className="bloc">{p.reference}</small>}</td><td><EtatPaiement s={p.statut} /></td><td><div className="acts-l">{actions(p)}</div></td></tr>)}</tbody></table></div>
-              <ul className="vue-tel liste-p">{l.slice(0, max).map((p: any) => <li key={p.id}><div className="lp-h"><Avatar nom={`${p.nom} ${p.prenom}`} /><div><b>{p.nom} {p.prenom}</b><small>{dateFr(p.date_paiement)}, {p.moyen}</small></div><div className="fin"><span className="gnf"><b>{nb(p.montant)}</b></span><EtatPaiement s={p.statut} /></div></div>{(p.statut === 'en_attente' ? v : true) && (p.statut === 'en_attente' || p.numero_recu) && <div className="acts-l">{actions(p)}</div>}</li>)}</ul>
+              <ul className="vue-tel liste-p">{l.slice(0, max).map((p: any) => <li key={p.id}><div className="lp-h"><Avatar nom={`${p.nom} ${p.prenom}`} /><div><b>{p.nom} {p.prenom}</b><small>{p.classe ? `${p.classe}, ` : ""}{dateFr(p.date_paiement)}, {p.moyen}</small></div><div className="fin"><span className="gnf"><b>{nb(p.montant)}</b></span><EtatPaiement s={p.statut} /></div></div>{(p.statut === 'en_attente' ? v : true) && (p.statut === 'en_attente' || p.numero_recu) && <div className="acts-l">{actions(p)}</div>}</li>)}</ul>
               {l.length > max && <div className="plus-l"><button className="btn contour mini" onClick={() => setMax(max + 100)}>Voir la suite ({nb(l.length - max)})</button></div>}
             </>}
           </section>

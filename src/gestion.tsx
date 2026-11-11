@@ -3,7 +3,7 @@ import { PiArrowLeftBold, PiCalendarBlankDuotone, PiWarningCircleFill, PiBabyDuo
 import { db } from './api';
 import { Jauge } from './charts';
 import { dateFr, gnf, grouperClasses, nb, rangNiveau, tel, telAff, trierClasses } from './lib';
-import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Champ, Erreur, Etat, Gnf, DateRoue, Lien, Modale, Montant, OptClasses, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const etat = (s: any) => (s.situation === 'a_jour' ? 'a_jour' : s.situation === 'rien_paye' && s.facture_net > 0 ? 'rien' : s.en_retard ? 'retard' : s.situation === 'partiel' ? 'partiel' : 'sans');
 export const Statut = ({ s }: { s: any }) => <Pastille k={etat(s)} />;
@@ -19,7 +19,7 @@ function FormEleve({ init, classes, fermer, fini }: any) {
       <form onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.rpc('enregistrer_eleve', { p: { ...f, parent_telephone: tel(f.parent_telephone), etablissement_id: eid, annee_scolaire_id: annee.id } }); fini(); }); }}>
         <div className="deux"><Champ label="Prénom *"><input {...c('prenom', true)} /></Champ><Champ label="Nom *"><input {...c('nom', true)} /></Champ></div>
         <Champ label="Classe *"><select {...c('classe_id', true)}><option value="">Choisir…</option><OptClasses l={classes} /></select></Champ>
-        <div className="deux"><Champ label="Matricule" aide="Automatique si vide"><input {...c('matricule')} /></Champ><Champ label="Date de naissance"><input type="date" {...c('date_naissance')} /></Champ></div>
+        <div className="deux"><Champ label="Matricule" aide="Automatique si vide"><input {...c('matricule')} /></Champ><Champ label="Date de naissance"><DateRoue value={f.date_naissance || ''} onChange={(v) => setF({ ...f, date_naissance: v })} debut={1990} defaut={new Date().getFullYear() - 10} /></Champ></div>
         <div className="deux"><Champ label="Nom du parent"><input {...c('parent_nom')} /></Champ><Champ label="Téléphone du parent"><input inputMode="tel" {...c('parent_telephone')} /></Champ></div>
         <Erreur t={e.erreur} />
         <button className="btn plein" disabled={e.occupe}>{e.occupe ? 'Enregistrement…' : 'Enregistrer'}</button>
@@ -108,6 +108,8 @@ export function DetailEleve({ id }: { id: string }) {
               {r && <a href={`tel:${r.telephone}`}><Tuile i={PiPhoneDuotone} ton="violet" t={44} /><span>Appeler</span></a>}
             </div>
             {d.res.length > 0 && <dl className="contacts">{d.res.map((x: any, i: number) => <div key={i}><dt>{x.principal ? 'Parent principal' : 'Parent'}</dt><dd>{x.responsables.nom}<small>{telAff(x.responsables.telephone)}</small></dd></div>)}</dl>}
+            <dl className="contacts infos-el"><div><dt>Date de naissance</dt><dd>{dateFr(d.el.date_naissance) || 'Non renseignée'}</dd></div></dl>
+            {can('directeur', 'secretaire') && <div className="ligne-btn"><button className="btn contour mini" onClick={() => setMod(true)}><PiPencilSimpleDuotone />Modifier</button><button className="btn contour mini rouge" onClick={async () => { if (confirm('Archiver cet élève ?')) { await db.upd(`eleves?id=eq.${id}`, { statut: 'archive', archive_le: new Date().toISOString() }); await db.upd(`inscriptions?eleve_id=eq.${id}&annee_scolaire_id=eq.${annee.id}`, { statut: 'archive' }); naviguer('/eleves'); } }}>Archiver</button></div>}
           </section>
           <div className="fiche-d">
             {fin && <section className="carte"><h2>Situation financière</h2>
@@ -119,10 +121,8 @@ export function DetailEleve({ id }: { id: string }) {
               <ol className="frise">{d.ech.map((e: any) => <li key={e.id} className={e.etat}><i>{e.etat === 'soldee' ? <PiCheckBold aria-hidden="true" /> : e.etat === 'echue' ? <PiClockCountdownFill aria-hidden="true" /> : null}</i><b>{e.libelle}</b><Gnf n={e.net} /><small>{e.etat === 'soldee' ? 'Payée' : e.etat === 'echue' ? `En retard, reste ${nb(e.reste)}` : e.regle > 0 ? `Reste ${nb(e.reste)}` : 'À venir'}</small><small>{dateFr(e.date_limite)}</small></li>)}</ol>
             </section>}
             <section className="carte">
-              <div className="segment" role="tablist">{[['hist', 'Historique'], ['infos', 'Informations'], ['autres', 'Autres']].map(([k, t]) => <button key={k} role="tab" aria-selected={onglet === k} className={onglet === k ? 'on' : ''} onClick={() => setO(k)}>{t}</button>)}</div>
-              {onglet === 'hist' && (d.pay.length === 0 ? <Vide t="Aucun paiement enregistré." /> : <ul className="hist">{d.pay.map((p: any) => <li key={p.id}><Tuile i={PiReceiptDuotone} ton={p.statut === 'valide' ? 'bleu' : 'orange'} t={40} /><div><b>{gnf(p.montant)}</b><small>{dateFr(p.date_paiement)}, {p.moyen}{p.numero_recu ? `, reçu n° ${p.numero_recu}` : ''}</small></div><EtatPaiement s={p.statut} />{p.numero_recu && d.jet[p.id] && <Lien className="btn lien" to={`/r/${d.jet[p.id]}`}>Reçu</Lien>}</li>)}</ul>)}
-              {onglet === 'infos' && <div><dl className="dl"><dt>Matricule</dt><dd>{d.el.matricule}</dd><dt>Naissance</dt><dd>{dateFr(d.el.date_naissance) || 'Non renseignée'}</dd><dt>Classe</dt><dd>{s.classe || 'Sans classe'}</dd></dl>
-                {can('directeur', 'secretaire') && <div className="ligne-btn"><button className="btn contour mini" onClick={() => setMod(true)}><PiPencilSimpleDuotone />Modifier</button><button className="btn contour mini rouge" onClick={async () => { if (confirm('Archiver cet élève ?')) { await db.upd(`eleves?id=eq.${id}`, { statut: 'archive', archive_le: new Date().toISOString() }); await db.upd(`inscriptions?eleve_id=eq.${id}&annee_scolaire_id=eq.${annee.id}`, { statut: 'archive' }); naviguer('/eleves'); } }}>Archiver</button></div>}</div>}
+              <div className="segment" role="tablist">{[['hist', 'Paiements et reçus'], ['autres', 'Réductions']].map(([k, t]) => <button key={k} role="tab" aria-selected={onglet === k} className={onglet === k ? 'on' : ''} onClick={() => setO(k)}>{t}</button>)}</div>
+              {onglet === 'hist' && (d.pay.length === 0 ? <Vide t="Aucun paiement enregistré." /> : <ul className="hist">{d.pay.map((p: any) => <li key={p.id}><Tuile i={PiReceiptDuotone} ton={p.statut === 'valide' ? 'bleu' : 'orange'} t={40} /><div><b>{gnf(p.montant)}</b><small>{dateFr(p.date_paiement)}, {p.moyen}</small></div><EtatPaiement s={p.statut} />{p.numero_recu && d.jet[p.id] && <Lien className="h-recu" to={`/r/${d.jet[p.id]}`}><PiReceiptDuotone aria-hidden="true" />Reçu n° {p.numero_recu}</Lien>}</li>)}</ul>)}
               {onglet === 'autres' && <div>{d.ech.some((e: any) => e.reductions > 0) ? <ul className="hist">{d.ech.filter((e: any) => e.reductions > 0).map((e: any) => <li key={e.id}><Tuile i={PiHandCoinsDuotone} ton="vert" t={40} /><div><b>Réduction de {gnf(e.reductions)}</b><small>{e.libelle}</small></div></li>)}</ul> : <p className="note">Aucune réduction ni exonération accordée.</p>}
                 {d.ech.some((e: any) => e.reste > 0) && can('directeur', 'comptable', 'secretaire') && <button className="btn contour mini" onClick={() => setRed(true)}>Réduction ou exonération</button>}</div>}
             </section>

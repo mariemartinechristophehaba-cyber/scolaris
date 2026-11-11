@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone, PiWalletDuotone } from 'react-icons/pi';
+import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
 import { auth, db, getSession, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
@@ -17,10 +17,10 @@ const MENU: [string, string, any, string[]?, string?, any?, string?][] = [
   ['/tableau', 'Tableau de bord', PiSquaresFour, undefined, undefined, PiSquaresFourFill, 'Général'],
   ['/eleves', 'Élèves', PiStudent, undefined, undefined, PiStudentFill, 'Général'],
   ['/classes', 'Classes', PiChalkboard, undefined, undefined, PiChalkboardFill, 'Général'],
-  ['/frais', 'Frais scolaires', PiReceipt, STAFF, undefined, PiReceiptFill, 'Finances'],
+  ['/frais', 'Frais scolaires', PiReceipt, ['directeur', 'comptable', 'caissier'], undefined, PiReceiptFill, 'Finances'],
   ['/paiements', 'Paiements', PiMoneyWavy, STAFF, 'attente', PiMoneyWavyFill, 'Finances'],
   ['/depenses', 'Dépenses', PiWallet, ['directeur', 'comptable', 'caissier'], undefined, PiWalletFill, 'Finances'],
-  ['/relances', 'Relances', PiBellRinging, STAFF, 'retard', PiBellRingingFill, 'Finances'],
+  ['/relances', 'Relances', PiBellRinging, ['directeur', 'comptable', 'caissier'], 'retard', PiBellRingingFill, 'Finances'],
   ['/rapports', 'Rapports', PiChartLineUp, ['directeur', 'comptable'], undefined, PiChartLineUpFill, 'Finances'],
   ['/importation', 'Importation', PiFileArrowUp, ['directeur', 'secretaire'], undefined, PiFileArrowUpFill, 'Administration'],
   ['/equipe', 'Équipe', PiUsersThree, ['fondateur'], undefined, PiUsersThreeFill, 'Administration'],
@@ -30,14 +30,14 @@ const MENU: [string, string, any, string[]?, string?, any?, string?][] = [
 ];
 const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
 
-function BarreBas({ chemin, can, ouvrir }: any) {
+function BarreBas({ chemin, can, role, ouvrir }: any) {
   const fin = can(...STAFF);
   const it = (to: string, t: string, I: any, J: any) => { const on = chemin.startsWith(to); const K = on ? J : I; return <Lien to={to} className={on ? 'on' : ''}><K aria-hidden="true" /><span>{t}</span></Lien>; };
   return (
     <nav className="barre-bas" aria-label="Navigation principale">
       {it('/tableau', 'Accueil', PiSquaresFour, PiSquaresFourFill)}
       {it('/eleves', 'Élèves', PiStudent, PiStudentFill)}
-      {fin ? <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien> : it('/classes', 'Classes', PiUsersThree, PiUsersThreeFill)}
+      {role === 'fondateur' ? it('/rapports', 'Rapports', PiChartLineUp, PiChartLineUpFill) : fin ? <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien> : it('/classes', 'Classes', PiUsersThree, PiUsersThreeFill)}
       {fin ? it('/paiements', 'Paiements', PiMoneyWavy, PiMoneyWavyFill) : it('/parametres', 'Paramètres', PiGearSix, PiGearSixFill)}
       <button type="button" onClick={ouvrir}><PiDotsNine aria-hidden="true" /><span>Menu</span></button>
     </nav>
@@ -115,12 +115,12 @@ function Coque({ m, annees, recharger, abo }: any) {
             <div className="esp" />
             <SelAnnee className="bureau" />
             <div className="zone-filtres" ref={setZF} />
-            <Lien to="/relances" className="cloche" aria-label="Notifications"><PiBellSimpleDuotone aria-hidden="true" />{nd.attente > 0 && <i>{nd.attente > 99 ? '99+' : nd.attente}</i>}</Lien>
+            <Lien to={can('directeur', 'comptable', 'caissier') ? '/relances' : '/paiements'} className="cloche" aria-label="Notifications"><PiBellSimpleDuotone aria-hidden="true" />{nd.attente > 0 && <i>{nd.attente > 99 ? '99+' : nd.attente}</i>}</Lien>
           </header>
           <div className="zone-bandeau" ref={setZB} />
           <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main>
         </div>
-        <BarreBas chemin={chemin} can={can} ouvrir={() => setO(true)} />
+        <BarreBas chemin={chemin} can={can} role={role} ouvrir={() => setO(true)} />
       </div>
     </Ctx.Provider>
   );

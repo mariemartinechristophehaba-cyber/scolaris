@@ -5,16 +5,25 @@ import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
 import { EtatPaiement } from './gestion';
+import { ADecider, BlocCompta, Bonjour, TableauCaissier, TableauSecretaire } from './espaces';
 import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
 export function Tableau() {
-  const { annee, can, zoneFiltres } = useApp();
+  const { role } = useApp();
+  if (role === 'secretaire') return <TableauSecretaire />;
+  if (role === 'caissier') return <TableauCaissier />;
+  return <TableauFinance />;
+}
+
+function TableauFinance() {
+  const { annee, can, role, zoneFiltres } = useApp();
   const fin = can(...STAFF);
+  const fond = role === 'fondateur', compta = !fond && fin;
   const [classe, setCl] = useState(''); const [per, setPer] = useState('');
   const q = useQ(async () => {
-    const [tb, obj, pay, sit, st, cls, p3, ins, dep] = await Promise.all([
+    const [tb, obj, pay, sit, st, cls, p3, ins, dep, depM] = await Promise.all([
       db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}`),
       can('directeur', 'comptable') ? db.get(`v_objectifs_resultats?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel`) : [],
       fin ? db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.valide&select=id,montant,date_paiement,classe_id&order=id`) : [],
@@ -24,8 +33,9 @@ export function Tableau() {
       fin ? db.get(`paiements?annee_scolaire_id=eq.${annee.id}&select=id,montant,cree_le,statut,eleves(prenom,nom)&order=cree_le.desc&limit=4`) : [],
       db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=3`),
       can('directeur', 'comptable', 'caissier') ? db.get(`depenses?annee_scolaire_id=eq.${annee.id}&select=id,libelle,montant,cree_le&order=cree_le.desc&limit=3`) : [],
+      can('directeur') ? db.get(`depenses?annee_scolaire_id=eq.${annee.id}&statut=eq.payee&date_depense=gte.${auj().slice(0, 7)}-01&select=montant`) : [],
     ]);
-    return { t: tb[0] || {}, obj, pay, sit, st, cls, p3, ins, dep };
+    return { t: tb[0] || {}, obj, pay, sit, st, cls, p3, ins, dep, depM };
   }, [annee.id]);
   const mois = moisAnnee(annee);
   const filtres = zoneFiltres && fin ? createPortal(<>
@@ -44,7 +54,12 @@ export function Tableau() {
     const pc = (n: number) => (tot ? Math.round((n / tot) * 100) : 0);
     const objet = d.obj.find((o: any) => (classe ? o.classe_id === classe : !o.classe_id));
     const objectif = objet ? Number(objet.objectif) : 0;
-    const pct = objectif && !per ? Math.round((encaisse / objectif) * 100) : null;
+    const base = objectif || (fin && !classe ? frais : 0);
+    const pct = base && !per ? Math.round((encaisse / base) * 100) : null;
+    const duJour = payC.filter((x: any) => String(x.date_paiement) === auj());
+    const jour = duJour.reduce((a: number, x: any) => a + Number(x.montant), 0);
+    const depMois = d.depM.reduce((a: number, x: any) => a + Number(x.montant), 0);
+    const vueJour = compta && !per;
     const fini = auj().slice(0, 7);
     const courants = mois.filter((m) => m.cle <= fini);
     let cumul = 0;
@@ -58,19 +73,20 @@ export function Tableau() {
       ...d.dep.map((x: any) => ({ cle: 'd' + x.id, date: x.cree_le, I: PiShoppingCartDuotone, ton: 'orange', t: `Dépense : ${gnf(x.montant)}`, s: x.libelle })),
     ].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 4);
     const quand = (v: string) => { const j = String(v).slice(0, 10); if (j === auj()) return heure(v); const h = new Date(Date.now() - 86400000).toISOString().slice(0, 10); return j === h ? 'Hier' : dateFr(v); };
-    const titreLab = per ? 'Encaissé sur la période' : 'Déjà encaissé';
+    const titreLab = per ? 'Encaissé sur la période' : vueJour ? "Argent reçu aujourd'hui" : 'Déjà encaissé cette année';
     return <>
       <Bandeau><section className="hero">
         <div className="hero-haut">
           <div className="hero-g">
+            {fin && <Bonjour />}
             <div className="hero-titre"><h1>Tableau de bord</h1><SelAnnee className="tel" /></div>
             <span className="hero-lab">{titreLab}</span>
-            <div className="hero-val"><b>{nb(encaisse)}</b><small>GNF</small></div>
-            {objectif > 0 && <span className="hero-sur">sur {gnf(objectif)}</span>}
-            {pct !== null && <div className="hero-etat"><span className={bonne ? 'chip-v' : 'chip-a'}>{bonne ? <PiTrendUpBold aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}{bonne ? 'Objectif en bonne voie' : 'Objectif à surveiller'}</span><span className="hero-note">{bonne ? 'En avance' : 'En retard'} de {gnf(Math.abs(ecart))} sur le rythme prévu</span></div>}
+            <div className="hero-val"><b>{nb(vueJour ? jour : encaisse)}</b><small>GNF</small></div>
+            {vueJour ? <span className="hero-sur">{nb(duJour.length)} paiement{duJour.length > 1 ? 's' : ''} reçu{duJour.length > 1 ? 's' : ''} aujourd'hui</span> : objectif > 0 ? <span className="hero-sur">sur {gnf(objectif)}</span> : fin && frais > 0 && !per && <span className="hero-sur">sur {gnf(frais)} attendus</span>}
+            {pct !== null && objectif > 0 && !vueJour && <div className="hero-etat"><span className={bonne ? 'chip-v' : 'chip-a'}>{bonne ? <PiTrendUpBold aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}{bonne ? 'Objectif en bonne voie' : 'Objectif à surveiller'}</span><span className="hero-note">{bonne ? 'En avance' : 'En retard'} de {gnf(Math.abs(ecart))} sur le rythme prévu</span></div>}
             {!objectif && can('directeur') && <Lien to="/parametres" className="chip-l"><PiCalendarDotsFill aria-hidden="true" />Définir l'objectif annuel</Lien>}
           </div>
-          {pct !== null && <Jauge p={pct}><b>{pct === 0 && encaisse > 0 ? '< 1' : pct} %</b><small>de l'objectif</small></Jauge>}
+          {pct !== null && <Jauge p={pct}><b>{pct === 0 && encaisse > 0 ? '< 1' : pct} %</b><small>{objectif ? "de l'objectif" : 'des frais'}</small></Jauge>}
         </div>
         <Vague />
         {fin && <div className="hero-bas">
@@ -83,10 +99,14 @@ export function Tableau() {
       {!fin ? <section className="carte"><h2>Votre établissement</h2><p className="note">{nb(tot)} élèves inscrits, {nb(d.t.classes)} classes et {nb(d.t.enseignants)} enseignants.</p></section> : <>
         <div className="kpis">
           <div className="kpi"><div><Tuile i={PiStudentDuotone} ton="bleu" t={34} /><span>Élèves inscrits</span></div><span className="gnf"><b>{nb(tot)}</b></span></div>
-          <div className="kpi"><div><Tuile i={PiCoinsDuotone} ton="vert" t={34} /><span>Total des frais</span></div><Gnf n={frais} /></div>
-          <div className="kpi"><div><Tuile i={PiHourglassMediumDuotone} ton="rouge" t={34} /><span>Reste à encaisser</span></div><span className="rg"><Gnf n={reste} /></span></div>
-          {can('directeur', 'comptable', 'caissier') && <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Trésorerie</span></div><Gnf n={d.t.tresorerie} /></div>}
+          {fond ? <div className="kpi"><div><Tuile i={PiHourglassMediumDuotone} ton="rouge" t={34} /><span>Reste à encaisser</span></div><span className="rg"><Gnf n={reste} /></span></div>
+            : <div className="kpi"><div><Tuile i={PiCoinsDuotone} ton="vert" t={34} /><span>{vueJour ? 'Encaissé cette année' : 'Total des frais'}</span></div><Gnf n={vueJour ? encaisse : frais} /></div>}
+          {fond ? <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Trésorerie</span></div><Gnf n={d.t.tresorerie} /></div>
+            : <div className="kpi"><div><Tuile i={PiHourglassMediumDuotone} ton="rouge" t={34} /><span>Reste à encaisser</span></div><span className="rg"><Gnf n={reste} /></span></div>}
+          {fond ? <div className="kpi"><div><Tuile i={PiShoppingCartDuotone} ton="orange" t={34} /><span>Dépenses du mois</span></div><Gnf n={depMois} /></div>
+            : <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Argent en caisse</span></div><Gnf n={d.t.tresorerie} /></div>}
         </div>
+        {fond ? <ADecider retard={retard} echu={echu} sit={d.sit} cls={d.cls} /> : <BlocCompta />}
         <div className="rang">
           <section className="carte c-large"><div className="tete-carte"><h2>Encaissements cumulés</h2>{objectif > 0 && <div className="legende"><span><i className="trait" />Encaissé</span><span><i className="pts" />Rythme prévu</span></div>}</div>
             {reel.length ? <Cumul labels={mois.map((m) => m.label)} reel={reel} objectif={objectif} /> : <Vide t="L'année scolaire n'a pas encore commencé." />}</section>
@@ -106,7 +126,6 @@ export function Tableau() {
           <div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="rouge" t={44} /><div><span>Impayés échus</span><Gnf n={echu} /></div></div>
           <div className="carte mini-c"><Tuile i={PiHandCoinsDuotone} ton="bleu" t={44} /><div><span>Avances</span><Gnf n={avances} /></div></div>
           {can('directeur', 'comptable', 'caissier') && <div className="carte mini-c"><Tuile i={PiShoppingCartDuotone} ton="orange" t={44} /><div><span>Dépenses</span><Gnf n={d.t.depenses_payees} /></div></div>}
-          {can('directeur', 'comptable', 'caissier') && <div className="carte mini-c tres"><Tuile i={PiPiggyBankDuotone} ton="vert" t={44} /><div><span>Trésorerie</span><Gnf n={d.t.tresorerie} /></div></div>}
         </div>
         <div className="rang">
           <section className="carte c-large"><div className="tete-carte"><h2>Activités récentes</h2><Lien to="/paiements" className="voir">Voir tout</Lien></div>

@@ -32,7 +32,7 @@ const FILTRES: [string, string][] = [['tous', 'Tous'], ['a_jour', 'À jour'], ['
 
 export function Eleves() {
   const { annee, can } = useApp();
-  const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [f, setF] = useState('tous'); const [p, setP] = useState(1); const [aj, setAj] = useState(false);
+  const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [f, setF] = useState('tous'); const [p, setP] = useState(1); const [aj, setAj] = useState(() => new URLSearchParams(location.search).get('ajout') === '1');
   const q = useQ(async () => {
     const [l, classes] = await Promise.all([db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom,inscription_id`), db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=*,niveaux(nom)&order=ordre,nom`)]);
     return { l, classes };

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiGearSixDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWarningDuotone, PiWhatsappLogoFill, PiXCircleFill } from 'react-icons/pi';
+import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
 import { auj, dateFr, gnf, nb, telAff } from './lib';
-import { Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Gnf, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Gnf, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
 import { LIB_M, LIB_P, LIB_T, SIT, ST_P, waUrl } from './abonnement';
 
-const ITEMS: [string, string, any, string][] = [['/admin', "Vue d'ensemble", PiGaugeDuotone, 'Accueil'], ['/admin/ecoles', 'Écoles', PiBuildingsDuotone, 'Écoles'], ['/admin/paiements', 'Paiements', PiReceiptDuotone, 'Paiements'], ['/admin/reglages', 'Réglages', PiGearSixDuotone, 'Réglages']];
+const ITEMS: [string, string, any, string, any][] = [['/admin', "Vue d'ensemble", PiSquaresFour, 'Accueil', PiSquaresFourFill], ['/admin/ecoles', 'Écoles', PiBuildings, 'Écoles', PiBuildingsFill], ['/admin/paiements', 'Paiements', PiMoneyWavy, 'Paiements', PiMoneyWavyFill], ['/admin/reglages', 'Réglages', PiGearSix, 'Réglages', PiGearSixFill]];
 const MOIS_C = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const NOM_ROLE: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
 const taille = (o: number) => (o < 1048576 ? `${Math.round(o / 1024)} Ko` : o < 1073741824 ? `${(o / 1048576).toFixed(0)} Mo` : `${(o / 1073741824).toFixed(1).replace('.', ',')} Go`);
@@ -17,6 +17,20 @@ const Sit = ({ x }: any) => <Pastille k={SIT[x.situation][0]} t={SIT[x.situation
 const Mini = ({ i, ton, t, children }: any) => <div className="carte mini-c"><Tuile i={i} ton={ton} t={44} /><div><span>{t}</span>{children}</div></div>;
 const Nb = ({ n }: { n: any }) => <span className="gnf"><b>{nb(n)}</b></span>;
 const Barre = ({ p, ton = 'bleu' }: any) => <span className="adm-b"><i className={ton} style={{ width: `${Math.min(Math.max(p, p > 0 ? 2 : 0), 100)}%` }} /></span>;
+
+function AFaire({ d }: any) {
+  const e = d.ecoles;
+  const l = [
+    d.a_verifier.nombre > 0 && { n: d.a_verifier.nombre, ton: 'orange', t: `${nb(d.a_verifier.nombre)} paiement${d.a_verifier.nombre > 1 ? 's' : ''} à vérifier`, s: `${gnf(d.a_verifier.somme)} d'abonnements`, to: '/admin/paiements', b: 'Vérifier', plein: true },
+    d.a_renouveler.length > 0 && { n: d.a_renouveler.length, ton: 'rouge', t: `${nb(d.a_renouveler.length)} école${d.a_renouveler.length > 1 ? 's' : ''} à relancer`, s: 'Abonnement fini ou bientôt', to: '/admin/ecoles?f=retard', b: 'Relancer' },
+    Number(e.attente) > 0 && { n: e.attente, ton: 'violet', t: `${nb(e.attente)} école${e.attente > 1 ? 's' : ''} pas encore payée${e.attente > 1 ? 's' : ''}`, s: 'En attente du premier paiement', to: '/admin/ecoles?f=attente', b: 'Voir' },
+    d.inactives.length > 0 && { n: d.inactives.length, ton: 'bleu', t: `${nb(d.inactives.length)} école${d.inactives.length > 1 ? 's' : ''} sans activité`, s: 'Rien depuis 14 jours', to: '/admin/ecoles', b: 'Voir' },
+  ].filter(Boolean) as any[];
+  return <section className="carte"><div className="tete-carte"><h2>À faire</h2></div>
+    {l.length === 0 ? <div className="action vert"><PiCheckCircleFill aria-hidden="true" /><div><b>Rien à faire</b><small>Tous les paiements sont traités et les écoles sont à jour.</small></div></div>
+      : <ul className="lignes-e decide">{l.map((x) => <li key={x.t}><Lien to={x.to} className="ligne-e"><span className={`rond ${x.ton}`}>{x.n > 99 ? '99+' : x.n}</span><div><b>{x.t}</b><small>{x.s}</small></div><span className={x.plein ? 'btn plein mini' : 'btn-doux'}>{x.b}</span></Lien></li>)}</ul>}
+  </section>;
+}
 
 function Vue() {
   const { tableau: q } = useApp();
@@ -52,26 +66,24 @@ function Vue() {
         <div className="kpi"><div><Tuile i={PiBuildingsDuotone} ton="violet" t={34} /><span>Écoles</span></div><Nb n={e.total} /></div>
         <div className="kpi"><div><Tuile i={PiStudentDuotone} ton="bleu" t={34} /><span>Élèves gérés</span></div><Nb n={d.eleves_total} /></div>
       </div>
+      <AFaire d={d} />
+      <section className="carte"><div className="tete-carte"><h2>À renouveler{d.a_renouveler.length ? ` (${nb(d.a_renouveler.length)})` : ''}</h2><Lien to="/admin/ecoles?f=retard" className="voir">Toutes les écoles</Lien></div>
+        {d.a_renouveler.length === 0 ? <p className="note">Aucun abonnement ne se termine dans les 14 prochains jours.</p> : <ul className="lignes-e">{d.a_renouveler.map((x: any) => <li key={x.id}><div className="ligne-e"><Avatar nom={String(x.nom).replace(/^(école|ecole|groupe scolaire|complexe scolaire|complexe)\s+/i, '')} /><div><Lien to={`/admin/ecoles/${x.id}`}><b>{x.nom}</b></Lien><small>{['grace', 'expire'].includes(x.situation) ? 'Terminé le' : 'Se termine le'} {dateFr(x.fin)}{x.prix_mois ? ` · ${gnf(x.prix_mois)} par mois` : ''}</small></div><span className="bureau-seul"><Sit x={x} /></span>{x.tel && <a className="btn wa mini" href={relancer(x)} target="_blank" rel="noreferrer" aria-label={`Relancer ${x.nom} sur WhatsApp`}><PiWhatsappLogoFill aria-hidden="true" /><span className="bureau-seul">Relancer</span></a>}</div></li>)}</ul>}
+      </section>
       <div className="rang">
         <section className="carte c-large"><div className="tete-carte"><h2>Encaissements des 12 derniers mois</h2></div>{vide ? <Vide t="Aucun abonnement encaissé pour le moment." /> : <Barres data={data} />}</section>
         <section className="carte c-etat"><h2>État des écoles</h2>
           <Segments parts={[[Number(e.actif), '#0FA968'], [Number(e.essai), '#1557F0'], [Number(e.grace), '#F79009'], [Number(e.expire), '#E5484D'], [Number(e.suspendu), '#94A0B8']]} />
           <ul className="etats">{ETATS.map(([t, n, I, c]) => <li key={t}><I className={c} aria-hidden="true" />{t}<b>{nb(n)}</b><small>{pc(Number(n))} %</small></li>)}</ul>
-          {d.a_verifier.nombre > 0 ? <div className="action"><PiHourglassMediumDuotone aria-hidden="true" /><div><b>{nb(d.a_verifier.nombre)} paiement{d.a_verifier.nombre > 1 ? 's' : ''} à vérifier</b><small>{gnf(d.a_verifier.somme)}</small></div><Lien to="/admin/paiements" className="btn plein mini">Vérifier</Lien></div> : <div className="action vert"><PiCheckCircleFill aria-hidden="true" /><div><b>Rien à vérifier</b><small>Tous les paiements sont traités.</small></div></div>}
         </section>
       </div>
       <div className="minis">
-        <Mini i={PiHourglassMediumDuotone} ton="orange" t="À vérifier"><Gnf n={d.a_verifier.somme} /></Mini>
-        <Mini i={PiWarningDuotone} ton="rouge" t="À renouveler"><Nb n={d.a_renouveler.length} /></Mini>
         <Mini i={PiSparkleDuotone} ton="violet" t="Nouvelles écoles, 30 jours"><Nb n={e.nouvelles_30j} /></Mini>
         <Mini i={PiUsersThreeDuotone} ton="vert" t="Écoles actives, 7 jours"><Nb n={e.actives_7j} /></Mini>
       </div>
       <div className="rang">
-        <section className="carte c-large"><div className="tete-carte"><h2>À renouveler</h2><Lien to="/admin/ecoles" className="voir">Toutes les écoles</Lien></div>
-          {d.a_renouveler.length === 0 ? <p className="note">Aucun abonnement ne se termine dans les 14 prochains jours.</p> : <ul className="hist">{d.a_renouveler.map((x: any) => <li key={x.id}><div><Lien to={`/admin/ecoles/${x.id}`}><b>{x.nom}</b></Lien><small>Fin le {dateFr(x.fin)}{x.prix_mois ? `, ${gnf(x.prix_mois)} par mois` : ''}</small></div><Sit x={x} />{x.tel && <a className="btn wa mini" href={relancer(x)} target="_blank" rel="noreferrer" aria-label={`Relancer ${x.nom} sur WhatsApp`}><PiWhatsappLogoFill aria-hidden="true" /><span className="bureau-seul-t">Relancer</span></a>}</li>)}</ul>}
-        </section>
-        <section className="carte c-etat"><h2>Écoles sans activité</h2>
-          {d.inactives.length === 0 ? <p className="note">Toutes les écoles ont travaillé ces 14 derniers jours.</p> : <ul className="hist">{d.inactives.map((x: any) => <li key={x.id}><div><Lien to={`/admin/ecoles/${x.id}`}><b>{x.nom}</b></Lien><small>Dernière activité : {quand(x.activite)}</small></div></li>)}</ul>}
+        <section className="carte c-large"><h2>Écoles sans activité</h2>
+          {d.inactives.length === 0 ? <p className="note">Toutes les écoles ont travaillé ces 14 derniers jours.</p> : <ul className="lignes-e">{d.inactives.map((x: any) => <li key={x.id}><Lien to={`/admin/ecoles/${x.id}`} className="ligne-e"><Avatar nom={String(x.nom).replace(/^(école|ecole|groupe scolaire|complexe scolaire|complexe)\s+/i, '')} /><div><b>{x.nom}</b><small>Dernière activité : {quand(x.activite)}</small></div><span className="btn-doux">Voir</span></Lien></li>)}</ul>}
         </section>
       </div>
       <div className="rang">
@@ -91,7 +103,7 @@ function Vue() {
 const FILTRES: [string, string, (s: string) => boolean][] = [['toutes', 'Toutes', () => true], ['attente', 'À payer', (s) => s === 'attente'], ['essai', 'Essai', (s) => s === 'essai'], ['actif', 'Actives', (s) => s === 'actif'], ['retard', 'À renouveler', (s) => s === 'grace' || s === 'expire'], ['suspendu', 'Suspendues', (s) => s === 'suspendu']];
 
 function Ecoles() {
-  const [f, setF] = useState('toutes'); const [t, setT] = useState('');
+  const [f, setF] = useState(() => { const v = new URLSearchParams(location.search).get('f') || ''; return FILTRES.some(([k]) => k === v) ? v : 'toutes'; }); const [t, setT] = useState('');
   const q = useQ(() => db.rpc('admin_ecoles'), []);
   return <>
     <Titre t="Écoles" />
@@ -234,7 +246,7 @@ export function EspaceAdmin() {
       <div className="app adm">
         <aside className="menu">
           <Lien to="/admin" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
-          <nav aria-label="Menu">{ITEMS.map(([to, t, I]) => <Lien key={to} to={to} className={on(to) ? 'actif' : ''}><I aria-hidden="true" /><span>{t}</span>{to === '/admin/paiements' && att > 0 && <em>{att}</em>}</Lien>)}</nav>
+          <nav aria-label="Menu">{ITEMS.map(([to, t, I, , J]) => { const K = on(to) ? J : I; return <Lien key={to} to={to} className={on(to) ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{t}</span>{to === '/admin/paiements' && att > 0 && <em>{att}</em>}</Lien>; })}</nav>
           <div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>Administrateur</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">
@@ -243,7 +255,7 @@ export function EspaceAdmin() {
           <div className="zone-bandeau" ref={setZB} />
           <main className="feuille">{page}</main>
         </div>
-        <nav className="barre-bas" aria-label="Navigation principale">{ITEMS.map(([to, , I, c]) => <Lien key={to} to={to} className={on(to) ? 'on' : ''}><I aria-hidden="true" /><span>{c}</span></Lien>)}</nav>
+        <nav className="barre-bas" aria-label="Navigation principale">{ITEMS.map(([to, , I, c, J]) => { const K = on(to) ? J : I; return <Lien key={to} to={to} className={on(to) ? 'on' : ''}><K aria-hidden="true" /><span>{c}</span></Lien>; })}</nav>
       </div>
     </Ctx.Provider>
   );

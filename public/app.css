@@ -291,3 +291,29 @@ button,input,select{font:inherit;color:inherit}input,select{width:100%;height:46
 @media(max-width:860px){.fr-st{grid-template-columns:1fr 1fr}.fr-st-t{margin:14px 16px 0}.fr-note{margin:0 16px 12px}.ff-suivi{margin-left:0}.fr-r3 b{font-size:15px}}
 @media(min-width:861px){.frais-g{grid-template-columns:400px minmax(0,1fr)}.fr-r3 b{font-size:15.5px;white-space:nowrap}}
 .ident-env{display:grid;gap:8px}.ident-env>span{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--gris)}.ie{display:grid;grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--bord);border-radius:14px;background:#fff;text-decoration:none;color:inherit}.ie svg{grid-row:1/3;width:44px;height:44px;padding:10px;border-radius:12px;box-sizing:border-box}.ie b{font-size:15px;color:#0B1F5C}.ie small{font-size:12.5px;color:var(--gris);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ie.wa svg{background:#DFF6EA;color:#128C4A}.ie.sms svg{background:#E4EFFF;color:#0B4FE8}.ie.mail svg{background:#FFF0DC;color:#C2620A}.ie:hover{border-color:#B9D2FF;background:#F8FAFF}
+/* Téléphone : tableau de bord plus compact, barre du bas épurée */
+@media(max-width:860px){
+.barre-bas a,.barre-bas button{gap:4px;font-size:11px;font-weight:600;color:#7A8499;padding-top:4px}
+.barre-bas svg{font-size:24px}
+.barre-bas .on{color:var(--bleu)}
+.barre-bas .fab{width:56px;height:56px;margin-top:-26px}
+.barre-bas .fab svg{font-size:24px}
+.kpis{gap:8px}
+.kpis .kpi{gap:6px 9px;padding:10px 11px;border-radius:16px}
+.kpis .kpi .tuile{width:36px!important;height:36px!important;font-size:19px!important}
+.kpis .kpi>div>span:not(.tuile){font-size:12px;line-height:1.25}
+.kpis .kpi .gnf b,.kpis .kpi>.rg b{font-size:clamp(15px,4.6vw,18px)}
+.kpis .kpi .gnf small,.kpis .kpi>.rg small{font-size:10.5px}
+.app.ondule .carte h2{font-size:16.5px}
+.app.ondule .carte{padding:14px}
+.c-etat{gap:11px}
+.c-etat li,.c-etat .leg{font-size:13.5px}
+}
+@media(max-width:860px){
+.minis{gap:8px}
+.minis:not(.caisses-m) .mini-c{flex-direction:row;align-items:center;gap:11px;padding:10px 12px;border-radius:16px}
+.minis .mini-c .tuile{width:38px!important;height:38px!important;font-size:20px!important}
+.minis .mini-c div>span:first-child{font-size:12px}
+.minis .mini-c .gnf b,.minis .mini-c div>b{font-size:17px}
+.minis .mini-c .gnf small{font-size:10.5px}
+}

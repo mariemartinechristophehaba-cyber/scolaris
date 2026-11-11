@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PiCrownSimpleDuotone, PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiDotsThreeCircleDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiReceiptDuotone, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
+import { PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiCrownSimpleDuotone, PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
 import { auth, db, getSession, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
@@ -32,14 +32,14 @@ const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 
 
 function BarreBas({ chemin, can, ouvrir }: any) {
   const fin = can(...STAFF);
-  const it = (to: string, t: string, I: any) => <Lien to={to} className={chemin.startsWith(to) ? 'on' : ''}><I aria-hidden="true" /><span>{t}</span></Lien>;
+  const it = (to: string, t: string, I: any, J: any) => { const on = chemin.startsWith(to); const K = on ? J : I; return <Lien to={to} className={on ? 'on' : ''}><K aria-hidden="true" /><span>{t}</span></Lien>; };
   return (
     <nav className="barre-bas" aria-label="Navigation principale">
-      {it('/tableau', 'Accueil', PiHouseSimpleDuotone)}
-      {it('/eleves', 'Élèves', PiStudentDuotone)}
-      {fin ? <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien> : it('/classes', 'Classes', PiUsersThreeDuotone)}
-      {fin ? it('/paiements', 'Paiements', PiReceiptDuotone) : it('/parametres', 'Paramètres', PiGearSixDuotone)}
-      <button type="button" onClick={ouvrir}><PiDotsThreeCircleDuotone aria-hidden="true" /><span>Plus</span></button>
+      {it('/tableau', 'Accueil', PiSquaresFour, PiSquaresFourFill)}
+      {it('/eleves', 'Élèves', PiStudent, PiStudentFill)}
+      {fin ? <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien> : it('/classes', 'Classes', PiUsersThree, PiUsersThreeFill)}
+      {fin ? it('/paiements', 'Paiements', PiWallet, PiWalletFill) : it('/parametres', 'Paramètres', PiGearSix, PiGearSixFill)}
+      <button type="button" onClick={ouvrir}><PiDotsNine aria-hidden="true" /><span>Menu</span></button>
     </nav>
   );
 }

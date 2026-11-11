@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { PiBooksDuotone, PiBusDuotone, PiCoinsDuotone, PiGraduationCapDuotone, PiIdentificationBadgeDuotone, PiNotePencilDuotone, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiClockCountdownFill, PiEyeDuotone, PiFileArrowUpDuotone, PiHandCoinsDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiPencilSimpleDuotone, PiPhoneDuotone, PiPlusBold, PiReceiptDuotone, PiStudentDuotone, PiTrashDuotone, PiWhatsappLogoFill, PiCrownSimpleFill } from 'react-icons/pi';
+import { PiBabyDuotone, PiBackpackDuotone, PiCaretDownBold, PiBooksDuotone, PiBusDuotone, PiCoinsDuotone, PiGraduationCapDuotone, PiIdentificationBadgeDuotone, PiNotePencilDuotone, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiClockCountdownFill, PiEyeDuotone, PiFileArrowUpDuotone, PiHandCoinsDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiPencilSimpleDuotone, PiPhoneDuotone, PiPlusBold, PiReceiptDuotone, PiStudentDuotone, PiTrashDuotone, PiWhatsappLogoFill, PiCrownSimpleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Jauge } from './charts';
 import { dateFr, gnf, grouperClasses, nb, rangNiveau, tel, telAff, trierClasses } from './lib';
@@ -197,8 +197,10 @@ function FormClasse({ nv, fermer, fini }: any) {
 
 const iconeFrais = (l = '') => (/inscri/i.test(l) ? PiIdentificationBadgeDuotone : /scolar/i.test(l) ? PiGraduationCapDuotone : /exam/i.test(l) ? PiNotePencilDuotone : /fourn/i.test(l) ? PiBooksDuotone : /transp/i.test(l) ? PiBusDuotone : PiCoinsDuotone);
 
+const ICONES_NIV: any = { Maternelle: PiBabyDuotone, Primaire: PiBackpackDuotone, 'Collège': PiBooksDuotone, 'Lycée': PiGraduationCapDuotone };
+
 export function Frais() {
-  const { annee, can, eid } = useApp(); const pre = new URLSearchParams(location.search).get('classe') || ''; const [form, setF] = useState<any>(pre && can('directeur', 'comptable') ? { classe: pre } : null); const [sel, setSel] = useState(pre);
+  const { annee, can, eid } = useApp(); const pre = new URLSearchParams(location.search).get('classe') || ''; const [ouvert, setOuv] = useState<string | null>(null); const [form, setF] = useState<any>(pre && can('directeur', 'comptable') ? { classe: pre } : null); const [sel, setSel] = useState(pre);
   const q = useQ(async () => {
     const [classes, types, tarifs] = await Promise.all([db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=*,niveaux(nom)&order=ordre,nom`), db.get(`types_frais?etablissement_id=eq.${eid}&actif=is.true&order=ordre`), db.get(`tarifs?annee_scolaire_id=eq.${annee.id}&select=*,tarif_tranches(*)`)]);
     return { classes, types, tarifs };
@@ -213,7 +215,9 @@ export function Frais() {
         const groupes = grouperClasses(d.classes); const c = d.classes.find((x: any) => x.id === sel) || groupes[0][1][0];
         const t = d.tarifs.filter((x: any) => x.classe_id === c.id);
         return <div className="frais-g">
-          <nav className="carte frais-l" aria-label="Classes">{groupes.map(([n, cs]) => <div className="fl-g" key={n}><h3>{n}</h3><div className="fl-b">{cs.map((x: any) => <button key={x.id} className={x.id === c.id ? 'on' : ''} onClick={() => setSel(x.id)}><b>{x.nom}</b><span>{totalDe(x.id) ? `${nb(totalDe(x.id))} GNF` : 'À définir'}</span></button>)}</div></div>)}</nav>
+          <div className="niv-l">{groupes.map(([n, cs]) => { const ouv = (ouvert ?? groupes.find(([, l]) => l.some((x: any) => x.id === c.id))?.[0]) === n; const I = ICONES_NIV[n] || PiStudentDuotone; const tot = cs.reduce((s2: number, x: any) => s2 + totalDe(x.id), 0); const def = cs.filter((x: any) => totalDe(x.id) > 0).length;
+            return <section key={n} className={`carte niv-c${ouv ? ' ouv' : ''}`}><button type="button" className="niv-h" aria-expanded={ouv} onClick={() => setOuv(ouv ? '' : n)}><span className={`niv-i ${n === 'Primaire' ? 'vert' : n === 'Collège' ? 'violet' : n === 'Lycée' ? 'orange' : 'bleu'}`}><I aria-hidden="true" /></span><span className="niv-t"><b>{n}</b><small>{cs.length} classe{cs.length > 1 ? 's' : ''}, {def === cs.length ? 'frais définis' : `${cs.length - def} à définir`}</small></span>{tot > 0 && <span className="niv-m">{nb(tot)} <small>GNF</small></span>}<PiCaretDownBold className="niv-f" aria-hidden="true" /></button>
+              {ouv && <div className="niv-b">{cs.map((x: any) => <button key={x.id} className={x.id === c.id ? 'on' : ''} onClick={() => setSel(x.id)}><b>{x.nom}</b><span>{totalDe(x.id) ? `${nb(totalDe(x.id))} GNF` : 'À définir'}</span></button>)}</div>}</section>; })}</div>
           <section className="carte">
             <div className="tete-carte"><h2>{c.nom}</h2><div className="total-cl"><span>Total annuel</span><Gnf n={totalDe(c.id)} /></div></div>
             {t.length === 0 ? <Vide t="Aucun tarif défini pour cette classe.">{edit && <button className="btn contour mini" onClick={() => setF({ classe: c.id })}>Définir un tarif</button>}</Vide> : <ul className="tarifs">{t.map((x: any) => {

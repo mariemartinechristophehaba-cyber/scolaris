@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill } from 'react-icons/pi';
+import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
 import { auj, dateFr, gnf, nb, telAff } from './lib';
@@ -18,22 +18,75 @@ const Mini = ({ i, ton, t, children }: any) => <div className="carte mini-c"><Tu
 const Nb = ({ n }: { n: any }) => <span className="gnf"><b>{nb(n)}</b></span>;
 const Barre = ({ p, ton = 'bleu' }: any) => <span className="adm-b"><i className={ton} style={{ width: `${Math.min(Math.max(p, p > 0 ? 2 : 0), 100)}%` }} /></span>;
 
-function AFaire({ d }: any) {
+const telUrl = (t: string) => { const x = String(t || '').replace(/\D/g, ''); return `tel:${x.length === 9 ? '+224' + x : '+' + x}`; };
+const Contact = ({ tel, msg, nom }: any) => tel ? <span className="contact-b"><a className="btn-doux rond-i" href={telUrl(tel)} aria-label={`Appeler ${nom}`}><PiPhoneCallFill aria-hidden="true" /></a><a className="btn wa mini rond-i" href={waUrl(tel, msg)} target="_blank" rel="noreferrer" aria-label={`Écrire à ${nom} sur WhatsApp`}><PiWhatsappLogoFill aria-hidden="true" /></a></span> : null;
+const sansPrefixe = (n: any) => String(n || '').replace(/^(école|ecole|groupe scolaire|complexe scolaire|complexe)\s+/i, '');
+
+function Suivi({ s, d }: any) {
+  const c = s.croissance; const taux = c.inscrites ? Math.round((c.payantes / c.inscrites) * 100) : 0;
+  const risque = (x: any) => ['actif', 'essai'].includes(x.situation) && Number(x.pay_7j) === 0;
+  const maxU = Math.max(...s.usage.map((x: any) => Number(x.pay_7j)), 1);
+  return <>
+    <div className="rang">
+      <section className="carte c-large" id="demarrage"><div className="tete-carte"><h2>Écoles qui démarrent mal{s.demarrage.length ? ` (${nb(s.demarrage.length)})` : ''}</h2></div>
+        <p className="note">Inscrites, mais sans classes ou sans élèves. Appelez-les pour les aider.</p>
+        {s.demarrage.length === 0 ? <p className="note">Toutes les écoles ont créé leurs classes et leurs élèves.</p> : <ul className="lignes-e">{s.demarrage.map((x: any) => <li key={x.id}><div className="ligne-e"><Avatar nom={sansPrefixe(x.nom)} /><div><Lien to={`/admin/ecoles/${x.id}`}><b>{x.nom}</b></Lien><small>{x.fondateur || 'Fondateur'}{x.tel ? ` · ${telAff(x.tel)}` : ''} · {nb(x.classes)} classe{x.classes > 1 ? 's' : ''}, {nb(x.eleves)} élève{x.eleves > 1 ? 's' : ''}</small></div><Contact tel={x.tel} nom={x.nom} msg={`Bonjour ${x.fondateur || ''}, c'est l'équipe Scolaris. Vous avez inscrit ${x.nom}. Je peux vous aider à créer vos classes et vos élèves ?`} /></div></li>)}</ul>}
+      </section>
+      <section className="carte c-etat"><h2>Écoles gagnées et perdues</h2>
+        <div className="croiss">
+          <div><span>Inscrites</span><b>{nb(c.inscrites)}</b></div>
+          <div><span>Payantes</span><b className="vert">{nb(c.payantes)}</b></div>
+          <div><span>Gagnées ce mois</span><b className="vert">{nb(c.gagnees_mois)}</b></div>
+          <div><span>Perdues</span><b className="rouge">{nb(c.perdues)}</b></div>
+        </div>
+        <div className="taux-c"><div><span>Écoles qui paient</span><b>{taux} %</b></div><Barre p={taux} ton="vert" /></div>
+        <p className="note">{nb(c.nouvelles_mois)} nouvelle{c.nouvelles_mois > 1 ? 's' : ''} école{c.nouvelles_mois > 1 ? 's' : ''} ce mois{c.essais_non_payes ? ` · ${nb(c.essais_non_payes)} essai${c.essais_non_payes > 1 ? 's' : ''} fini${c.essais_non_payes > 1 ? 's' : ''} sans payer` : ''}.</p>
+      </section>
+    </div>
+    <div className="rang">
+      <section className="carte c-large"><div className="tete-carte"><h2>Utilisation cette semaine</h2></div>
+        <p className="note">Paiements de parents enregistrés ces 7 derniers jours.</p>
+        {s.usage.length === 0 ? <p className="note">Aucune école pour le moment.</p> : <ul className="lignes-e">{s.usage.map((x: any) => <li key={x.id}><Lien to={`/admin/ecoles/${x.id}`} className="ligne-e"><Avatar nom={sansPrefixe(x.nom)} /><div><b>{x.nom}</b><small>{nb(x.eleves)} élève{x.eleves > 1 ? 's' : ''} · dernier paiement : {x.dernier_pay ? quand(x.dernier_pay) : 'jamais'}</small><Barre p={(Number(x.pay_7j) / maxU) * 100} ton={risque(x) ? 'rouge' : 'vert'} /></div>{risque(x) ? <span className="puce-r">À risque</span> : <b className="le-m">{nb(x.pay_7j)}</b>}</Lien></li>)}</ul>}
+      </section>
+      <section className="carte c-etat"><h2>Argent à venir, 30 jours</h2>
+        <div className="a-venir"><Gnf n={s.a_venir.somme} /><small>si les {nb(s.a_venir.nombre)} école{s.a_venir.nombre > 1 ? 's' : ''} renouvelle{s.a_venir.nombre > 1 ? 'nt' : ''}</small></div>
+        {s.a_venir.liste.length === 0 ? <p className="note">Aucun abonnement ne se termine dans les 30 prochains jours.</p> : <ul className="lignes-e">{s.a_venir.liste.map((x: any) => <li key={x.id}><Lien to={`/admin/ecoles/${x.id}`} className="ligne-e"><div><b>{x.nom}</b><small>Fin le {dateFr(x.fin)}{x.situation === 'essai' ? ' · essai' : ''}</small></div><b className="le-m">{nb(x.montant)}</b></Lien></li>)}</ul>}
+      </section>
+    </div>
+    <div className="rang">
+      <section className="carte c-large" id="sans-ecole"><div className="tete-carte"><h2>Comptes sans école{s.sans_ecole.length ? ` (${nb(s.sans_ecole.length)})` : ''}</h2></div>
+        <p className="note">Ils ont créé un compte mais n'ont pas fini l'inscription de leur école.</p>
+        {s.sans_ecole.length === 0 ? <p className="note">Aucun compte en attente.</p> : <ul className="lignes-e">{s.sans_ecole.map((x: any) => <li key={x.id}><div className="ligne-e"><Avatar nom={x.nom || x.email || '?'} /><div><b>{x.nom || x.email || 'Sans nom'}</b><small>{[x.telephone && telAff(x.telephone), x.email, `inscrit ${quand(x.cree_le).toLowerCase()}`].filter(Boolean).join(' · ')}</small></div><Contact tel={x.telephone} nom={x.nom || 'ce compte'} msg={`Bonjour ${x.nom || ''}, c'est l'équipe Scolaris. Vous avez créé un compte mais pas encore votre école. Je peux vous aider à finir ?`} /></div></li>)}</ul>}
+      </section>
+      <section className="carte c-etat vol"><h2>Argent géré dans Scolaris</h2>
+        <p className="note">Payé par les parents dans toutes les écoles.</p>
+        <div className="a-venir"><Gnf n={s.volume.total} /><small>{nb(s.volume.paiements)} paiement{s.volume.paiements > 1 ? 's' : ''} validé{s.volume.paiements > 1 ? 's' : ''} · {nb(d.eleves_total)} élèves</small></div>
+        <dl className="cl-d"><div><dt>Ce mois</dt><dd>{gnf(s.volume.mois)}</dd></div></dl>
+      </section>
+    </div>
+  </>;
+}
+
+function AFaire({ d, s }: any) {
   const e = d.ecoles;
   const l = [
     d.a_verifier.nombre > 0 && { n: d.a_verifier.nombre, ton: 'orange', t: `${nb(d.a_verifier.nombre)} paiement${d.a_verifier.nombre > 1 ? 's' : ''} à vérifier`, s: `${gnf(d.a_verifier.somme)} d'abonnements`, to: '/admin/paiements', b: 'Vérifier', plein: true },
     d.a_renouveler.length > 0 && { n: d.a_renouveler.length, ton: 'rouge', t: `${nb(d.a_renouveler.length)} école${d.a_renouveler.length > 1 ? 's' : ''} à relancer`, s: 'Abonnement fini ou bientôt', to: '/admin/ecoles?f=retard', b: 'Relancer' },
     Number(e.attente) > 0 && { n: e.attente, ton: 'violet', t: `${nb(e.attente)} école${e.attente > 1 ? 's' : ''} pas encore payée${e.attente > 1 ? 's' : ''}`, s: 'En attente du premier paiement', to: '/admin/ecoles?f=attente', b: 'Voir' },
+    s && s.demarrage.length > 0 && { n: s.demarrage.length, ton: 'orange', t: `${nb(s.demarrage.length)} école${s.demarrage.length > 1 ? 's' : ''} démarre${s.demarrage.length > 1 ? 'nt' : ''} mal`, s: 'Sans classes ou sans élèves : appelez', to: '#demarrage', b: 'Appeler' },
+    s && s.sans_ecole.length > 0 && { n: s.sans_ecole.length, ton: 'violet', t: `${nb(s.sans_ecole.length)} compte${s.sans_ecole.length > 1 ? 's' : ''} sans école`, s: "Inscription pas terminée", to: '#sans-ecole', b: 'Voir' },
     d.inactives.length > 0 && { n: d.inactives.length, ton: 'bleu', t: `${nb(d.inactives.length)} école${d.inactives.length > 1 ? 's' : ''} sans activité`, s: 'Rien depuis 14 jours', to: '/admin/ecoles', b: 'Voir' },
   ].filter(Boolean) as any[];
   return <section className="carte"><div className="tete-carte"><h2>À faire</h2></div>
     {l.length === 0 ? <div className="action vert"><PiCheckCircleFill aria-hidden="true" /><div><b>Rien à faire</b><small>Tous les paiements sont traités et les écoles sont à jour.</small></div></div>
-      : <ul className="lignes-e decide">{l.map((x) => <li key={x.t}><Lien to={x.to} className="ligne-e"><span className={`rond ${x.ton}`}>{x.n > 99 ? '99+' : x.n}</span><div><b>{x.t}</b><small>{x.s}</small></div><span className={x.plein ? 'btn plein mini' : 'btn-doux'}>{x.b}</span></Lien></li>)}</ul>}
+      : <ul className="lignes-e decide">{l.map((x) => { const C: any = x.to.startsWith('#') ? 'a' : Lien; const pr = x.to.startsWith('#') ? { href: x.to } : { to: x.to }; return <li key={x.t}><C {...pr} className="ligne-e"><span className={`rond ${x.ton}`}>{x.n > 99 ? '99+' : x.n}</span><div><b>{x.t}</b><small>{x.s}</small></div><span className={x.plein ? 'btn plein mini' : 'btn-doux'}>{x.b}</span></C></li>; })}</ul>}
   </section>;
 }
 
 function Vue() {
   const { tableau: q } = useApp();
+  const sq = useQ(() => db.rpc('admin_suivi').catch(() => null), []);
+  const s: any = sq.data;
   return <Etat q={q}>{(d: any) => {
     const e = d.ecoles; const reglees = Number(e.essai) + Number(e.actif); const pct = e.total ? Math.round((reglees / e.total) * 100) : 0; const pc = (n: number) => (e.total ? Math.round((n / e.total) * 100) : 0);
     const prec = Number(d.encaisse_mois_prec); const mois = Number(d.encaisse_mois); const evo = prec > 0 ? Math.round(((mois - prec) / prec) * 100) : null;
@@ -66,7 +119,7 @@ function Vue() {
         <div className="kpi"><div><Tuile i={PiBuildingsDuotone} ton="violet" t={34} /><span>Écoles</span></div><Nb n={e.total} /></div>
         <div className="kpi"><div><Tuile i={PiStudentDuotone} ton="bleu" t={34} /><span>Élèves gérés</span></div><Nb n={d.eleves_total} /></div>
       </div>
-      <AFaire d={d} />
+      <AFaire d={d} s={s} />
       <section className="carte"><div className="tete-carte"><h2>À renouveler{d.a_renouveler.length ? ` (${nb(d.a_renouveler.length)})` : ''}</h2><Lien to="/admin/ecoles?f=retard" className="voir">Toutes les écoles</Lien></div>
         {d.a_renouveler.length === 0 ? <p className="note">Aucun abonnement ne se termine dans les 14 prochains jours.</p> : <ul className="lignes-e">{d.a_renouveler.map((x: any) => <li key={x.id}><div className="ligne-e"><Avatar nom={String(x.nom).replace(/^(école|ecole|groupe scolaire|complexe scolaire|complexe)\s+/i, '')} /><div><Lien to={`/admin/ecoles/${x.id}`}><b>{x.nom}</b></Lien><small>{['grace', 'expire'].includes(x.situation) ? 'Terminé le' : 'Se termine le'} {dateFr(x.fin)}{x.prix_mois ? ` · ${gnf(x.prix_mois)} par mois` : ''}</small></div><span className="bureau-seul"><Sit x={x} /></span>{x.tel && <a className="btn wa mini" href={relancer(x)} target="_blank" rel="noreferrer" aria-label={`Relancer ${x.nom} sur WhatsApp`}><PiWhatsappLogoFill aria-hidden="true" /><span className="bureau-seul">Relancer</span></a>}</div></li>)}</ul>}
       </section>
@@ -77,6 +130,7 @@ function Vue() {
           <ul className="etats">{ETATS.map(([t, n, I, c]) => <li key={t}><I className={c} aria-hidden="true" />{t}<b>{nb(n)}</b><small>{pc(Number(n))} %</small></li>)}</ul>
         </section>
       </div>
+      {s && <Suivi s={s} d={d} />}
       <div className="minis">
         <Mini i={PiSparkleDuotone} ton="violet" t="Nouvelles écoles, 30 jours"><Nb n={e.nouvelles_30j} /></Mini>
         <Mini i={PiUsersThreeDuotone} ton="vert" t="Écoles actives, 7 jours"><Nb n={e.actives_7j} /></Mini>

@@ -369,3 +369,13 @@ button,input,select{font:inherit;color:inherit}input,select{width:100%;height:46
 @media(max-width:860px){.hero-g>.hero-bj{margin-top:44px}.hero-g>.hero-bj~.hero-lab{margin-top:2px}.hero-simple .hero-g>.hero-bj{margin-top:46px}}
 .ligne-e a{color:var(--encre)}.ligne-e .btn.wa{flex:none;min-height:38px;padding:0 13px}
 .rond.bleu{background:var(--ciel);color:var(--bleu)}.adm .lignes-e small{white-space:normal}
+/* Admin : suivi */
+#demarrage,#sans-ecole{scroll-margin-top:90px}
+.contact-b{display:flex;gap:8px;flex:none}.rond-i{width:40px;height:40px;min-height:40px!important;padding:0!important;justify-content:center;border-radius:50%;font-size:19px}
+.croiss{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.croiss div{padding:12px;border-radius:14px;background:var(--fond)}.croiss span{display:block;font-size:12.5px;color:var(--gris)}.croiss b{font:600 24px/1.2 var(--pop)}
+.taux-c>div{display:flex;justify-content:space-between;font-size:14px;margin-bottom:7px}.taux-c b{font-weight:700}
+.ligne-e .adm-b{display:block;margin-top:6px;max-width:220px}
+.puce-r{flex:none;display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:999px;background:var(--rougef);color:var(--rouge);font-size:12.5px;font-weight:600}
+.a-venir{display:flex;flex-direction:column;gap:2px}.a-venir .gnf b{font-size:28px}.a-venir small{font-size:13px;color:var(--gris)}
+.carte.vol{background:linear-gradient(160deg,#0F2D7A,#1557F0);color:#fff;border:0}.carte.vol h2,.carte.vol .gnf{color:#fff}.carte.vol .note,.carte.vol small,.carte.vol dt{color:#C9D8FF}.carte.vol dd{color:#fff;font-weight:600}.carte.vol .cl-d div{border-color:rgba(255,255,255,.18)}
+.contact-b .rond-i{flex:none;width:40px!important;display:inline-flex;align-items:center}

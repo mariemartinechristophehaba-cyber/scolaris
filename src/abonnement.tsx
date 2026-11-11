@@ -16,7 +16,7 @@ export function BandeauAbonnement({ cache, accueil }: { cache: boolean; accueil:
   const { abo, role } = useApp();
   if (!abo || cache) return null;
   const { situation: s, jours, jours_grace: g } = abo; let t = ''; let ton = 'orange';
-  if (s === 'attente') { if (abo.en_attente) t = 'Paiement en cours de vérification. Votre école sera activée dès sa validation.'; else { t = 'Votre école n’est pas encore activée. Payez votre abonnement pour commencer.'; ton = 'paye'; } } else if ((s === 'essai' || s === 'actif') && jours <= 7) t = `Votre ${s === 'essai' ? 'essai gratuit' : 'abonnement'} se termine ${jours === 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}.`;
+  if (s === 'attente') { if (abo.en_attente) t = 'Paiement en cours de vérification. Votre école sera activée dès sa validation.'; else { t = 'Payez votre abonnement pour activer votre école.'; ton = 'paye'; } } else if ((s === 'essai' || s === 'actif') && jours <= 7) t = `Votre ${s === 'essai' ? 'essai gratuit' : 'abonnement'} se termine ${jours === 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}.`;
   else if (s === 'grace') t = `Votre abonnement est terminé. Plus que ${g} jour${g > 1 ? 's' : ''} avant le passage en lecture seule.`;
   else if (s === 'expire') { t = "Abonnement expiré : vous pouvez consulter vos données, mais plus rien enregistrer."; ton = 'rouge'; } else if (s === 'suspendu') { t = 'Cet établissement est suspendu : contactez Scolaris.'; ton = 'rouge'; }
   if (!t && s === 'essai' && accueil && role === 'fondateur') { t = `Essai gratuit : il vous reste ${jours} jours.`; ton = 'bleu'; }

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiCrownSimpleDuotone, PiClockCounterClockwiseDuotone, PiUsersFourDuotone, PiBellSimpleDuotone, PiBuildingsDuotone, PiChartBarDuotone, PiFileArrowUpDuotone, PiGearSixDuotone, PiHouseSimpleDuotone, PiInvoiceDuotone, PiMegaphoneDuotone, PiMoneyWavyDuotone, PiPlusBold, PiSignOutDuotone, PiStudentDuotone, PiUsersThreeDuotone, PiWalletDuotone } from 'react-icons/pi';
+import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone, PiWalletDuotone } from 'react-icons/pi';
 import { auth, db, getSession, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
@@ -13,20 +13,20 @@ import { Abonnement, BandeauAbonnement } from './abonnement';
 import { EspaceAdmin } from './admin';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
-const MENU: [string, string, any, string[]?, string?][] = [
-  ['/tableau', 'Tableau de bord', PiHouseSimpleDuotone],
-  ['/eleves', 'Élèves', PiStudentDuotone],
-  ['/classes', 'Classes', PiUsersThreeDuotone],
-  ['/frais', 'Frais scolaires', PiInvoiceDuotone, STAFF],
-  ['/paiements', 'Paiements', PiMoneyWavyDuotone, STAFF, 'attente'],
-  ['/depenses', 'Dépenses', PiWalletDuotone, ['directeur', 'comptable', 'caissier']],
-  ['/rapports', 'Rapports', PiChartBarDuotone, ['directeur', 'comptable']],
-  ['/relances', 'Relances', PiMegaphoneDuotone, STAFF, 'retard'],
-  ['/importation', 'Importation', PiFileArrowUpDuotone, ['directeur', 'secretaire']],
-  ['/equipe', 'Équipe', PiUsersFourDuotone, ['fondateur']],
-  ['/activite', 'Qui a fait quoi', PiClockCounterClockwiseDuotone, ['fondateur']],
-  ['/abonnement', 'Abonnement', PiCrownSimpleDuotone, ['fondateur']],
-  ['/parametres', 'Paramètres', PiGearSixDuotone],
+const MENU: [string, string, any, string[]?, string?, any?, string?][] = [
+  ['/tableau', 'Tableau de bord', PiSquaresFour, undefined, undefined, PiSquaresFourFill, 'Général'],
+  ['/eleves', 'Élèves', PiStudent, undefined, undefined, PiStudentFill, 'Général'],
+  ['/classes', 'Classes', PiChalkboard, undefined, undefined, PiChalkboardFill, 'Général'],
+  ['/frais', 'Frais scolaires', PiReceipt, STAFF, undefined, PiReceiptFill, 'Finances'],
+  ['/paiements', 'Paiements', PiMoneyWavy, STAFF, 'attente', PiMoneyWavyFill, 'Finances'],
+  ['/depenses', 'Dépenses', PiWallet, ['directeur', 'comptable', 'caissier'], undefined, PiWalletFill, 'Finances'],
+  ['/relances', 'Relances', PiBellRinging, STAFF, 'retard', PiBellRingingFill, 'Finances'],
+  ['/rapports', 'Rapports', PiChartLineUp, ['directeur', 'comptable'], undefined, PiChartLineUpFill, 'Finances'],
+  ['/importation', 'Importation', PiFileArrowUp, ['directeur', 'secretaire'], undefined, PiFileArrowUpFill, 'Administration'],
+  ['/equipe', 'Équipe', PiUsersThree, ['fondateur'], undefined, PiUsersThreeFill, 'Administration'],
+  ['/activite', 'Qui a fait quoi', PiClockCounterClockwise, ['fondateur'], undefined, PiClockCounterClockwiseFill, 'Administration'],
+  ['/abonnement', 'Abonnement', PiSealCheck, ['fondateur'], undefined, PiSealCheckFill, 'Administration'],
+  ['/parametres', 'Paramètres', PiGearSix, undefined, undefined, PiGearSixFill, 'Administration'],
 ];
 const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
 
@@ -38,7 +38,7 @@ function BarreBas({ chemin, can, ouvrir }: any) {
       {it('/tableau', 'Accueil', PiSquaresFour, PiSquaresFourFill)}
       {it('/eleves', 'Élèves', PiStudent, PiStudentFill)}
       {fin ? <Lien to="/paiements/nouveau" className="fab" aria-label="Enregistrer un paiement"><PiPlusBold aria-hidden="true" /></Lien> : it('/classes', 'Classes', PiUsersThree, PiUsersThreeFill)}
-      {fin ? it('/paiements', 'Paiements', PiWallet, PiWalletFill) : it('/parametres', 'Paramètres', PiGearSix, PiGearSixFill)}
+      {fin ? it('/paiements', 'Paiements', PiMoneyWavy, PiMoneyWavyFill) : it('/parametres', 'Paramètres', PiGearSix, PiGearSixFill)}
       <button type="button" onClick={ouvrir}><PiDotsNine aria-hidden="true" /><span>Menu</span></button>
     </nav>
   );
@@ -104,7 +104,7 @@ function Coque({ m, annees, recharger, abo }: any) {
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
-          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle]) => <Lien key={to} to={to} className={chemin.startsWith(to) ? 'actif' : ''}><I aria-hidden="true" /><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien>)}</nav>
+          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle, J, grp], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien></Fragment>; })}</nav>
           <div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">

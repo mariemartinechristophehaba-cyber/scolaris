@@ -337,3 +337,14 @@ button,input,select{font:inherit;color:inherit}input,select{width:100%;height:46
 .roue-eff{display:block;margin:10px auto 0;border:0;background:none;color:#C2281F;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .date-roue{white-space:nowrap;overflow:hidden}
 .profil-el .infos-el{margin-top:0;border-top:0;padding-top:0}.profil-el .ligne-btn{display:flex;justify-content:center;gap:10px;margin-top:14px}
+/* Menu latéral : groupes et icônes en pastilles */
+.menu nav .menu-g{display:block;margin:14px 0 4px 14px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(201,216,255,.55)}
+.menu nav .menu-g:first-child{margin-top:4px}
+.menu nav a .mi{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.08);transition:background .15s}
+.menu nav a .mi svg{font-size:18px;color:#D6E2FF}
+.menu nav a:hover .mi{background:rgba(255,255,255,.14)}
+.menu nav a.actif .mi{background:linear-gradient(135deg,#2F6BFF,#0B4FE8);box-shadow:0 6px 14px -6px rgba(11,79,232,.7)}
+.menu nav a.actif .mi svg{color:#fff}
+.menu nav a{gap:11px;padding-left:9px}
+@media(max-width:860px){.menu nav a{min-height:44px;height:44px}.menu nav .menu-g{margin-top:12px}}
+@media(min-width:861px){.menu nav .menu-g{margin:10px 0 2px 14px}.menu nav a{height:42px}.menu nav a .mi{width:30px;height:30px}}

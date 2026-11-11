@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
@@ -10,7 +10,7 @@ import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptCl
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
 export function Tableau() {
-  const { annee, eid, can, zoneFiltres } = useApp();
+  const { annee, can, zoneFiltres } = useApp();
   const fin = can(...STAFF);
   const [classe, setCl] = useState(''); const [per, setPer] = useState('');
   const q = useQ(async () => {
@@ -70,7 +70,7 @@ export function Tableau() {
             {pct !== null && <div className="hero-etat"><span className={bonne ? 'chip-v' : 'chip-a'}>{bonne ? <PiTrendUpBold aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}{bonne ? 'Objectif en bonne voie' : 'Objectif à surveiller'}</span><span className="hero-note">{bonne ? 'En avance' : 'En retard'} de {gnf(Math.abs(ecart))} sur le rythme prévu</span></div>}
             {!objectif && can('directeur') && <Lien to="/parametres" className="chip-l"><PiCalendarDotsFill aria-hidden="true" />Définir l'objectif annuel</Lien>}
           </div>
-          {pct !== null && <Jauge p={pct}><b>{pct} %</b><small>de l'objectif</small></Jauge>}
+          {pct !== null && <Jauge p={pct}><b>{pct === 0 && encaisse > 0 ? '< 1' : pct} %</b><small>de l'objectif</small></Jauge>}
         </div>
         <Vague />
         {fin && <div className="hero-bas">

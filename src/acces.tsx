@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
-import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingDuotone, PiBuildingsDuotone, PiBabyFill, PiBackpackFill, PiBookOpenFill, PiBuildingsFill, PiCameraFill, PiCaretDownBold, PiCaretLeftBold, PiChalkboardTeacherFill, PiCrownSimpleFill, PiEnvelopeSimpleFill, PiGraduationCapFill, PiImageFill, PiLockKeyFill, PiMagnifyingGlassBold, PiMapPinFill, PiMinusBold, PiPencilSimpleFill, PiPhoneFill, PiPlusBold, PiShieldCheckFill, PiUserFill, PiXBold, PiChalkboardTeacherDuotone, PiChartLineUpDuotone, PiCheckBold, PiCheckCircleFill, PiEnvelopeSimpleDuotone, PiEyeDuotone, PiEyeSlashDuotone, PiLockKeyDuotone, PiMapPinDuotone, PiPhoneDuotone, PiSealCheckFill, PiStudentDuotone, PiTargetDuotone, PiUserDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
+
+// Connexion Google : à activer une fois le fournisseur Google configuré dans Supabase.
+const GOOGLE_ACTIF = false;
+import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingDuotone, PiBuildingsDuotone, PiBabyFill, PiBackpackFill, PiBookOpenFill, PiBuildingsFill, PiCameraFill, PiCaretDownBold, PiCaretLeftBold, PiChalkboardTeacherFill, PiCrownSimpleFill, PiEnvelopeSimpleFill, PiGraduationCapFill, PiImageFill, PiLockKeyFill, PiMagnifyingGlassBold, PiMapPinFill, PiMinusBold, PiPencilSimpleFill, PiPhoneFill, PiPlusBold, PiShieldCheckFill, PiUserFill, PiXBold, PiChartLineUpDuotone, PiCheckBold, PiCheckCircleFill, PiEnvelopeSimpleDuotone, PiEyeDuotone, PiEyeSlashDuotone, PiLockKeyDuotone, PiSealCheckFill, PiStudentDuotone, PiTargetDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db } from './api';
 import { TRANCHES, gnf, tel, trancheDe } from './lib';
 import { Erreur, Gnf, Lien, Mot, Tuile, naviguer, useEnvoi } from './ui';
@@ -91,8 +94,8 @@ export function Connexion() {
         <Erreur t={e.erreur} />
         <button className="btn plein" disabled={e.occupe}>{e.occupe ? 'Connexion…' : 'Se connecter'}</button>
       </form>
-      <div className="acc-ou"><span>ou</span></div>
-      <button type="button" className="btn contour acc-g" disabled={e.occupe} onClick={() => e.envoyer(() => auth.google())}><FcGoogle aria-hidden="true" />Se connecter avec Google</button>
+      {GOOGLE_ACTIF && <><div className="acc-ou"><span>ou</span></div>
+      <button type="button" className="btn contour acc-g" disabled={e.occupe} onClick={() => e.envoyer(() => auth.google())}><FcGoogle aria-hidden="true" />Se connecter avec Google</button></>}
       <p className="acc-bas">Pas encore de compte ? <Lien to="/inscription">Créer un compte</Lien></p>
     </Cadre>
   );

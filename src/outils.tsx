@@ -1,9 +1,9 @@
 import { PiBuildingsFill, PiCalendarBlankFill, PiCaretRightBold, PiStudentFill, PiTargetBold, PiUserCircleFill } from 'react-icons/pi';
 import { Haut } from './abonnement';
 import { useMemo, useRef, useState } from 'react';
-import { PiKeyDuotone, PiStudentDuotone, PiBuildingsDuotone, PiCalendarBlankDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiTargetDuotone, PiUserCircleDuotone, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
+import { PiKeyDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { SUPA, auth, db, getSession, message } from './api';
-import { TRANCHES, auj, dateFr, gnf, heure, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
+import { TRANCHES, auj, dateFr, gnf, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
 import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
@@ -143,7 +143,7 @@ export function Importation() {
   );
 }
 
-const Sec = ({ i, ton, t, children }: any) => <section className="carte para"><header><Tuile i={i} ton={ton} t={40} /><h2>{t}</h2></header>{children}</section>;
+
 
 export function Parametres({ vue }: { vue?: string }) {
   const { annee, annees, eid, etab, can, recharger, role } = useApp();

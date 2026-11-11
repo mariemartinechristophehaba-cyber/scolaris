@@ -54,7 +54,7 @@ export function FamillePublic({ jeton }: { jeton: string }) {
   const q = useQ(() => db.rpc('famille_public', { p_jeton: jeton }), [jeton]);
   if (q.charge && !q.data) return <main className="pub"><Chargement /></main>;
   const r: any = q.data;
-  if (!r) return <main className="pub"><section className="carte-pub"><Logo /><h1>Lien introuvable</h1></section></main>;
+  if (!r || !Array.isArray(r.enfants)) return <main className="pub"><section className="carte-pub"><Logo /><h1>Lien introuvable</h1></section></main>;
   return (
     <main className="pub"><section className="carte-pub recu"><Logo petit /><h1>{r.ecole}</h1><p className="intro">Situation de la famille de {r.parent}</p>
       {r.enfants.map((e: any, i: number) => <div className="enfant" key={i}><b>{e.prenom} {e.nom}</b><span>{e.classe}</span>

@@ -4,7 +4,7 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/((?!app\\.js|app\\.css|img/|fonts/|manifest\\.json).*)",
+      "source": "/((?!app\\.js|app\\.css|img/|fonts/|manifest\\.json|api/).*)",
       "destination": "/index.html"
     }
   ],
@@ -33,6 +33,12 @@
           "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://hezntpvvsukdlehpbqzs.supabase.co; font-src 'self'; connect-src 'self' https://hezntpvvsukdlehpbqzs.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/garder-actif",
+      "schedule": "17 6 * * *"
     }
   ]
 }

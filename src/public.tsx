@@ -3,13 +3,66 @@ import { PiArrowLeftBold, PiCheckBold, PiPrinterDuotone, PiWhatsappLogoFill, PiX
 import { useState } from 'react';
 import { db, getSession } from './api';
 import { dateFr, gnf, nb } from './lib';
-import { Chargement, Lien, Logo, useQ } from './ui';
+import { Chargement, Lien, Logo, naviguer, useQ } from './ui';
+
+const retourTexte = () => { if (history.length > 1) history.back(); else naviguer('/'); };
+function PageTexte({ titre, autre, children }: any) {
+  return <main className="pub"><section className="carte-pub texte legal"><button type="button" onClick={retourTexte} className="retour" aria-label="Retour"><FaArrowLeft /></button><Logo /><h1>{titre}</h1>
+    <p className="maj">Mise à jour : 11 novembre 2026</p>{children}
+    <p className="legal-pied"><Lien to={autre[0]}>{autre[1]}</Lien></p></section></main>;
+}
 
 export function Conditions() {
-  return <main className="pub"><section className="carte-pub texte"><Lien to="/inscription" className="retour" aria-label="Retour"><FaArrowLeft /></Lien><Logo /><h1>Conditions d'utilisation</h1>
-    <p>Scolaris aide les établissements scolaires à suivre leurs élèves, leurs frais, leurs paiements et leurs dépenses.</p>
-    <p>L'établissement reste responsable de l'exactitude des informations saisies et de l'accès accordé à son équipe. Chaque utilisateur protège son mot de passe.</p>
-    <p>Les données d'un établissement ne sont jamais accessibles aux autres établissements.</p></section></main>;
+  return <PageTexte titre="Conditions d'utilisation" autre={['/confidentialite', 'Voir la politique de confidentialité']}>
+    <h2>1. Le service</h2>
+    <p>Scolaris est un logiciel en ligne qui aide les écoles privées de Guinée à gérer leurs élèves, leurs frais scolaires, les paiements des parents, les reçus, les relances et les dépenses. Scolaris n'encaisse jamais l'argent des parents : chaque école reçoit ses paiements elle-même et les enregistre dans l'application.</p>
+    <h2>2. Votre compte</h2>
+    <p>La personne qui inscrit l'école en devient le fondateur. Elle donne des informations exactes : nom de l'école, ville, numéros de téléphone guinéens valides et adresse e-mail. Chaque utilisateur garde son mot de passe secret et reste responsable de ce qui est fait avec son compte.</p>
+    <h2>3. L'équipe de l'école</h2>
+    <p>Le fondateur ajoute les membres de son équipe et choisit leur rôle : directeur, comptable, secrétaire, caissier ou enseignant. Chaque rôle ne voit que ce dont il a besoin. Le fondateur retire l'accès d'une personne qui quitte l'école.</p>
+    <h2>4. Essai et abonnement</h2>
+    <p>Le prix de l'abonnement dépend du nombre d'élèves et est affiché sur la page Abonnement, au mois ou à l'année. Le paiement se fait par Orange Money, MTN Mobile Money ou un autre moyen indiqué, puis il est vérifié par l'équipe Scolaris avant d'activer l'abonnement.</p>
+    <p>Quand l'abonnement se termine, l'école garde un délai de 7 jours. Ensuite, elle peut toujours consulter ses données, mais ne peut plus rien enregistrer tant qu'elle n'a pas renouvelé. Aucune donnée n'est supprimée à cause d'un retard de paiement.</p>
+    <h2>5. Les données de l'école</h2>
+    <p>Les informations saisies (élèves, parents, frais, paiements, dépenses) appartiennent à l'école. Elles ne sont jamais visibles par une autre école. L'école reste responsable de leur exactitude et de l'information des parents.</p>
+    <h2>6. Bon usage</h2>
+    <p>Il est interdit de saisir de fausses informations, d'utiliser Scolaris pour tromper des parents, d'essayer d'entrer dans le compte d'une autre école ou de gêner le fonctionnement du service. En cas d'abus, Scolaris peut suspendre le compte après avoir prévenu le fondateur.</p>
+    <h2>7. Disponibilité</h2>
+    <p>Scolaris fait le maximum pour que le service soit disponible tous les jours et que les données soient sauvegardées. Une coupure peut arriver pour une maintenance ou un problème technique ; elle est réparée le plus vite possible. Scolaris ne peut pas être tenu responsable d'une perte due à une mauvaise saisie de l'école ou à un mot de passe partagé.</p>
+    <h2>8. Arrêt du service</h2>
+    <p>L'école peut arrêter d'utiliser Scolaris quand elle le souhaite. Sur demande du fondateur, ses données lui sont remises ou supprimées.</p>
+    <h2>9. Changements</h2>
+    <p>Ces conditions peuvent évoluer. Les écoles sont prévenues dans l'application avant tout changement important.</p>
+    <h2>10. Droit applicable et contact</h2>
+    <p>Ces conditions sont soumises au droit guinéen. Pour toute question, contactez l'équipe Scolaris sur WhatsApp, au numéro indiqué sur la page Abonnement.</p>
+  </PageTexte>;
+}
+
+export function Confidentialite() {
+  return <PageTexte titre="Politique de confidentialité" autre={['/conditions', "Voir les conditions d'utilisation"]}>
+    <h2>1. Les informations enregistrées</h2>
+    <ul>
+      <li><b>L'école :</b> nom, ville, quartier, téléphone, logo, numéros Orange Money et MTN.</li>
+      <li><b>L'équipe :</b> prénom, nom, téléphone, e-mail et rôle de chaque membre.</li>
+      <li><b>Les élèves :</b> nom, prénom, matricule, classe, date de naissance, sexe.</li>
+      <li><b>Les parents :</b> nom et numéro de téléphone.</li>
+      <li><b>L'argent :</b> frais, paiements, reçus, relances et dépenses de l'école.</li>
+    </ul>
+    <h2>2. Pourquoi</h2>
+    <p>Uniquement pour faire fonctionner Scolaris : suivre la scolarité payée, produire les reçus, relancer les parents, préparer les rapports de l'école et gérer son abonnement. Scolaris ne vend et ne loue aucune donnée, et ne fait pas de publicité avec.</p>
+    <h2>3. Qui peut les voir</h2>
+    <p>Les membres de l'école, chacun selon son rôle : par exemple, la secrétaire ne voit pas la trésorerie et le caissier ne voit que ses encaissements. Un parent voit seulement son reçu ou la situation de son enfant, grâce au lien privé que l'école lui envoie. L'équipe Scolaris voit les informations nécessaires à l'abonnement et à l'assistance, et n'utilise jamais les données d'une école pour autre chose.</p>
+    <h2>4. Séparation des écoles</h2>
+    <p>Chaque école a son propre espace. La base de données refuse qu'une école lise ou modifie les données d'une autre.</p>
+    <h2>5. Hébergement et sécurité</h2>
+    <p>Les données sont hébergées chez des prestataires techniques reconnus (Supabase et Vercel), dont les serveurs peuvent se trouver hors de Guinée. Les échanges sont chiffrés, les mots de passe ne sont jamais stockés en clair et chaque action importante est inscrite dans l'historique de l'école (« Qui a fait quoi »).</p>
+    <h2>6. Durée de conservation</h2>
+    <p>Les données sont gardées tant que l'école utilise Scolaris. Quand le fondateur demande la fermeture du compte, elles sont supprimées, sauf ce que la loi oblige à garder.</p>
+    <h2>7. Vos droits</h2>
+    <p>Chaque personne peut demander à voir, corriger ou supprimer les informations qui la concernent. Un parent s'adresse d'abord à l'école de son enfant ; l'école ou toute personne concernée peut aussi contacter l'équipe Scolaris sur WhatsApp, au numéro indiqué sur la page Abonnement.</p>
+    <h2>8. Sur votre téléphone</h2>
+    <p>Scolaris garde seulement votre connexion et quelques choix d'affichage dans la mémoire de votre navigateur. Il n'y a pas de traceur publicitaire.</p>
+  </PageTexte>;
 }
 
 // Dessine le reçu en image (PNG) : le parent reçoit une photo du reçu, sans lien vers l'application.

@@ -210,7 +210,7 @@ export function Inscription() {
           <Carte ton="ve" i={PiEnvelopeSimpleFill} label="Adresse e-mail" type="email" placeholder="vous@exemple.com" autoComplete="email" autoCapitalize="none" spellCheck={false} {...c('email')} />
           <Carte ton="or" i={PiLockKeyFill} label="Mot de passe" mdp placeholder="8 caractères minimum" autoComplete="new-password" {...c('m')} />
           {f.m && <><div className="ric-pw" aria-hidden="true">{[1, 2, 3, 4].map((k) => <i key={k} className={k <= force ? 'y' : ''} />)}</div><p className={`ric-pwt${force < 4 ? ' f' : ''}`}>{force < 4 ? 'Ajoutez une majuscule, une minuscule, un chiffre, 8 caractères' : 'Mot de passe solide'}</p></>}
-          <label className="ric-cg"><input type="checkbox" checked={f.ok} onChange={(x) => setF({ ...f, ok: x.target.checked })} /><span>J’accepte les <Lien to="/conditions">conditions d’utilisation</Lien></span></label></>}
+          <label className="ric-cg"><input type="checkbox" checked={f.ok} onChange={(x) => setF({ ...f, ok: x.target.checked })} /><span>J’accepte les <Lien to="/conditions">conditions d’utilisation</Lien> et la <Lien to="/confidentialite">politique de confidentialité</Lien></span></label></>}
         <Erreur t={e.erreur} />
       </div>
       <footer className="ric-ft"><button className="ric-bt" disabled={e.occupe}>{e.occupe ? 'Envoi…' : et === 3 ? 'Créer mon école' : 'Continuer'}<PiArrowRightBold aria-hidden="true" /></button><p><PiShieldCheckFill aria-hidden="true" />Vos informations restent confidentielles.</p></footer>

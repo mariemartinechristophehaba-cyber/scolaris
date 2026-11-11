@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill } from 'react-icons/pi';
+import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiDatabaseDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
 import { auj, dateFr, erreurTel, gnf, nb, telAff } from './lib';
@@ -69,7 +69,10 @@ function Suivi({ s, d }: any) {
 
 function AFaire({ d, s }: any) {
   const e = d.ecoles;
+  const rg = s?.reglages; const vieille = rg && (!rg.derniere_sauvegarde || Date.now() - new Date(rg.derniere_sauvegarde).getTime() > 7 * 864e5);
   const l = [
+    rg?.sans_paiement && { n: '!', ton: 'rouge', t: 'Tes numéros de paiement sont vides', s: "Les écoles ne savent pas où payer l'abonnement", to: '/admin/reglages', b: 'Remplir', plein: true },
+    vieille && { n: '!', ton: 'orange', t: 'Sauvegarde de la semaine à faire', s: rg.derniere_sauvegarde ? `Dernière : ${dateFr(rg.derniere_sauvegarde)}` : 'Aucune sauvegarde pour le moment', to: '/admin/reglages', b: 'Sauvegarder' },
     d.a_verifier.nombre > 0 && { n: d.a_verifier.nombre, ton: 'orange', t: `${nb(d.a_verifier.nombre)} paiement${d.a_verifier.nombre > 1 ? 's' : ''} à vérifier`, s: `${gnf(d.a_verifier.somme)} d'abonnements`, to: '/admin/paiements', b: 'Vérifier', plein: true },
     d.a_renouveler.length > 0 && { n: d.a_renouveler.length, ton: 'rouge', t: `${nb(d.a_renouveler.length)} école${d.a_renouveler.length > 1 ? 's' : ''} à relancer`, s: 'Abonnement fini ou bientôt', to: '/admin/ecoles?f=retard', b: 'Relancer' },
     Number(e.attente) > 0 && { n: e.attente, ton: 'violet', t: `${nb(e.attente)} école${e.attente > 1 ? 's' : ''} pas encore payée${e.attente > 1 ? 's' : ''}`, s: 'En attente du premier paiement', to: '/admin/ecoles?f=attente', b: 'Voir' },
@@ -79,7 +82,7 @@ function AFaire({ d, s }: any) {
   ].filter(Boolean) as any[];
   return <section className="carte"><div className="tete-carte"><h2>À faire</h2></div>
     {l.length === 0 ? <div className="action vert"><PiCheckCircleFill aria-hidden="true" /><div><b>Rien à faire</b><small>Tous les paiements sont traités et les écoles sont à jour.</small></div></div>
-      : <ul className="lignes-e decide">{l.map((x) => { const C: any = x.to.startsWith('#') ? 'a' : Lien; const pr = x.to.startsWith('#') ? { href: x.to } : { to: x.to }; return <li key={x.t}><C {...pr} className="ligne-e"><span className={`rond ${x.ton}`}>{x.n > 99 ? '99+' : x.n}</span><div><b>{x.t}</b><small>{x.s}</small></div><span className={x.plein ? 'btn plein mini' : 'btn-doux'}>{x.b}</span></C></li>; })}</ul>}
+      : <ul className="lignes-e decide">{l.map((x) => { const C: any = x.to.startsWith('#') ? 'a' : Lien; const pr = x.to.startsWith('#') ? { href: x.to } : { to: x.to }; return <li key={x.t}><C {...pr} className="ligne-e"><span className={`rond ${x.ton}`}>{Number(x.n) > 99 ? '99+' : x.n}</span><div><b>{x.t}</b><small>{x.s}</small></div><span className={x.plein ? 'btn plein mini' : 'btn-doux'}>{x.b}</span></C></li>; })}</ul>}
   </section>;
 }
 
@@ -259,6 +262,22 @@ function Paiements() {
   </>;
 }
 
+function Sauvegarde({ d, fini }: any) {
+  const e = useEnvoi(); const [ok, setOk] = useState('');
+  const telecharger = () => e.envoyer(async () => {
+    const r = await db.rpc('admin_sauvegarde');
+    const b = new Blob([JSON.stringify(r)], { type: 'application/json' }); const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href = u; a.download = `scolaris-sauvegarde-${auj()}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+    setOk(`Sauvegarde téléchargée : ${nb(r.lignes)} lignes. Gardez ce fichier sur votre téléphone et sur Google Drive.`); await fini();
+  });
+  const vieille = !d.derniere_sauvegarde || Date.now() - new Date(d.derniere_sauvegarde).getTime() > 7 * 864e5;
+  return <section className="carte para sauv" id="sauvegarde"><div className="sauv-h"><Tuile i={PiDatabaseDuotone} ton={vieille ? 'orange' : 'vert'} t={44} /><div><h2>Sauvegarde des données</h2><p className="note">Toutes les écoles, élèves, parents, frais, paiements et dépenses dans un seul fichier. À faire chaque semaine.</p></div></div>
+    <p className={vieille ? 'orange' : 'vert'}><b>{d.derniere_sauvegarde ? `Dernière sauvegarde : ${dateFr(d.derniere_sauvegarde)} à ${String(d.derniere_sauvegarde).slice(11, 16)}` : 'Aucune sauvegarde pour le moment'}</b></p>
+    <Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}
+    <button type="button" className="btn plein" onClick={telecharger} disabled={e.occupe}><PiDownloadSimpleBold aria-hidden="true" />{e.occupe ? 'Préparation…' : 'Télécharger la sauvegarde'}</button>
+  </section>;
+}
+
 function FormReglages({ d, fini }: any) {
   const [f, setF] = useState({ orange_money: d.orange_money || '', mtn_money: d.mtn_money || '', whatsapp: d.whatsapp || '' }); const [cout, setCout] = useState<number>(Number(d.cout_mensuel)); const [lb, setLb] = useState(String(d.limite_base_mo)); const [lf, setLf] = useState(String(d.limite_fichiers_mo)); const [t, setT] = useState<any[]>(d.tarifs); const [ok, setOk] = useState(false); const e = useEnvoi();
   const c = (k: string) => ({ value: (f as any)[k], onChange: (x: any) => { setOk(false); setF({ ...f, [k]: x.target.value }); } });
@@ -276,7 +295,7 @@ function FormReglages({ d, fini }: any) {
 
 function Reglages() {
   const { tableau } = useApp(); const q = useQ(() => db.rpc('admin_reglages'), []);
-  return <><Titre t="Réglages" /><Etat q={q}>{(d: any) => <FormReglages d={d} fini={async () => { await q.reload(); tableau.reload(); }} />}</Etat></>;
+  return <><Titre t="Réglages" /><Etat q={q}>{(d: any) => <><Sauvegarde d={d} fini={async () => { await q.reload(); tableau.reload(); }} /><FormReglages d={d} fini={async () => { await q.reload(); tableau.reload(); }} /></>}</Etat></>;
 }
 
 export function EspaceAdmin() {

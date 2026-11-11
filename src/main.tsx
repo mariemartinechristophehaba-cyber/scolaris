@@ -4,7 +4,7 @@ import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, 
 import { auth, db, getSession, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
-import { Conditions, FamillePublic, RecuPublic } from './public';
+import { Conditions, Confidentialite, FamillePublic, RecuPublic } from './public';
 import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
@@ -164,6 +164,7 @@ function Racine() {
   if (seg[0] === 'r' && seg[1]) return <RecuPublic jeton={seg[1]} />;
   if (seg[0] === 'f' && seg[1]) return <FamillePublic jeton={seg[1]} />;
   if (c === '/conditions') return <Conditions />;
+  if (c === '/confidentialite') return <Confidentialite />;
   const connecte = !!getSession()?.access_token;
   if (recup && connecte) return <NouveauMdp fini={() => { setR(false); naviguer('/tableau'); }} />;
   if (connecte && getSession()?.user?.user_metadata?.mdp_temporaire) return <NouveauMdp fini={() => naviguer(seg[0] === 'admin' ? '/admin' : '/tableau')} />;

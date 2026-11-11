@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { PiArrowLeftBold, PiCalendarBlankDuotone, PiWarningCircleFill, PiBabyDuotone, PiBackpackDuotone, PiCaretDownBold, PiBooksDuotone, PiBusDuotone, PiCoinsDuotone, PiGraduationCapDuotone, PiIdentificationBadgeDuotone, PiNotePencilDuotone, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiClockCountdownFill, PiEyeDuotone, PiFileArrowUpDuotone, PiHandCoinsDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiPencilSimpleDuotone, PiPhoneDuotone, PiPlusBold, PiReceiptDuotone, PiStudentDuotone, PiTrashDuotone, PiWhatsappLogoFill, PiCrownSimpleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Jauge } from './charts';
-import { dateFr, gnf, grouperClasses, nb, rangNiveau, tel, telAff, trierClasses } from './lib';
+import { dateFr, erreurTel, gnf, grouperClasses, nb, rangNiveau, tel, telAff, trierClasses } from './lib';
 import { Avatar, Champ, Erreur, Etat, Gnf, DateRoue, Lien, Modale, Montant, OptClasses, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const etat = (s: any) => (s.situation === 'a_jour' ? 'a_jour' : s.situation === 'rien_paye' && s.facture_net > 0 ? 'rien' : s.en_retard ? 'retard' : s.situation === 'partiel' ? 'partiel' : 'sans');
@@ -16,11 +16,11 @@ function FormEleve({ init, classes, fermer, fini }: any) {
   const c = (k: string, req = false) => ({ value: f[k] ?? '', onChange: (x: any) => setF({ ...f, [k]: x.target.value }), required: req });
   return (
     <Modale titre={init ? 'Modifier l\'élève' : 'Ajouter un élève'} fermer={fermer}>
-      <form onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.rpc('enregistrer_eleve', { p: { ...f, parent_telephone: tel(f.parent_telephone), etablissement_id: eid, annee_scolaire_id: annee.id } }); fini(); }); }}>
+      <form onSubmit={(x) => { x.preventDefault(); const er = erreurTel(f.parent_telephone); if (er) return e.setE(`Téléphone du parent : ${er}`); e.envoyer(async () => { await db.rpc('enregistrer_eleve', { p: { ...f, parent_telephone: tel(f.parent_telephone), etablissement_id: eid, annee_scolaire_id: annee.id } }); fini(); }); }}>
         <div className="deux"><Champ label="Prénom *"><input {...c('prenom', true)} /></Champ><Champ label="Nom *"><input {...c('nom', true)} /></Champ></div>
         <Champ label="Classe *"><select {...c('classe_id', true)}><option value="">Choisir…</option><OptClasses l={classes} /></select></Champ>
         <div className="deux"><Champ label="Matricule" aide="Automatique si vide"><input {...c('matricule')} /></Champ><Champ label="Date de naissance"><DateRoue value={f.date_naissance || ''} onChange={(v) => setF({ ...f, date_naissance: v })} debut={1990} defaut={new Date().getFullYear() - 10} /></Champ></div>
-        <div className="deux"><Champ label="Nom du parent"><input {...c('parent_nom')} /></Champ><Champ label="Téléphone du parent"><input inputMode="tel" {...c('parent_telephone')} /></Champ></div>
+        <div className="deux"><Champ label="Nom du parent"><input {...c('parent_nom')} /></Champ><Champ label="Téléphone du parent"><input inputMode="tel" placeholder="620 12 34 56" {...c('parent_telephone')} /></Champ></div>
         <Erreur t={e.erreur} />
         <button className="btn plein" disabled={e.occupe}>{e.occupe ? 'Enregistrement…' : 'Enregistrer'}</button>
       </form>

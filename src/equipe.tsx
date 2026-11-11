@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PiChatTextFill, PiEnvelopeSimpleFill, PiAddressBookDuotone, PiCalculatorDuotone, PiCalendarBlankDuotone, PiChalkboardTeacherDuotone, PiCheckBold, PiCheckCircleDuotone, PiCheckCircleFill, PiCopyBold, PiHandCoinsDuotone, PiKeyDuotone, PiPlusBold, PiReceiptDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTagDuotone, PiTargetDuotone, PiUserMinusDuotone, PiUserPlusDuotone, PiUsersFourDuotone, PiUsersThreeDuotone, PiWhatsappLogoFill, PiWifiHighDuotone, PiXCircleDuotone } from 'react-icons/pi';
 import { db, equipeApi } from './api';
-import { auj, dateFr, gnf, heure, nb, tel, telAff } from './lib';
+import { auj, dateFr, erreurTel, gnf, heure, nb, tel, telAff } from './lib';
 import { Avatar, Champ, Erreur, Etat, Modale, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
 
 const ROLES: [string, string, string, any][] = [
@@ -25,7 +25,7 @@ function AjouterMembre({ fermer, fini }: any) {
   const envoyer = (x: any) => {
     x.preventDefault();
     if (!f.prenom.trim() || !f.nom.trim()) return e.setE('Indiquez le prénom et le nom');
-    if (tel(f.telephone).length < 8) return e.setE('Numéro de téléphone invalide');
+    if (!tel(f.telephone)) return e.setE('Indiquez le téléphone'); { const er = erreurTel(f.telephone); if (er) return e.setE(er); }
     e.envoyer(async () => { const r = await equipeApi({ action: 'ajouter', etablissement_id: eid, ...f }); fini({ ...r, email: (f.email || '').trim(), nom: `${f.prenom.trim()} ${f.nom.trim()}`, titre: 'Membre ajouté' }); });
   };
   return <Modale titre="Ajouter un membre" fermer={fermer}><form onSubmit={envoyer} noValidate>

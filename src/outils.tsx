@@ -3,7 +3,7 @@ import { Haut } from './abonnement';
 import { useMemo, useRef, useState } from 'react';
 import { PiKeyDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { SUPA, auth, db, getSession, message } from './api';
-import { TRANCHES, auj, dateFr, gnf, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
+import { TRANCHES, auj, dateFr, erreurTel, gnf, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
 import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
@@ -94,7 +94,7 @@ export function Importation() {
     return tab.slice(1).map((l, i) => {
       const v: any = { n: i + 2 }; COLS.forEach(([k]) => { v[k] = map[k] !== undefined ? String(l[map[k]] ?? '').trim() : ''; });
       const cle = `${norm(v.nom)}|${norm(v.prenom)}`;
-      v.etat = !v.nom || !v.prenom ? 'Nom ou prénom manquant' : !v.classe ? 'Classe manquante' : (v.matricule && mats.has(norm(v.matricule))) || noms.has(cle) ? 'Déjà inscrit' : vus.has(cle) ? 'Doublon dans le fichier' : '';
+      v.etat = !v.nom || !v.prenom ? 'Nom ou prénom manquant' : !v.classe ? 'Classe manquante' : erreurTel(v.parent_telephone) ? 'Téléphone invalide' : (v.matricule && mats.has(norm(v.matricule))) || noms.has(cle) ? 'Déjà inscrit' : vus.has(cle) ? 'Doublon dans le fichier' : '';
       vus.add(cle); return v;
     });
   }, [tab, map, ex.data]);
@@ -162,7 +162,7 @@ export function Parametres({ vue }: { vue?: string }) {
   const Ecran = ({ t, children }: any) => <><Titre t="Paramètres" /><div className="abp"><Haut t={t} retour={retour} /><div className="abp-co par-co">{children}</div></div></>;
   const Msg = <><Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}</>;
 
-  if (vue === 'ecole') return Ecran({ t: 'Mon école', children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, f); await recharger(); fait('École enregistrée'); }); }}><fieldset disabled={!d}>
+  if (vue === 'ecole') return Ecran({ t: 'Mon école', children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); const er = erreurTel(f.telephone, true); if (er) return e.setE(`Téléphone de l'école : ${er}`); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, { ...f, telephone: tel(f.telephone) || null }); await recharger(); fait('École enregistrée'); }); }}><fieldset disabled={!d}>
     {d && <div className="par-logo">{etab.logo_chemin ? <img src={`${SUPA}/storage/v1/object/public/logos/${etab.logo_chemin}`} alt="" /> : <span className="par-logo-v" aria-hidden="true"><PiBuildingsFill /></span>}<label className="btn contour mini">{etab.logo_chemin ? 'Changer le logo' : 'Ajouter le logo'}<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(x) => { const fi = x.target.files?.[0]; if (fi) e.envoyer(async () => { await db.poserLogo(eid, fi); await recharger(); fait('Logo enregistré'); }); }} /></label></div>}
     <Champ label="Nom de l'école"><input value={f.nom} onChange={(x) => setF({ ...f, nom: x.target.value })} required /></Champ>
     <Champ label="Ville"><input placeholder="Ex. Conakry" value={f.ville} onChange={(x) => setF({ ...f, ville: x.target.value })} /></Champ>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
-import { auj, dateFr, gnf, nb, telAff } from './lib';
+import { auj, dateFr, erreurTel, gnf, nb, telAff } from './lib';
 import { Avatar, Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Gnf, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
 import { LIB_M, LIB_P, LIB_T, SIT, ST_P, waUrl } from './abonnement';
 
@@ -264,7 +264,7 @@ function FormReglages({ d, fini }: any) {
   const c = (k: string) => ({ value: (f as any)[k], onChange: (x: any) => { setOk(false); setF({ ...f, [k]: x.target.value }); } });
   const maj = (i: number, k: string, v: number) => { setOk(false); setT(t.map((x, j) => (j === i ? { ...x, [k]: v } : x))); };
   const entier = (v: string) => v.replace(/\D/g, '');
-  return <form className="param-g" noValidate onSubmit={(x) => { x.preventDefault(); if (!Number(lb) || !Number(lf)) return e.setE('Indiquez les limites d’hébergement'); setOk(false); e.envoyer(async () => { await db.rpc('admin_reglages_maj', { p: { ...f, cout_mensuel: cout, limite_base_mo: Number(lb), limite_fichiers_mo: Number(lf), tarifs: t } }); await fini(); setOk(true); }); }}>
+  return <form className="param-g" noValidate onSubmit={(x) => { x.preventDefault(); for (const [k, l] of [['orange_money', 'Orange Money'], ['mtn_money', 'MTN Money'], ['whatsapp', 'WhatsApp']]) { const er = erreurTel((f as any)[k]); if (er) return e.setE(`${l} : ${er}`); } if (!Number(lb) || !Number(lf)) return e.setE('Indiquez les limites d’hébergement'); setOk(false); e.envoyer(async () => { await db.rpc('admin_reglages_maj', { p: { ...f, cout_mensuel: cout, limite_base_mo: Number(lb), limite_fichiers_mo: Number(lf), tarifs: t } }); await fini(); setOk(true); }); }}>
     <div className="param-c"><section className="carte para"><h2>Prix par tranche</h2>{t.map((x, i) => <div className="reg-t" key={x.tranche}><b>{LIB_T[x.tranche]}</b><div className="deux"><Champ label="Par mois"><Montant value={x.prix_mois || 0} onChange={(v: number) => maj(i, 'prix_mois', v)} placeholder="À discuter" /></Champ><Champ label="Par an"><Montant value={x.prix_an || 0} onChange={(v: number) => maj(i, 'prix_an', v)} placeholder="À discuter" /></Champ></div></div>)}</section></div>
     <div className="param-c">
       <section className="carte para"><h2>Numéros de paiement</h2><p className="note">Affichés aux écoles sur la page Abonnement.</p><Champ label="Orange Money"><input inputMode="tel" {...c('orange_money')} placeholder="620 12 34 56" /></Champ><Champ label="MTN Money"><input inputMode="tel" {...c('mtn_money')} placeholder="664 12 34 56" /></Champ><Champ label="WhatsApp Scolaris"><input inputMode="tel" {...c('whatsapp')} placeholder="620 12 34 56" /></Champ></section>

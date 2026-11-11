@@ -5,7 +5,7 @@ import { FcGoogle } from 'react-icons/fc';
 const GOOGLE_ACTIF = false;
 import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingDuotone, PiBuildingsDuotone, PiBabyFill, PiBackpackFill, PiBookOpenFill, PiBuildingsFill, PiCameraFill, PiCaretDownBold, PiCaretLeftBold, PiChalkboardTeacherFill, PiCrownSimpleFill, PiEnvelopeSimpleFill, PiGraduationCapFill, PiImageFill, PiLockKeyFill, PiMagnifyingGlassBold, PiMapPinFill, PiMinusBold, PiPencilSimpleFill, PiPhoneFill, PiPlusBold, PiShieldCheckFill, PiUserFill, PiXBold, PiChartLineUpDuotone, PiCheckBold, PiCheckCircleFill, PiEnvelopeSimpleDuotone, PiEyeDuotone, PiEyeSlashDuotone, PiLockKeyDuotone, PiSealCheckFill, PiStudentDuotone, PiTargetDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db } from './api';
-import { TRANCHES, gnf, tel, trancheDe } from './lib';
+import { TRANCHES, erreurTel, gnf, tel, trancheDe } from './lib';
 import { Erreur, Gnf, Lien, Mot, Tuile, naviguer, useEnvoi } from './ui';
 
 // Écrans d'accès : même habillage bleu nuit que l'application (voir app.css, classes acc-*).
@@ -165,7 +165,7 @@ export function Inscription() {
     x.preventDefault(); e.setE('');
     if (et === 1) {
       if (!f.ecole.trim() || !f.ville.trim() || !f.quartier.trim()) return e.setE('Remplissez le nom, la ville et le quartier');
-      if (tel(f.telE).length !== 9) return e.setE('Le téléphone de l’école doit avoir 9 chiffres');
+      { const er = erreurTel(f.telE, true); if (!tel(f.telE)) return e.setE('Indiquez le téléphone de l’école'); if (er) return e.setE(`Téléphone de l’école : ${er}`); }
       setEt(2); window.scrollTo(0, 0); return;
     }
     if (et === 2) {
@@ -175,7 +175,7 @@ export function Inscription() {
       setEt(3); window.scrollTo(0, 0); return;
     }
     if (!f.prenom.trim() || !f.nom.trim() || !f.email.trim() || !f.m) return e.setE('Remplissez tous les champs');
-    const tr2 = tel(f.tel); if (tr2.length !== 9) return e.setE('Votre téléphone doit avoir 9 chiffres');
+    const tr2 = tel(f.tel); if (!tr2) return e.setE('Indiquez votre téléphone'); { const er = erreurTel(f.tel); if (er) return e.setE(`Votre téléphone : ${er}`); }
     if (force < 4) return e.setE('Le mot de passe doit avoir 8 caractères, une majuscule, une minuscule et un chiffre');
     if (!f.ok) return e.setE('Acceptez les conditions d’utilisation pour continuer');
     e.envoyer(async () => {

@@ -7,6 +7,15 @@ export const TRANCHES: [string, string][] = [['t_100', "Jusqu'à 100 élèves"],
 export const trancheDe = (n: number) => (n <= 100 ? 't_100' : n <= 200 ? 't_200' : n <= 300 ? 't_300' : n <= 400 ? 't_400' : n <= 500 ? 't_500' : n <= 700 ? 't_700' : n <= 1000 ? 't_1000' : 'plus_1000');
 export const auj = () => new Date().toISOString().slice(0, 10);
 export const tel = (v: any) => { let t = String(v ?? '').replace(/\D/g, '').replace(/^00/, ''); if (/^224\d{9}$/.test(t)) t = t.slice(3); return t; };
+// Numéro guinéen (+224) : 9 chiffres, mobile 61 à 69, fixe 3x pour une école. Mêmes règles que la base.
+export function erreurTel(v: any, fixe = false): string {
+  const t = tel(v); if (!t) return '';
+  if (!/^\d+$/.test(t)) return 'Le numéro ne doit contenir que des chiffres';
+  if (t.length !== 9) return `Un numéro guinéen a 9 chiffres (vous en avez ${t.length})`;
+  if (!(/^6[1-9]/.test(t) || (fixe && /^3/.test(t)))) return fixe ? 'Numéro guinéen invalide : il doit commencer par 6 (mobile) ou 3 (fixe)' : 'Numéro guinéen invalide : il doit commencer par 61 à 69 (Orange, MTN, Cellcom)';
+  if (/(\d)\1{6}/.test(t) || /1234567|2345678|3456789|9876543|8765432|7654321/.test(t)) return 'Ce numéro semble faux. Saisissez un vrai numéro.';
+  return '';
+}
 export const telAff = (v: any) => { const t = String(v ?? ''); return /^\d{9}$/.test(t) ? `${t.slice(0, 3)} ${t.slice(3, 5)} ${t.slice(5, 7)} ${t.slice(7)}` : t; };
 const MOIS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 

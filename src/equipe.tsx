@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PiAddressBookDuotone, PiCalculatorDuotone, PiCalendarBlankDuotone, PiChalkboardTeacherDuotone, PiCheckBold, PiCheckCircleDuotone, PiCheckCircleFill, PiCopyBold, PiHandCoinsDuotone, PiKeyDuotone, PiPlusBold, PiReceiptDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTagDuotone, PiTargetDuotone, PiUserMinusDuotone, PiUserPlusDuotone, PiUsersFourDuotone, PiUsersThreeDuotone, PiWhatsappLogoFill, PiWifiHighDuotone, PiXCircleDuotone } from 'react-icons/pi';
+import { PiChatTextFill, PiEnvelopeSimpleFill, PiAddressBookDuotone, PiCalculatorDuotone, PiCalendarBlankDuotone, PiChalkboardTeacherDuotone, PiCheckBold, PiCheckCircleDuotone, PiCheckCircleFill, PiCopyBold, PiHandCoinsDuotone, PiKeyDuotone, PiPlusBold, PiReceiptDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTagDuotone, PiTargetDuotone, PiUserMinusDuotone, PiUserPlusDuotone, PiUsersFourDuotone, PiUsersThreeDuotone, PiWhatsappLogoFill, PiWifiHighDuotone, PiXCircleDuotone } from 'react-icons/pi';
 import { db, equipeApi } from './api';
 import { auj, dateFr, gnf, heure, nb, tel, telAff } from './lib';
 import { Avatar, Champ, Erreur, Etat, Modale, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
@@ -26,7 +26,7 @@ function AjouterMembre({ fermer, fini }: any) {
     x.preventDefault();
     if (!f.prenom.trim() || !f.nom.trim()) return e.setE('Indiquez le prénom et le nom');
     if (tel(f.telephone).length < 8) return e.setE('Numéro de téléphone invalide');
-    e.envoyer(async () => { const r = await equipeApi({ action: 'ajouter', etablissement_id: eid, ...f }); fini({ ...r, nom: `${f.prenom.trim()} ${f.nom.trim()}`, titre: 'Membre ajouté' }); });
+    e.envoyer(async () => { const r = await equipeApi({ action: 'ajouter', etablissement_id: eid, ...f }); fini({ ...r, email: (f.email || '').trim(), nom: `${f.prenom.trim()} ${f.nom.trim()}`, titre: 'Membre ajouté' }); });
   };
   return <Modale titre="Ajouter un membre" fermer={fermer}><form onSubmit={envoyer} noValidate>
     <div className="deux"><Champ label="Prénom *"><input {...c('prenom')} autoFocus /></Champ><Champ label="Nom *"><input {...c('nom')} /></Champ></div>
@@ -39,15 +39,19 @@ function AjouterMembre({ fermer, fini }: any) {
 
 function Identifiants({ r, fermer }: any) {
   const { etab } = useApp(); const [copie, setC] = useState(false);
-  const lien = `${location.origin}/connexion`;
+  const lien = `${location.origin}/connexion`; const mail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email || '') && !/@membres\.scolaris\.app$/i.test(r.email) ? r.email : '';
   if (!r.mot_de_passe) return <Modale titre={r.titre} fermer={fermer}><div className="ident-c"><p><b>{r.nom}</b> a déjà un compte Scolaris. Cette personne se connecte avec son mot de passe habituel.</p><button className="btn plein" onClick={fermer}>Compris</button></div></Modale>;
   const msg = `Bonjour ${r.nom}, voici votre accès à Scolaris pour ${etab.nom}.\nLien : ${lien}\nTéléphone : ${telAff(r.telephone)}\nMot de passe provisoire : ${r.mot_de_passe}\nVous choisirez votre mot de passe à la première connexion.`;
   const copier = async () => { try { await navigator.clipboard.writeText(msg); setC(true); } catch { setC(false); } };
   return <Modale titre={r.titre} fermer={fermer}><div className="ident-c">
     <p>Envoyez ces informations à <b>{r.nom}</b>. Ce mot de passe ne sera plus affiché.</p>
     <dl className="ident"><div><dt>Téléphone</dt><dd>{telAff(r.telephone)}</dd></div><div><dt>Mot de passe provisoire</dt><dd className="code">{r.mot_de_passe}</dd></div></dl>
-    <a className="btn wa" href={`https://wa.me/224${tel(r.telephone)}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Envoyer sur WhatsApp</a>
-    <button className="btn contour" onClick={copier}><PiCopyBold aria-hidden="true" />{copie ? 'Copié' : 'Copier le message'}</button>
+    <div className="ident-env"><span>Envoyer ces informations par</span>
+      <a className="ie wa" href={`https://wa.me/224${tel(r.telephone)}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" /><b>WhatsApp</b><small>Gratuit avec Internet</small></a>
+      <a className="ie sms" href={`sms:+224${tel(r.telephone)}?&body=${encodeURIComponent(msg)}`}><PiChatTextFill aria-hidden="true" /><b>SMS</b><small>Depuis votre téléphone</small></a>
+      {mail ? <a className="ie mail" href={`mailto:${mail}?subject=${encodeURIComponent(`Votre accès à Scolaris, ${etab.nom}`)}&body=${encodeURIComponent(msg)}`}><PiEnvelopeSimpleFill aria-hidden="true" /><b>E-mail</b><small>{mail}</small></a> : null}
+    </div>
+    <button className="btn contour" onClick={copier}><PiCopyBold aria-hidden="true" />{copie ? 'Message copié' : 'Copier le message'}</button>
   </div></Modale>;
 }
 
@@ -65,7 +69,7 @@ function Retirer({ m, fermer, fini }: any) {
 export function Equipe() {
   const { eid } = useApp(); const e = useEnvoi(); const [aj, setAj] = useState(false); const [ident, setId] = useState<any>(null); const [rol, setRol] = useState<any>(null); const [ret, setRet] = useState<any>(null);
   const q = useQ(() => db.rpc('equipe_liste', { p_etab: eid }), [eid]);
-  const reinit = (m: any) => e.envoyer(async () => { const r = await equipeApi({ action: 'reinitialiser', etablissement_id: eid, membre_id: m.membre_id }); setId({ ...r, telephone: r.telephone || m.telephone, nom: nomDe(m), titre: 'Nouveau mot de passe' }); });
+  const reinit = (m: any) => e.envoyer(async () => { const r = await equipeApi({ action: 'reinitialiser', etablissement_id: eid, membre_id: m.membre_id }); setId({ ...r, telephone: r.telephone || m.telephone, email: m.email || '', nom: nomDe(m), titre: 'Nouveau mot de passe' }); });
   const actions = (m: any) => (m.role === 'fondateur' ? null : m.actif ? <>
     <button className="btn contour mini" onClick={() => setRol(m)}>Rôle</button>
     <button className="btn contour mini" onClick={() => reinit(m)} disabled={e.occupe}><PiKeyDuotone aria-hidden="true" />Mot de passe</button>

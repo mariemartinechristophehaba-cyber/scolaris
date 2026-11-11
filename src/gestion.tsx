@@ -170,7 +170,7 @@ export function Classes() {
           {l.length === 0 ? <section className="carte"><Vide t="Aucune classe pour cette année." /></section> : <div className="grille-cl">{l.map((c: any) => {
             const t = Math.round(c.taux_recouvrement); const a = c.facture_net > 0;
             return <section className="carte cl" key={c.classe_id}>
-              <div className="cl-t"><div><h2>{c.nom}</h2>{d.nom[c.classe_id] && <span className="puce">{d.nom[c.classe_id]}</span>}</div>{fin && (a ? <Jauge clair petit ton={t >= 70 ? 'vert' : 'orange'} p={t}><b>{t} %</b></Jauge> : <span className="sans-frais">Frais à définir</span>)}</div>
+              <div className="cl-t"><div><h2>{c.nom}</h2>{d.nom[c.classe_id] && <span className="puce">{d.nom[c.classe_id]}</span>}</div>{fin && (a ? <Jauge clair petit ton={t >= 70 ? 'vert' : 'orange'} p={t}><b>{t} %</b></Jauge> : (can('directeur', 'comptable') ? <Lien to={`/frais?classe=${c.classe_id}`} className="sans-frais lien-frais">Définir les frais<PiCaretRightBold aria-hidden="true" /></Lien> : <span className="sans-frais">Frais à définir</span>))}</div>
               {a && Number(c.taux_recouvrement) === meilleur && <span className="meilleur"><PiCrownSimpleFill aria-hidden="true" />Meilleur taux</span>}
               <dl className="cl-d"><div><dt>Effectif</dt><dd>{nb(c.effectif)}</dd></div>{fin && a && <><div><dt>Facturé</dt><dd>{nb(c.facture_net)}</dd></div><div><dt>Payé</dt><dd className="vert">{nb(c.regle)}</dd></div><div><dt>Reste</dt><dd className={c.impaye_echu > 0 ? 'rouge' : ''}>{nb(c.reste)}</dd></div></>}</dl>
             </section>;
@@ -197,7 +197,7 @@ function FormClasse({ nv, fermer, fini }: any) {
 const iconeFrais = (l = '') => (/inscri/i.test(l) ? PiIdentificationBadgeDuotone : /scolar/i.test(l) ? PiGraduationCapDuotone : /exam/i.test(l) ? PiNotePencilDuotone : /fourn/i.test(l) ? PiBooksDuotone : /transp/i.test(l) ? PiBusDuotone : PiCoinsDuotone);
 
 export function Frais() {
-  const { annee, can, eid } = useApp(); const [form, setF] = useState<any>(null); const [sel, setSel] = useState('');
+  const { annee, can, eid } = useApp(); const pre = new URLSearchParams(location.search).get('classe') || ''; const [form, setF] = useState<any>(pre && can('directeur', 'comptable') ? { classe: pre } : null); const [sel, setSel] = useState(pre);
   const q = useQ(async () => {
     const [classes, types, tarifs] = await Promise.all([db.get(`classes?annee_scolaire_id=eq.${annee.id}&order=ordre,nom`), db.get(`types_frais?etablissement_id=eq.${eid}&actif=is.true&order=ordre`), db.get(`tarifs?annee_scolaire_id=eq.${annee.id}&select=*,tarif_tranches(*)`)]);
     return { classes, types, tarifs };

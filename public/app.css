@@ -384,3 +384,4 @@ button.retour{border:0;background:none;cursor:pointer;padding:0}
 @media(max-width:860px){.carte-pub.legal{padding:28px 18px 24px;border-radius:22px}}
 .sauv{max-width:900px;width:100%;margin-inline:auto;display:grid;gap:12px}.sauv-h{display:flex;gap:14px;align-items:flex-start}.sauv .btn{width:auto;justify-self:start}@media(max-width:860px){.sauv .btn{width:100%}}
 .adm .decide b,.espace .decide b{white-space:normal}
+.abp-sec{display:flex;align-items:center;justify-content:center;width:100%;height:50px;border:1.5px solid #CFDCFF;border-radius:14px;background:#fff;color:#0B49E0;font:600 14.5px var(--pop);cursor:pointer}a.abp-cta{text-decoration:none}

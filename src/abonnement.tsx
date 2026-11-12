@@ -98,8 +98,13 @@ export function Abonnement() {
         <div className="abp-co">
           <h3>Avantages inclus :</h3>
           <ul className="abp-av">{AVANTAGES.map(([I, t]) => <li key={t}><span><I aria-hidden="true" /></span>{t}</li>)}</ul>
-          <p className="abp-info"><PiInfoFill aria-hidden="true" />Votre abonnement sera prolongé dès que Scolaris aura vérifié votre paiement.</p>
-          <div className="abp-bas"><button type="button" className="abp-cta" onClick={() => aller(3)}>Payer maintenant<PiArrowRightBold aria-hidden="true" /></button></div>
+          {abo?.[`lien_${per}`] ? <>
+            <p className="abp-info"><PiInfoFill aria-hidden="true" />Payez en ligne par Orange Money ou MTN, puis revenez ici et appuyez sur « J'ai déjà payé ».</p>
+            <div className="abp-bas deux-b"><a className="abp-cta" href={abo[`lien_${per}`]} target="_blank" rel="noopener noreferrer">Payer en ligne<PiArrowRightBold aria-hidden="true" /></a><button type="button" className="abp-sec" onClick={() => aller(3)}>J'ai déjà payé</button></div>
+          </> : <>
+            <p className="abp-info"><PiInfoFill aria-hidden="true" />Votre abonnement sera prolongé dès que Scolaris aura vérifié votre paiement.</p>
+            <div className="abp-bas"><button type="button" className="abp-cta" onClick={() => aller(3)}>Payer maintenant<PiArrowRightBold aria-hidden="true" /></button></div>
+          </>}
         </div>
       </div>
     </>

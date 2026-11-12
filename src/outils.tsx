@@ -1,10 +1,10 @@
 import { PiBuildingsFill, PiCalendarBlankFill, PiCaretRightBold, PiStudentFill, PiTargetBold, PiUserCircleFill } from 'react-icons/pi';
 import { Haut } from './abonnement';
 import { useMemo, useRef, useState } from 'react';
-import { PiKeyDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
+import { PiChatCircleDotsDuotone, PiClockCountdownDuotone, PiCheckCircleDuotone, PiPaperPlaneTiltFill, PiInfoFill, PiKeyDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { SUPA, auth, db, getSession, message } from './api';
-import { TRANCHES, auj, dateFr, erreurTel, gnf, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
-import { Avatar, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { TRANCHES, auj, dateFr, erreurTel, gnf, grouperClasses, telAff, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
+import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Vague, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
 
@@ -17,18 +17,63 @@ function FormPromesse({ r, resp, fermer, fini }: any) {
     <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}><PiCheckBold />Enregistrer la promesse</button></form></Modale>;
 }
 
+function AutoRelances({ reg, peut, abo, fini }: any) {
+  const { eid } = useApp(); const e = useEnvoi();
+  const actif = !!reg?.actif && reg?.canal === 'sms'; const av = reg?.jours_avant?.[0] ?? 3; const ap = reg?.jours_apres?.[0] ?? 7;
+  const basculer = () => e.envoyer(async () => {
+    const v = { actif: !actif, canal: !actif ? 'sms' : 'whatsapp', jours_avant: [3], jours_apres: [7] };
+    if (reg) await db.upd(`parametres_relance?etablissement_id=eq.${eid}`, v); else await db.ins('parametres_relance', { etablissement_id: eid, ...v });
+    await fini();
+  });
+  const quota = abo?.sms_quota, reste = abo?.sms_restants;
+  return <section className="carte c-large auto-r">
+    <div className="ar-h"><Tuile i={PiChatCircleDotsDuotone} ton="vert" t={44} /><div><h2>Relances automatiques par SMS</h2><p className="note">Scolaris prévient les parents tout seul.</p></div>
+      <button type="button" role="switch" aria-checked={actif} aria-label="Relances automatiques par SMS" className={`inter${actif ? ' on' : ''}`} disabled={!peut || e.occupe} onClick={basculer}><i /></button></div>
+    <ul className="regles">
+      <li><Tuile i={PiCalendarCheckDuotone} ton="bleu" t={36} /><div><b>{av} jours avant chaque tranche</b><small>Un rappel aux parents qui n’ont pas encore payé.</small></div></li>
+      <li><Tuile i={PiClockCountdownDuotone} ton="rouge" t={36} /><div><b>{ap} jours après, si toujours impayé</b><small>Une seule relance. Ensuite, Scolaris s’arrête.</small></div></li>
+      <li><Tuile i={PiCheckCircleDuotone} ton="vert" t={36} /><div><b>Le parent a payé ? Plus aucun SMS.</b><small>2 SMS au maximum par tranche.</small></div></li>
+    </ul>
+    {quota != null ? <div className="sms-q"><div><span>SMS de l’école</span><b>{nb(reste)}<small> restants sur {nb(quota)}</small></b></div><div className="barre-p"><i style={{ width: `${Math.max(0, Math.min(100, (reste / quota) * 100))}%` }} /></div></div>
+      : <p className="sms-b"><PiInfoFill aria-hidden="true" />Les SMS arrivent bientôt. En attendant, relancez par WhatsApp, c’est gratuit.</p>}
+    {!peut && <p className="note">Seul le directeur peut activer ou couper les relances automatiques.</p>}
+    <Erreur t={e.erreur} />
+  </section>;
+}
+
+function EnvoiSerie({ s, setS, lien, etab, envoyer }: any) {
+  const r = s.l[s.i]; const resp = r && lien.get(r.eleve_id)?.responsables;
+  const fin = s.i >= s.l.length;
+  return <Modale titre={`Relance de la ${s.cl}`} fermer={() => setS(null)}>
+    <div className="serie">
+      <div className="se-h"><span>{fin ? 'Terminé' : `Parent ${nb(s.i + 1)} sur ${nb(s.l.length)}`}</span><span className="ok-t">{nb(s.faits)} relancé{s.faits > 1 ? 's' : ''}</span></div>
+      <div className="se-p">{s.l.map((_: any, k: number) => <i key={k} className={k < s.i ? 'f' : k === s.i ? 'c' : ''} />)}</div>
+      {fin ? <div className="action vert"><PiCheckCircleFill aria-hidden="true" /><div><b>Toute la classe est relancée</b><small>{nb(s.faits)} message{s.faits > 1 ? 's' : ''} envoyé{s.faits > 1 ? 's' : ''} par WhatsApp.</small></div></div> : <>
+        <div className="ligne-e"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>Parent : {resp?.nom} · {telAff(resp?.telephone)}</small></div><b className="le-m rg">{nb(r.impaye_echu)}</b></div>
+        <div className="bulle-wa">Bonjour {resp?.nom}, {etab.nom} vous rappelle que {r.prenom} {r.nom} ({r.classe}) a un retard de paiement de {gnf(r.impaye_echu)}.</div>
+        <button type="button" className="btn wa" onClick={() => { envoyer(r, resp); setS({ ...s, i: s.i + 1, faits: s.faits + 1 }); }}><PiWhatsappLogoFill />Envoyer sur WhatsApp</button>
+        <button type="button" className="btn contour" onClick={() => setS({ ...s, i: s.i + 1 })}>Passer ce parent</button>
+        <p className="note centre">Après l’envoi, revenez ici : le parent suivant s’affiche tout seul.</p>
+      </>}
+      {fin && <button type="button" className="btn plein" onClick={() => setS(null)}>Fermer</button>}
+    </div>
+  </Modale>;
+}
+
 export function Relances() {
-  const { annee, eid, etab, majNotif } = useApp(); const e = useEnvoi(); const [f, setF] = useState('retards'); const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [pro, setPro] = useState<any>(null); const [n, setN] = useState(30);
+  const { annee, eid, etab, majNotif, can, abo } = useApp(); const e = useEnvoi(); const [serie, setSerie] = useState<any>(null); const [clc, setClc] = useState(''); const [f, setF] = useState('retards'); const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [pro, setPro] = useState<any>(null); const [n, setN] = useState(30);
   const q = useQ(async () => {
-    const [ret, att, ins, lien, rap, pr] = await Promise.all([
+    const [ret, att, ins, lien, rap, pr, reg, cls] = await Promise.all([
       db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&en_retard=is.true&order=impaye_echu.desc,inscription_id`),
       db.get(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.en_attente&order=date_paiement.desc&limit=30`),
       db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=10`),
       db.tout(`eleve_responsables?etablissement_id=eq.${eid}&select=eleve_id,principal,responsables(id,nom,telephone,jeton_public)&order=principal.desc,eleve_id,responsable_id`),
       db.tout(`rappels?etablissement_id=eq.${eid}&select=eleve_id,cree_le&order=cree_le.desc,id`),
       db.tout(`promesses?etablissement_id=eq.${eid}&select=eleve_id,date_promise&order=date_promise.desc,id`),
+      db.get(`parametres_relance?etablissement_id=eq.${eid}&select=*`),
+      db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=nom,niveaux(nom)`),
     ]);
-    return { ret, att, ins, lien: premier(lien), rap: premier(rap), pro: premier(pr) };
+    return { ret, att, ins, lien: premier(lien), rap: premier(rap), pro: premier(pr), reg: reg[0] || null, cls };
   }, [annee.id]);
   const relancer = (r: any, resp: any) => {
     const msg = `Bonjour ${resp.nom}, ${etab.nom} vous rappelle que ${r.prenom} ${r.nom} (${r.classe}) a un retard de paiement de ${gnf(r.impaye_echu)}. Détail : ${location.origin}/f/${resp.jeton_public}`;
@@ -40,7 +85,6 @@ export function Relances() {
   };
   return (
     <>
-      <Titre t="Relances" />
       <Erreur t={e.erreur} />
       <Etat q={q}>{(d) => {
         const jour = auj(); const som = d.ret.reduce((t: number, x: any) => t + Number(x.impaye_echu), 0);
@@ -54,7 +98,33 @@ export function Relances() {
           <button className="btn contour mini" onClick={() => setPro({ r, resp })}><PiCalendarCheckDuotone />Promesse</button>
         </>; };
         const suivi = (r: any) => { const dn = dernier(r); const p = promis(r); return <>{p ? <span className="puce p-vert">Promis le {dateFr(p.date_promise)}</span> : dn ? <small className="gr">Relancé le {dateFr(dn.cree_le)}</small> : <small className="gr">Jamais relancé</small>}</>; };
+        const parCl = new Map<string, any[]>(); d.ret.forEach((r: any) => { if (!parCl.has(r.classe)) parCl.set(r.classe, []); parCl.get(r.classe)!.push(r); });
+        const nivs = new Map(d.cls.map((c: any) => [c.nom, c.niveaux?.nom || ''])); const groupes = grouperClasses([...parCl.keys()].map((nom) => ({ nom, niveau: nivs.get(nom) || '' })), (c: any) => c.niveau);
+        const choisie = clc && parCl.has(clc) ? clc : (groupes[0]?.[1][0] as any)?.nom || '';
+        const lc = parCl.get(choisie) || []; const aRelancer = lc.filter((r: any) => d.lien.get(r.eleve_id)?.responsables?.telephone && !fait(r));
         return <>
+          <Bandeau><section className="hero hero-simple">
+            <div className="hero-haut"><div className="hero-g">
+              <div className="hero-titre"><h1>Relances</h1></div>
+              <span className="hero-lab">En retard de paiement</span>
+              <div className="hero-val"><b>{nb(som)}</b><small>GNF</small></div>
+              <span className="hero-sur">{nb(d.ret.length)} élève{d.ret.length > 1 ? 's' : ''} · {nb(parCl.size)} classe{parCl.size > 1 ? 's' : ''} · {nb(relances)} relancé{relances > 1 ? 's' : ''} aujourd'hui</span>
+            </div></div>
+            <Vague />
+          </section></Bandeau>
+          <div className="rang r-ordre rel-haut">
+            <AutoRelances reg={d.reg} peut={can('directeur')} abo={abo} fini={q.reload} />
+            <section className="carte c-etat par-cl"><div className="tete-carte"><h2>Relancer par classe</h2>{lc.length > 0 && <span className="puce p-rouge">{nb(lc.length)} en retard</span>}</div>
+              {groupes.length === 0 ? <p className="note">Aucun élève en retard. Bravo !</p> : <>
+                <div className="niv-cl">{groupes.map(([niv, l]) => <div key={niv}><small>{niv}</small><div className="chips-cl">{(l as any[]).map((c) => <button key={c.nom} type="button" className={c.nom === choisie ? 'on' : ''} onClick={() => setClc(c.nom)}>{c.nom}<em>{parCl.get(c.nom)!.length}</em></button>)}</div></div>)}</div>
+                <ul className="lignes-e">{lc.slice(0, 3).map((r: any) => <li key={r.inscription_id}><div className="ligne-e"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>{fait(r) ? 'Relancé aujourd’hui' : dernier(r) ? `Relancé le ${dateFr(dernier(r).cree_le)}` : 'Jamais relancé'}</small></div><b className="le-m rg">{nb(r.impaye_echu)}</b></div></li>)}</ul>
+                {lc.length > 3 && <p className="note centre">+ {nb(lc.length - 3)} autre{lc.length - 3 > 1 ? 's' : ''} parent{lc.length - 3 > 1 ? 's' : ''}</p>}
+                <button type="button" className="btn plein" disabled={!aRelancer.length} onClick={() => setSerie({ cl: choisie, l: aRelancer, i: 0, faits: 0 })}><PiPaperPlaneTiltFill />{aRelancer.length ? `Relancer toute la classe (${nb(aRelancer.length)})` : 'Toute la classe est déjà relancée'}</button>
+                <p className="note centre">Par WhatsApp, gratuit. Le message est déjà écrit pour chaque parent.</p>
+              </>}
+            </section>
+          </div>
+          {serie && <EnvoiSerie s={serie} setS={setSerie} lien={d.lien} etab={etab} envoyer={relancer} />}
           <div className="minis"><div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="rouge" t={44} /><div><span>En retard ({nb(d.ret.length)})</span><Gnf n={som} /></div></div><div className="carte mini-c"><Tuile i={PiWhatsappLogoDuotone} ton="vert" t={44} /><div><span>Relancés aujourd'hui</span><span className="gnf"><b>{nb(relances)}</b></span></div></div><div className="carte mini-c"><Tuile i={PiCalendarCheckDuotone} ton="bleu" t={44} /><div><span>Promesses en cours</span><span className="gnf"><b>{nb(promesses)}</b></span></div></div></div>
           <div className="segment" role="tablist">{[['retards', 'Retards', d.ret.length], ['verifier', 'À vérifier', d.att.length], ['inscriptions', 'Inscriptions', d.ins.length]].map(([k, x, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{x}<em>{nb(n)}</em></button>)}</div>
           {f === 'retards' && <>

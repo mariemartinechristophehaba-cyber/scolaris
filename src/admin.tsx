@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiDatabaseDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
+import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiChatCircleDots, PiChatCircleDotsFill, PiShoppingCartFill, PiInfoFill, PiDatabaseDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
 import { auj, dateFr, erreurTel, gnf, nb, telAff } from './lib';
-import { Avatar, Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Gnf, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Gnf, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vague, Vide, useApp, useEnvoi, useQ } from './ui';
 import { LIB_M, LIB_P, LIB_T, SIT, ST_P, waUrl } from './abonnement';
 
-const ITEMS: [string, string, any, string, any][] = [['/admin', "Vue d'ensemble", PiSquaresFour, 'Accueil', PiSquaresFourFill], ['/admin/ecoles', 'Écoles', PiBuildings, 'Écoles', PiBuildingsFill], ['/admin/paiements', 'Paiements', PiMoneyWavy, 'Paiements', PiMoneyWavyFill], ['/admin/reglages', 'Réglages', PiGearSix, 'Réglages', PiGearSixFill]];
+const ITEMS: [string, string, any, string, any][] = [['/admin', "Vue d'ensemble", PiSquaresFour, 'Accueil', PiSquaresFourFill], ['/admin/ecoles', 'Écoles', PiBuildings, 'Écoles', PiBuildingsFill], ['/admin/paiements', 'Paiements', PiMoneyWavy, 'Paiements', PiMoneyWavyFill], ['/admin/sms', 'SMS', PiChatCircleDots, 'SMS', PiChatCircleDotsFill], ['/admin/reglages', 'Réglages', PiGearSix, 'Réglages', PiGearSixFill]];
 const MOIS_C = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const NOM_ROLE: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
 const taille = (o: number) => (o < 1048576 ? `${Math.round(o / 1024)} Ko` : o < 1073741824 ? `${(o / 1048576).toFixed(0)} Mo` : `${(o / 1073741824).toFixed(1).replace('.', ',')} Go`);
@@ -293,6 +293,53 @@ function FormReglages({ d, fini }: any) {
   </form>;
 }
 
+function AchatSms({ prix, fermer, fini }: any) {
+  const e = useEnvoi(); const [qte, setQ] = useState(1000); const [m, setM] = useState<number>(1000 * prix); const [note, setN] = useState('Nimba SMS');
+  return <Modale titre="J'ai acheté des SMS" fermer={fermer}><form onSubmit={(x) => { x.preventDefault(); if (!qte) return e.setE('Indiquez le nombre de SMS'); e.envoyer(async () => { await db.rpc('admin_sms_achat', { p_quantite: qte, p_montant: m || 0, p_note: note }); fini(); }); }}>
+    <div className="chips-cl q-sms">{[100, 1000, 5000, 10000].map((n) => <button key={n} type="button" className={qte === n ? 'on' : ''} onClick={() => { setQ(n); setM(n * prix); }}>{nb(n)} SMS</button>)}</div>
+    <Champ label="Nombre de SMS achetés"><input inputMode="numeric" value={qte ? nb(qte) : ''} onChange={(ev) => { const v = Number(ev.target.value.replace(/\D/g, '')) || 0; setQ(v); setM(v * prix); }} /></Champ>
+    <Champ label="Montant payé"><Montant value={m} onChange={setM} /></Champ>
+    <Champ label="Fournisseur ou note"><input value={note} onChange={(ev) => setN(ev.target.value)} /></Champ>
+    <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}><PiCheckBold />Ajouter au stock</button></form></Modale>;
+}
+
+function Sms() {
+  const q = useQ(() => db.rpc('admin_sms'), []); const [ach, setA] = useState(false);
+  return <Etat q={q}>{(d: any) => {
+    const reste = Number(d.restants), achetes = Number(d.achetes); const pct = achetes ? Math.max(0, Math.min(100, (reste / achetes) * 100)) : 0;
+    const etat = !achetes ? ['Aucun stock', 'p-rouge'] : pct < 15 ? ['Bientôt vide', 'p-orange'] : ['Stock correct', 'p-vert'];
+    const besoin = d.ecoles.reduce((a: number, x: any) => a + (x.auto ? Math.max(0, x.quota - x.utilises) : 0), 0);
+    return <>
+      <Bandeau><section className="hero hero-simple">
+        <div className="hero-haut"><div className="hero-g">
+          <div className="hero-titre"><h1>SMS</h1></div>
+          <span className="hero-lab">SMS restants</span>
+          <div className="hero-val"><b>{nb(reste)}</b><small>SMS</small></div>
+          <span className="hero-sur">sur {nb(achetes)} achetés · {nb(d.prix_unitaire)} GNF le SMS</span>
+        </div></div>
+        <Vague />
+      </section></Bandeau>
+      <div className="rang r-ordre">
+        <section className="carte c-large sms-stock"><div className="tete-carte"><h2>Stock Nimba SMS</h2><span className={`puce ${etat[1]}`}>{etat[0]}</span></div>
+          <div className="barre-p"><i style={{ width: `${pct}%`, background: pct < 15 ? '#F79009' : '#0FA968' }} /></div>
+          <div className="g-res"><div><span>Envoyés ce mois</span><b>{nb(d.envoyes_mois)}</b></div><div><span>Coût ce mois</span><b>{nb(d.envoyes_mois * d.prix_unitaire)}</b><span>GNF</span></div><div><span>Envoyés au total</span><b>{nb(d.envoyes)}</b></div></div>
+          {besoin > reste && <p className="sms-b"><PiInfoFill aria-hidden="true" />Les écoles qui ont activé les SMS peuvent encore en utiliser {nb(besoin)} cette année : rechargez avant d'être à court.</p>}
+          {!achetes && <p className="sms-b"><PiInfoFill aria-hidden="true" />Achetez un pack sur Nimba SMS, puis enregistrez-le ici pour suivre ce qu'il vous reste.</p>}
+          <button type="button" className="btn plein" onClick={() => setA(true)}><PiShoppingCartFill />J'ai acheté des SMS</button>
+        </section>
+        <section className="carte c-etat"><div className="tete-carte"><h2>Derniers achats</h2></div>
+          {d.achats.length === 0 ? <p className="note">Aucun achat enregistré.</p> : <ul className="lignes-e">{d.achats.map((a: any) => <li key={a.id}><div className="ligne-e"><Tuile i={PiShoppingCartFill} ton="vert" t={38} /><div><b>{nb(a.quantite)} SMS</b><small>{dateFr(a.cree_le)}{a.note ? ` · ${a.note}` : ''}</small></div><b className="le-m">{nb(a.montant)}</b></div></li>)}</ul>}
+        </section>
+      </div>
+      <section className="carte"><div className="tete-carte"><h2>Par école, cette année scolaire</h2></div>
+        <p className="note">Chaque école a {nb(3)} SMS par élève et par an, 300 au minimum.</p>
+        <ul className="lignes-e">{d.ecoles.map((x: any) => { const p = x.quota ? (x.utilises / x.quota) * 100 : 0; return <li key={x.id}><Lien to={`/admin/ecoles/${x.id}`} className="ligne-e"><Avatar nom={sansPrefixe(x.nom)} /><div><b>{x.nom}</b><small>{nb(x.eleves)} élève{x.eleves > 1 ? 's' : ''} · {x.auto ? 'SMS automatiques activés' : 'SMS automatiques coupés'}</small><Barre p={p} ton={p >= 100 ? 'rouge' : p >= 80 ? 'orange' : 'vert'} /></div><b className={`le-m${p >= 100 ? ' rg' : ''}`}>{nb(x.utilises)} / {nb(x.quota)}</b></Lien></li>; })}</ul>
+      </section>
+      {ach && <AchatSms prix={d.prix_unitaire} fermer={() => setA(false)} fini={() => { setA(false); q.reload(); }} />}
+    </>;
+  }}</Etat>;
+}
+
 function Reglages() {
   const { tableau } = useApp(); const q = useQ(() => db.rpc('admin_reglages'), []);
   return <><Titre t="Réglages" /><Etat q={q}>{(d: any) => <><Sauvegarde d={d} fini={async () => { await q.reload(); tableau.reload(); }} /><FormReglages d={d} fini={async () => { await q.reload(); tableau.reload(); }} /></>}</Etat></>;
@@ -309,7 +356,7 @@ export function EspaceAdmin() {
   if (droit.data == null) return <main className="pub"><Chargement /></main>;
   if (!estAdmin) return <main className="pub"><section className="carte-pub"><Logo /><h1>Accès réservé</h1><p className="intro">Cette page n'est pas accessible avec ce compte.</p><button className="btn plein" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
   const seg = chemin.split('/').filter(Boolean);
-  const page = seg[1] === 'ecoles' && seg[2] ? <Fiche id={seg[2]} key={seg[2]} /> : seg[1] === 'ecoles' ? <Ecoles /> : seg[1] === 'paiements' ? <Paiements /> : seg[1] === 'reglages' ? <Reglages /> : <Vue />;
+  const page = seg[1] === 'ecoles' && seg[2] ? <Fiche id={seg[2]} key={seg[2]} /> : seg[1] === 'ecoles' ? <Ecoles /> : seg[1] === 'paiements' ? <Paiements /> : seg[1] === 'reglages' ? <Reglages /> : seg[1] === 'sms' ? <Sms /> : <Vue />;
   const on = (to: string) => (to === '/admin' ? chemin === '/admin' || chemin === '/admin/' : chemin.startsWith(to));
   const att = Number((tableau.data as any)?.a_verifier?.nombre || 0);
   const md = getSession()?.user?.user_metadata || {}; const nom = `${md.prenom || ''} ${md.nom || ''}`.trim() || getSession()?.user?.email || 'Administrateur';

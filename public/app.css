@@ -428,3 +428,9 @@ html.modale-ouverte body{position:fixed;left:0;right:0;width:100%}
 .fond,.modale{overscroll-behavior:contain}
 .modale{-webkit-overflow-scrolling:touch}
 .g-liste{max-height:none;overflow:visible}
+.puce.p-orange{background:var(--orangef);color:#B54708}
+.sms-stock{display:grid;gap:14px;align-content:start}.sms-stock .barre-p{height:12px}
+.g-res span+b+span{font-size:11px}
+.q-sms{margin-bottom:12px}
+.adm .barre-bas a span{font-size:10.5px}
+@media(max-width:860px){.adm .barre-bas{grid-template-columns:repeat(5,minmax(0,1fr))!important}}

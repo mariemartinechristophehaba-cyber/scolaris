@@ -412,3 +412,13 @@ button.retour{border:0;background:none;cursor:pointer;padding:0}
 .serie .bulle-wa{overflow-wrap:anywhere}
 .serie .btn{white-space:normal;text-align:center}
 @media(max-width:860px){.serie .ligne-e .le-m{font-size:14px}}
+.par-cl .btn.contour{width:100%}
+.mode-test{display:flex;gap:8px;align-items:flex-start;margin:0;padding:10px 12px;border-radius:14px;background:#FFF6E5;color:#8A5A00;font-size:13px}.mode-test svg{flex:none;font-size:18px;margin-top:1px}
+.g-res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.g-res div{padding:10px;border-radius:14px;background:#F5F8FE;text-align:center}.g-res span{display:block;font-size:11.5px;color:var(--gris)}.g-res b{font:700 20px var(--pop)}
+.g-lab{display:block;font-size:12px;font-weight:600;color:var(--gris);margin-bottom:6px}
+.bulle-sms{background:#EEF2FA;border-radius:16px 16px 16px 4px;padding:12px 14px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.g-cpt{display:block;text-align:right;font-size:12px;color:#0FA968;margin-top:4px}
+.g-barre i{background:#0FA968}
+.g-liste{max-height:300px;overflow-y:auto;border-top:1px solid #EEF2FA}
+.g-ligne{width:100%;border:0;background:none;text-align:left;cursor:pointer;font:inherit;color:inherit}.g-msg{margin:0 0 10px 48px;font-size:13px}
+.nw{white-space:nowrap}

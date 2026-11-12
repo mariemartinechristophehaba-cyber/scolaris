@@ -41,6 +41,35 @@ function AutoRelances({ reg, peut, abo, fini }: any) {
   </section>;
 }
 
+const sansAcc = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’]/g, "'");
+const nbSms = (t: string) => (t.length <= 160 ? 1 : Math.ceil(t.length / 153));
+export const messageSms = (etab: string, r: any) => sansAcc(`${etab}: ${r.prenom} ${r.nom} (${r.classe}) a un retard de paiement de ${nb(r.impaye_echu)} GNF. Merci de passer regler.`);
+
+function EnvoiGroupe({ g, fermer, lien, etab }: any) {
+  const [etape, setEtape] = useState<'voir' | 'envoi' | 'fini'>('voir'); const [k, setK] = useState(0); const [ouv, setOuv] = useState<string | null>(null);
+  const l = g.l.map((r: any) => { const ln = lien.get(r.eleve_id); const resp = ln && ln.eleve_id === r.eleve_id ? ln.responsables : null; const msg = messageSms(etab.nom, r); return { r, resp, msg, ok: !!resp?.telephone && msg.includes(sansAcc(`${r.prenom} ${r.nom}`)), sms: nbSms(msg) }; });
+  const ok = l.filter((x: any) => x.ok); const total = ok.reduce((a: number, x: any) => a + x.sms, 0);
+  const envoyer = () => { setEtape('envoi'); let i = 0; const t = setInterval(() => { i++; setK(i); if (i >= l.length) { clearInterval(t); setEtape('fini'); } }, 140); };
+  return <Modale titre={`Relance de la ${g.cl}`} fermer={fermer}>
+    <div className="serie groupe">
+      <p className="mode-test"><PiInfoFill aria-hidden="true" /><span><b>Mode test.</b> Les SMS ne partent pas encore : ils partiront quand le compte SMS de Scolaris sera branché.</span></p>
+      {etape === 'voir' ? <>
+        <div className="g-res"><div><span>Parents</span><b>{nb(ok.length)}</b></div><div><span>SMS utilisés</span><b>{nb(total)}</b></div><div><span>Sans numéro</span><b className={l.length - ok.length ? 'rg' : ''}>{nb(l.length - ok.length)}</b></div></div>
+        <div><small className="g-lab">Chaque parent reçoit le message de son propre enfant. Exemple :</small><div className="bulle-sms">{(ok[0] || l[0])?.msg}</div><small className="g-cpt">{(ok[0] || l[0])?.msg.length} / 160 caractères · {(ok[0] || l[0])?.sms} SMS</small></div>
+        <button type="button" className="btn plein" disabled={!ok.length} onClick={envoyer}><PiPaperPlaneTiltFill />Envoyer à {nb(ok.length)} parent{ok.length > 1 ? 's' : ''}</button>
+      </> : <>
+        <div className="se-h"><span>{etape === 'fini' ? 'Terminé' : 'Envoi en cours…'}</span><span className="ok-t">{nb(Math.min(k, l.length))} / {nb(l.length)}</span></div>
+        <div className="barre-p g-barre"><i style={{ width: `${(Math.min(k, l.length) / l.length) * 100}%` }} /></div>
+        {etape === 'fini' && <div className="action vert"><PiCheckCircleFill aria-hidden="true" /><div><b>{nb(ok.length)} parent{ok.length > 1 ? 's' : ''} prévenu{ok.length > 1 ? 's' : ''} en un clic</b><small>{nb(total)} SMS · test, rien n'a été envoyé</small></div></div>}
+      </>}
+      <small className="g-lab">Appuyez sur un élève pour voir son message.</small>
+      <ul className="lignes-e g-liste">{l.map((x: any, i: number) => <li key={x.r.inscription_id}><button type="button" className="ligne-e g-ligne" onClick={() => setOuv(ouv === x.r.inscription_id ? null : x.r.inscription_id)} aria-expanded={ouv === x.r.inscription_id}><Avatar nom={`${x.r.nom} ${x.r.prenom}`} /><div><b>{x.r.nom} {x.r.prenom} · {x.r.classe}</b><small>{x.ok ? <>{x.resp.nom || 'Parent'} · <span className="nw">{telAff(x.resp.telephone)}</span></> : 'Pas de numéro de parent'}</small></div>
+        {etape === 'voir' ? <b className="le-m rg">{nb(x.r.impaye_echu)}</b> : i < k ? (x.ok ? <span className="puce p-vert">Envoyé</span> : <span className="puce p-rouge">Pas de numéro</span>) : <span className="puce">En attente</span>}</button>{ouv === x.r.inscription_id && <div className="bulle-sms g-msg">{x.ok ? x.msg : 'Aucun SMS : ajoutez le numéro du parent dans la fiche de l’élève.'}</div>}</li>)}</ul>
+      {etape === 'fini' && <button type="button" className="btn plein" onClick={fermer}>Fermer</button>}
+    </div>
+  </Modale>;
+}
+
 function EnvoiSerie({ s, setS, lien, etab, envoyer }: any) {
   const r = s.l[s.i]; const resp = r && lien.get(r.eleve_id)?.responsables;
   const fin = s.i >= s.l.length;
@@ -61,7 +90,7 @@ function EnvoiSerie({ s, setS, lien, etab, envoyer }: any) {
 }
 
 export function Relances() {
-  const { annee, eid, etab, majNotif, can, abo } = useApp(); const e = useEnvoi(); const [serie, setSerie] = useState<any>(null); const [clc, setClc] = useState(''); const [f, setF] = useState('retards'); const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [pro, setPro] = useState<any>(null); const [n, setN] = useState(30);
+  const { annee, eid, etab, majNotif, can, abo } = useApp(); const e = useEnvoi(); const [serie, setSerie] = useState<any>(null); const [groupe, setGroupe] = useState<any>(null); const [clc, setClc] = useState(''); const [f, setF] = useState('retards'); const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [pro, setPro] = useState<any>(null); const [n, setN] = useState(30);
   const q = useQ(async () => {
     const [ret, att, ins, lien, rap, pr, reg, cls] = await Promise.all([
       db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&en_retard=is.true&order=impaye_echu.desc,inscription_id`),
@@ -119,11 +148,13 @@ export function Relances() {
                 <div className="niv-cl">{groupes.map(([niv, l]) => <div key={niv}><small>{niv}</small><div className="chips-cl">{(l as any[]).map((c) => <button key={c.nom} type="button" className={c.nom === choisie ? 'on' : ''} onClick={() => setClc(c.nom)}>{c.nom}<em>{parCl.get(c.nom)!.length}</em></button>)}</div></div>)}</div>
                 <ul className="lignes-e">{lc.slice(0, 3).map((r: any) => <li key={r.inscription_id}><div className="ligne-e"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>{fait(r) ? 'Relancé aujourd’hui' : dernier(r) ? `Relancé le ${dateFr(dernier(r).cree_le)}` : 'Jamais relancé'}</small></div><b className="le-m rg">{nb(r.impaye_echu)}</b></div></li>)}</ul>
                 {lc.length > 3 && <p className="note centre">+ {nb(lc.length - 3)} autre{lc.length - 3 > 1 ? 's' : ''} parent{lc.length - 3 > 1 ? 's' : ''}</p>}
-                <button type="button" className="btn plein" disabled={!aRelancer.length} onClick={() => setSerie({ cl: choisie, l: aRelancer, i: 0, faits: 0 })}><PiPaperPlaneTiltFill />{aRelancer.length ? `Relancer toute la classe (${nb(aRelancer.length)})` : 'Toute la classe est déjà relancée'}</button>
-                <p className="note centre">Par WhatsApp, gratuit. Le message est déjà écrit pour chaque parent.</p>
+                <button type="button" className="btn plein" disabled={!lc.length} onClick={() => setGroupe({ cl: choisie, l: lc })}><PiPaperPlaneTiltFill />Envoyer à toute la classe ({nb(lc.length)})</button>
+                <button type="button" className="btn contour" disabled={!aRelancer.length} onClick={() => setSerie({ cl: choisie, l: aRelancer, i: 0, faits: 0 })}><PiWhatsappLogoFill />Un par un sur WhatsApp</button>
+                <p className="note centre">En un clic par SMS, ou un par un sur WhatsApp (gratuit).</p>
               </>}
             </section>
           </div>
+          {groupe && <EnvoiGroupe g={groupe} fermer={() => setGroupe(null)} lien={d.lien} etab={etab} />}
           {serie && <EnvoiSerie s={serie} setS={setSerie} lien={d.lien} etab={etab} envoyer={relancer} />}
           <div className="minis"><div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="rouge" t={44} /><div><span>En retard ({nb(d.ret.length)})</span><Gnf n={som} /></div></div><div className="carte mini-c"><Tuile i={PiWhatsappLogoDuotone} ton="vert" t={44} /><div><span>Relancés aujourd'hui</span><span className="gnf"><b>{nb(relances)}</b></span></div></div><div className="carte mini-c"><Tuile i={PiCalendarCheckDuotone} ton="bleu" t={44} /><div><span>Promesses en cours</span><span className="gnf"><b>{nb(promesses)}</b></span></div></div></div>
           <div className="segment" role="tablist">{[['retards', 'Retards', d.ret.length], ['verifier', 'À vérifier', d.att.length], ['inscriptions', 'Inscriptions', d.ins.length]].map(([k, x, n]: any) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{x}<em>{nb(n)}</em></button>)}</div>

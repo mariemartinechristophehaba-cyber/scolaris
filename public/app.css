@@ -405,3 +405,10 @@ button.retour{border:0;background:none;cursor:pointer;padding:0}
 .serie .btn{width:100%}
 @media(min-width:861px){.rel-haut .auto-r{flex:1.2 1 0}.rel-haut .par-cl{flex:1 1 0}}
 .puce.p-rouge{background:var(--rougef);color:var(--rouge)}
+/* Envoi en série : rien ne doit dépasser de la fenêtre */
+.serie{min-width:0;max-width:100%}.serie>*{min-width:0;max-width:100%}
+.serie .ligne-e{overflow:hidden}.serie .ligne-e>div{min-width:0}.serie .ligne-e small{white-space:normal}
+.serie .se-h{gap:10px}.serie .se-h span{white-space:nowrap}
+.serie .bulle-wa{overflow-wrap:anywhere}
+.serie .btn{white-space:normal;text-align:center}
+@media(max-width:860px){.serie .ligne-e .le-m{font-size:14px}}

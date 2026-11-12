@@ -422,3 +422,9 @@ button.retour{border:0;background:none;cursor:pointer;padding:0}
 .g-liste{max-height:300px;overflow-y:auto;border-top:1px solid #EEF2FA}
 .g-ligne{width:100%;border:0;background:none;text-align:left;cursor:pointer;font:inherit;color:inherit}.g-msg{margin:0 0 10px 48px;font-size:13px}
 .nw{white-space:nowrap}
+/* Fenêtre ouverte : la page derrière est bloquée, seul le contenu de la fenêtre défile */
+html.modale-ouverte,html.modale-ouverte body{overflow:hidden}
+html.modale-ouverte body{position:fixed;left:0;right:0;width:100%}
+.fond,.modale{overscroll-behavior:contain}
+.modale{-webkit-overflow-scrolling:touch}
+.g-liste{max-height:none;overflow:visible}

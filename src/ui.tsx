@@ -47,7 +47,14 @@ export function Etat({ q, children }: { q: any; children: (d: any) => any }) {
   return children(q.data);
 }
 
+let modalesOuvertes = 0;
 export function Modale({ titre, fermer, children }: any) {
+  // La page derrière ne bouge plus tant que la fenêtre est ouverte : seul son contenu défile.
+  useEffect(() => {
+    const h = document.documentElement, y = window.scrollY;
+    if (modalesOuvertes++ === 0) { h.classList.add('modale-ouverte'); document.body.style.top = `-${y}px`; }
+    return () => { if (--modalesOuvertes === 0) { h.classList.remove('modale-ouverte'); document.body.style.top = ''; window.scrollTo(0, y); } };
+  }, []);
   // Rendu à la racine de la page : sinon la barre du bas passe au-dessus sur téléphone.
   return createPortal(
     <div className="fond" onMouseDown={(e) => e.target === e.currentTarget && fermer()}>

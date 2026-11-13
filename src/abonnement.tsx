@@ -11,6 +11,8 @@ export const MOYENS: [string, string][] = [['chariow', 'Paiement en ligne'], ['o
 export const LIB_M: any = Object.fromEntries(MOYENS);
 export const LIB_P: any = { mois: '1 mois', an: '1 an', sms: 'Pack SMS' };
 export const ST_P: any = { en_attente: ['retard', 'À vérifier'], valide: ['a_jour', 'Validé'], rejete: ['rien', 'Rejeté'] };
+// WhatsApp Scolaris : numéro guinéen sur 9 chiffres, ou numéro étranger déjà avec son indicatif.
+export const waScolaris = (n: string, t = '') => `https://wa.me/${String(n).length === 9 ? '224' + n : n}${t ? `?text=${encodeURIComponent(t)}` : ''}`;
 export const waUrl = (n: string, t = '') => { const x = tel(n); return `https://wa.me/${x.length >= paysActif().mn && x.length <= paysActif().ch && paysActif().c !== 'GN' || x.length === 9 && paysActif().c === 'GN' ? paysActif().ind + x : x}${t ? `?text=${encodeURIComponent(t)}` : ''}`; };
 
 export function BandeauAbonnement({ cache, accueil }: { cache: boolean; accueil: boolean }) {
@@ -121,7 +123,7 @@ export function Abonnement() {
             <div className="abp-bas deux-b"><a className="abp-cta" href={per === 'sms' ? pk.lien : abo[`lien_${per}`]} target="_blank" rel="noopener noreferrer">Payer en ligne<PiArrowRightBold aria-hidden="true" /></a><button type="button" className="abp-sec" onClick={() => aller(3)}>J'ai déjà payé</button></div>
           </> : <>
             <p className="abp-info"><PiInfoFill aria-hidden="true" />Le paiement en ligne n'est pas encore ouvert pour ce tarif. Écrivez à Scolaris, on vous envoie le lien de paiement.</p>
-            {abo.whatsapp && <div className="abp-bas"><a className="btn wa" href={waUrl('224' + abo.whatsapp, `Bonjour Scolaris, je souhaite payer : ${per === 'sms' ? plan.nom : `abonnement ${plan.nom.toLowerCase()}`} (${gnf(montant)}).`)} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Écrire à Scolaris</a></div>}
+            {abo.whatsapp && <div className="abp-bas"><a className="btn wa" href={waScolaris(abo.whatsapp, `Bonjour Scolaris, je souhaite payer : ${per === 'sms' ? plan.nom : `abonnement ${plan.nom.toLowerCase()}`} (${gnf(montant)}).`)} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Écrire à Scolaris</a></div>}
           </>}
         </div>
       </div>
@@ -155,7 +157,7 @@ export function Abonnement() {
         </section>
         <div className="abp-co abp-feuille">
           {dernier?.statut === 'rejete' && <p className="abp-rejet"><PiWarningCircleFill aria-hidden="true" />Votre dernier paiement a été rejeté{dernier.motif ? ` : ${dernier.motif}` : ''}.</p>}
-          {m == null || a == null ? <div className="abp-contact"><p>Pour une école de cette taille, le tarif se fixe directement avec Scolaris.</p>{abo.whatsapp && <a className="btn wa" href={waUrl('224' + abo.whatsapp, 'Bonjour Scolaris, je souhaite connaître le tarif pour mon école.')} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Contacter Scolaris</a>}</div> : <>
+          {m == null || a == null ? <div className="abp-contact"><p>Pour une école de cette taille, le tarif se fixe directement avec Scolaris.</p>{abo.whatsapp && <a className="btn wa" href={waScolaris(abo.whatsapp, 'Bonjour Scolaris, je souhaite connaître le tarif pour mon école.')} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Contacter Scolaris</a>}</div> : <>
             <div className="abp-bascule" role="group" aria-label="Durée de l'abonnement">{['an', 'mois'].map((k) => <button type="button" key={k} aria-pressed={per === k} className={per === k ? 'on' : ''} onClick={() => setPer(k)}>{PLANS[k].nom}</button>)}</div>
             <div className="abp-plans">{['an', 'mois'].map((k) => { const P = PLANS[k]; return <button type="button" key={k} aria-pressed={per === k} className={`abp-plan${per === k ? ' on' : ''}`} onClick={() => setPer(k)}><span className="abp-sel" aria-hidden="true">{per === k ? <PiCheckCircleFill /> : <i />}</span><span className="abp-ph"><span className="abp-tuile"><P.Ic /></span><span className="abp-pt"><b>{P.nom}</b><small>{P.sous}</small><strong>{nb(P.prix)} <em>{symbole(paysActif().dev)} / {P.unite}</em></strong></span></span><span className="abp-pts">{P.points.map((t: string) => <span key={t}><PiCheckCircleFill aria-hidden="true" />{t}</span>)}</span></button>; })}</div>
             <div className="abp-bas"><button type="button" className="abp-cta" onClick={() => { if (per === 'sms') setPer('an'); aller(2); }}>Continuer<PiArrowRightBold aria-hidden="true" /></button></div>
@@ -168,4 +170,12 @@ export function Abonnement() {
       {hist && <Historique abo={abo} fermer={() => setHist(false)} />}
     </>
   );
+}
+
+// Bouton flottant « Support » : écrire à Scolaris sur WhatsApp depuis n'importe quelle page.
+export function BoutonSupport() {
+  const { abo, etab } = useApp();
+  if (!abo?.whatsapp) return null;
+  const msg = `Bonjour Scolaris, je vous écris depuis l'école ${etab?.nom || ''}. J'ai besoin d'aide : `;
+  return <a className="support" href={waScolaris(abo.whatsapp, msg)} target="_blank" rel="noopener noreferrer" aria-label="Écrire au support Scolaris sur WhatsApp"><span className="support-r"><PiWhatsappLogoFill aria-hidden="true" /></span><b>Support</b></a>;
 }

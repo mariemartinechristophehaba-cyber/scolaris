@@ -9,7 +9,7 @@ import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
-import { Abonnement, BandeauAbonnement } from './abonnement';
+import { Abonnement, BandeauAbonnement, BoutonSupport } from './abonnement';
 import { EspaceAdmin } from './admin';
 import { choisirPays } from './lib';
 
@@ -119,7 +119,7 @@ function Coque({ m, annees, recharger, abo }: any) {
             <Lien to={can('directeur', 'comptable', 'caissier') ? '/relances' : '/paiements'} className="cloche" aria-label="Notifications"><PiBellSimpleDuotone aria-hidden="true" />{nd.attente > 0 && <i>{nd.attente > 99 ? '99+' : nd.attente}</i>}</Lien>
           </header>
           <div className="zone-bandeau" ref={setZB} />
-          <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main>
+          <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main><BoutonSupport />
         </div>
         <BarreBas chemin={chemin} can={can} role={role} ouvrir={() => setO(true)} />
       </div>

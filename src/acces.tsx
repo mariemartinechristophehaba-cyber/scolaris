@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 
 // Connexion Google : à activer une fois le fournisseur Google configuré dans Supabase.
 const GOOGLE_ACTIF = false;
 import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingDuotone, PiBuildingsDuotone, PiBabyFill, PiBackpackFill, PiBookOpenFill, PiBuildingsFill, PiCameraFill, PiCaretDownBold, PiCaretLeftBold, PiChalkboardTeacherFill, PiCrownSimpleFill, PiEnvelopeSimpleFill, PiGraduationCapFill, PiImageFill, PiLockKeyFill, PiMagnifyingGlassBold, PiMapPinFill, PiMinusBold, PiPencilSimpleFill, PiPhoneFill, PiPlusBold, PiShieldCheckFill, PiUserFill, PiXBold, PiChartLineUpDuotone, PiCheckBold, PiCheckCircleFill, PiEnvelopeSimpleDuotone, PiEyeDuotone, PiEyeSlashDuotone, PiLockKeyDuotone, PiSealCheckFill, PiStudentDuotone, PiTargetDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db } from './api';
-import { TRANCHES, erreurTel, gnf, tel, trancheDe } from './lib';
+import { VILLES_PAYS, QUARTIER_EX } from './villes';
+import { PAYS, TRANCHES, choisirPays, convertir, drapeau, erreurTel, fcfa, gnf, paysActif, paysDe, symbole, tel, trancheDe } from './lib';
 import { Erreur, Gnf, Lien, Mot, Tuile, naviguer, useEnvoi } from './ui';
 
 // Écrans d'accès : même habillage bleu nuit que l'application (voir app.css, classes acc-*).
@@ -127,7 +128,6 @@ function Message({ t, st }: any) {
 const BROUILLON = 'scolaris_brouillon_ins';
 const lireBrouillon = () => { try { return JSON.parse(sessionStorage.getItem(BROUILLON) || 'null'); } catch { return null; } };
 const NIVEAUX: [string, any][] = [['Maternelle', PiBabyFill], ['Primaire', PiBackpackFill], ['Collège', PiBookOpenFill], ['Lycée', PiGraduationCapFill]];
-const VILLES = ['Beyla', 'Boffa', 'Boké', 'Coyah', 'Dabola', 'Dalaba', 'Dinguiraye', 'Dubréka', 'Faranah', 'Forécariah', 'Fria', 'Gaoual', 'Guéckédou', 'Kankan', 'Kérouané', 'Kindia', 'Kissidougou', 'Koubia', 'Koundara', 'Kouroussa', 'Labé', 'Lélouma', 'Lola', 'Macenta', 'Mali', 'Mamou', 'Mandiana', 'Nzérékoré', 'Pita', 'Siguiri', 'Télimélé', 'Tougué', 'Yomou'];
 const sansAccent = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 let logoEnAttente: File | null = null;
 export const prendreLogo = () => { const f = logoEnAttente; logoEnAttente = null; return f; };
@@ -139,25 +139,35 @@ function Haut3({ n, retour }: { n: number; retour: () => void }) {
 }
 function Carte({ ton = 'bl', i: I, label, estTel, mdp, ...p }: any) {
   const [voir, setV] = useState(false);
-  return <label className="ric-cd"><span className={`ric-tu ${ton}`}><I aria-hidden="true" /></span><span className="ric-t"><small>{label}</small><span className="ric-v">{estTel && <span className="ric-pf"><span className="ins-fg" aria-hidden="true"><s /><s /><s /></span>+224</span>}<input type={mdp ? (voir ? 'text' : 'password') : p.type || 'text'} {...p} /></span></span>{mdp && <button type="button" className="ric-oe" onClick={(x) => { x.preventDefault(); setV(!voir); }} aria-label={voir ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>{voir ? <PiEyeSlashDuotone /> : <PiEyeDuotone />}</button>}</label>;
+  return <label className="ric-cd"><span className={`ric-tu ${ton}`}><I aria-hidden="true" /></span><span className="ric-t"><small>{label}</small><span className="ric-v">{estTel && <span className="ric-pf"><span className="ric-dr" aria-hidden="true">{drapeau(paysActif().c)}</span>+{paysActif().ind}</span>}<input type={mdp ? (voir ? 'text' : 'password') : p.type || 'text'} {...p} /></span></span>{mdp && <button type="button" className="ric-oe" onClick={(x) => { x.preventDefault(); setV(!voir); }} aria-label={voir ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>{voir ? <PiEyeSlashDuotone /> : <PiEyeDuotone />}</button>}</label>;
 }
-function ChoixVille({ v, choisir, autre, fermer }: any) {
+function ChoixPays({ v, choisir, fermer }: any) {
+  const [q, setQ] = useState(''); const q2 = sansAccent(q);
+  const L = PAYS.filter((p) => sansAccent(p.nom).includes(q2) || p.ind.includes(q.replace(/\D/g, '') || '§'));
+  const zones = [...new Set(L.map((p) => p.zone))];
+  const R = ({ p }: any) => <button type="button" role="radio" aria-checked={v === p.c} className={`pay-i${v === p.c ? ' on' : ''}`} onClick={() => choisir(p.c)}><span className="pay-d" aria-hidden="true">{drapeau(p.c)}</span><span className="pay-n"><b>{p.nom}</b><small>+{p.ind} · {symbole(p.dev)}</small></span>{v === p.c && <PiCheckBold className="pay-ok" aria-hidden="true" />}</button>;
+  return <main className="vil"><header className="vil-h"><div><button type="button" className="ric-bk" onClick={fermer} aria-label="Fermer"><PiXBold /></button><h1>Dans quel pays est votre école ?</h1></div><label className="vil-s"><PiMagnifyingGlassBold aria-hidden="true" /><input autoFocus value={q} onChange={(x) => setQ(x.target.value)} placeholder="Rechercher un pays" aria-label="Rechercher un pays" /></label></header>
+    <div className="vil-l" role="radiogroup" aria-label="Pays">{zones.map((z) => <Fragment key={z}><h2>{z}</h2><div className="pay-l">{L.filter((p) => p.zone === z).map((p) => <R key={p.c} p={p} />)}</div></Fragment>)}{!L.length && <p className="vil-v">Aucun pays trouvé.</p>}</div></main>;
+}
+
+function ChoixVille({ v, pays, choisir, autre, fermer }: any) {
+  const TOUTES = VILLES_PAYS[pays] || []; const CAP = TOUTES[0] || ''; const VILLES = [...TOUTES.slice(1)].sort((a, b) => a.localeCompare(b, 'fr'));
   const [q, setQ] = useState(''); const q2 = sansAccent(q.trim());
-  const L = VILLES.filter((x) => sansAccent(x).includes(q2)); const voirC = sansAccent('Conakry').includes(q2);
+  const L = VILLES.filter((x) => sansAccent(x).includes(q2)); const voirC = !!CAP && sansAccent(CAP).includes(q2);
   const R = ({ t }: any) => <button type="button" role="radio" aria-checked={v === t} className={v === t ? 'on' : ''} onClick={() => choisir(t)}><span>{t}</span><i aria-hidden="true" /></button>;
   return <main className="vil"><header className="vil-h"><div><button type="button" className="ric-bk" onClick={fermer} aria-label="Fermer"><PiXBold /></button><h1>Choisissez votre ville</h1></div><label className="vil-s"><PiMagnifyingGlassBold aria-hidden="true" /><input autoFocus value={q} onChange={(x) => setQ(x.target.value)} placeholder="Rechercher une ville" aria-label="Rechercher une ville" /></label></header>
-    <div className="vil-l" role="radiogroup" aria-label="Ville">{voirC && <><h2>Le plus choisi</h2><div className="vil-b"><R t="Conakry" /></div></>}{L.length > 0 && <><h2>Toutes les villes</h2><div className="vil-b">{L.map((t) => <R key={t} t={t} />)}</div></>}{!voirC && !L.length && <p className="vil-v">Aucune ville trouvée.</p>}<button type="button" className="vil-a" onClick={autre}><PiPencilSimpleFill aria-hidden="true" />Autre ville, je l’écris moi-même</button></div></main>;
+    <div className="vil-l" role="radiogroup" aria-label="Ville">{voirC && <><h2>Le plus choisi</h2><div className="vil-b"><R t={CAP} /></div></>}{L.length > 0 && <><h2>Toutes les villes</h2><div className="vil-b">{L.map((t) => <R key={t} t={t} />)}</div></>}{!voirC && !L.length && <p className="vil-v">Aucune ville trouvée.</p>}<button type="button" className="vil-a" onClick={autre}><PiPencilSimpleFill aria-hidden="true" />Autre ville, je l’écris moi-même</button></div></main>;
 }
 
 export function Inscription() {
   const [br] = useState(lireBrouillon);
-  const [f, setF] = useState({ ecole: '', ville: '', vl: false, quartier: '', telE: '', eleves: '', classes: '', prenom: '', nom: '', tel: '', email: '', ok: false, ...(br?.f || {}), m: '' });
+  const [f, setF] = useState({ pays: 'GN', ecole: '', ville: '', vl: false, quartier: '', telE: '', eleves: '', classes: '', prenom: '', nom: '', tel: '', email: '', ok: false, ...(br?.f || {}), m: '' });
   const [niv, setNiv] = useState<string[]>(br?.niv || []); const [et, setEt] = useState<number>(br?.et || 1);
   useEffect(() => { try { const { m: _m, ...sansMdp } = f; sessionStorage.setItem(BROUILLON, JSON.stringify({ f: sansMdp, niv, et })); } catch { /* ignoré */ } }, [f, niv, et]);
-  const [fin, setFin] = useState(false); const [tarifs, setTarifs] = useState<any[]>([]); const [pv, setPv] = useState(false); const [apercu, setAp] = useState(''); const e = useEnvoi();
+  const [fin, setFin] = useState(false); const [tarifs, setTarifs] = useState<any[]>([]); const [pv, setPv] = useState(false); const [pp, setPp] = useState(false); const [apercu, setAp] = useState(''); const e = useEnvoi();
   useEffect(() => { db.rpc('tarifs_liste', {}).then(setTarifs).catch(() => setTarifs([])); }, []);
   const c = (k: string) => ({ value: (f as any)[k], onChange: (x: any) => { setF({ ...f, [k]: x.target.value }); e.setE(''); } });
-  const nb_ = Number(f.eleves.replace(/\D/g, '')) || 0; const tr = nb_ ? trancheDe(nb_) : ''; const t = tarifs.find((x) => x.tranche === tr);
+  const nb_ = Number(f.eleves.replace(/\D/g, '')) || 0; const tr = nb_ ? trancheDe(nb_) : ''; const t0 = tarifs.find((x) => x.tranche === tr); const dv = paysDe(f.pays).dev; const t = t0 && { ...t0, prix_mois: convertir(t0.prix_mois, dv, t0.taux), prix_an: convertir(t0.prix_an, dv, t0.taux), fm: t0.prix_mois };
   const ajout = (d: number) => { setF({ ...f, eleves: String(Math.max(1, Math.min(50000, nb_ + d))) }); e.setE(''); };
   const force = [f.m.length >= 8, /[A-Z]/.test(f.m), /[a-z]/.test(f.m), /\d/.test(f.m)].filter(Boolean).length;
   const retour = () => { e.setE(''); if (et === 1) naviguer('/'); else { setEt(et - 1); window.scrollTo(0, 0); } };
@@ -181,13 +191,14 @@ export function Inscription() {
     e.envoyer(async () => {
       try { sessionStorage.setItem('scolaris_nouvelle', '1'); } catch { /* ignoré */ }
       let ouvert = false;
-      try { ouvert = await auth.inscription(f.email, f.m, { prenom: f.prenom.trim(), nom: f.nom.trim(), telephone: tr2, etablissement: f.ecole.trim(), ville: f.ville.trim(), quartier: f.quartier.trim(), tel_ecole: tel(f.telE), eleves: nb_, classes: Number(f.classes), niveaux: niv }); } catch (err) { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } throw err; }
+      try { ouvert = await auth.inscription(f.email, f.m, { prenom: f.prenom.trim(), nom: f.nom.trim(), telephone: tr2, pays: f.pays, etablissement: f.ecole.trim(), ville: f.ville.trim(), quartier: f.quartier.trim(), tel_ecole: tel(f.telE), eleves: nb_, classes: Number(f.classes), niveaux: niv }); } catch (err) { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } throw err; }
       try { sessionStorage.removeItem(BROUILLON); } catch { /* ignoré */ }
       if (ouvert) naviguer('/tableau'); else { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } setFin(true); }
     });
   };
   if (fin) return <Message t="Vérifiez vos e-mails" st={`Un lien de confirmation a été envoyé à ${f.email}.`} />;
-  if (pv) return <ChoixVille v={f.ville} fermer={() => setPv(false)} choisir={(v: string) => { setF({ ...f, ville: v, vl: false }); setPv(false); e.setE(''); }} autre={() => { setF({ ...f, ville: '', vl: true }); setPv(false); }} />;
+  if (pp) return <ChoixPays v={f.pays} fermer={() => setPp(false)} choisir={(c: string) => { choisirPays(c); setF({ ...f, pays: c, ville: c === f.pays ? f.ville : '', vl: !(VILLES_PAYS[c] || []).length, telE: c === f.pays ? f.telE : '', tel: c === f.pays ? f.tel : '' }); setPp(false); e.setE(''); }} />;
+  if (pv) return <ChoixVille v={f.ville} pays={f.pays} fermer={() => setPv(false)} choisir={(v: string) => { setF({ ...f, ville: v, vl: false }); setPv(false); e.setE(''); }} autre={() => { setF({ ...f, ville: '', vl: true }); setPv(false); }} />;
   const TITRES = [['Parlons de votre école', 'Elle aura son propre espace.'], ['Combien d’élèves ?', 'Votre tarif s’affiche tout seul.'], ['Parlons de vous', 'Le responsable du compte.']][et - 1];
   return (
     <main className="ric"><form className="ric-c" noValidate onSubmit={suite}>
@@ -195,18 +206,19 @@ export function Inscription() {
       <div className="ric-b">
         {et === 1 && <>
           <label className="ric-lg">{apercu ? <img src={apercu} alt="" /> : <span className="ric-tu bl"><PiImageFill aria-hidden="true" /></span>}<span><b>Logo de l’école</b><small>Facultatif</small></span><span className="ric-ca"><PiCameraFill aria-hidden="true" /></span><input type="file" accept="image/png,image/jpeg,image/webp" hidden aria-label="Ajouter le logo de l’école" onChange={(x) => { const fi = x.target.files?.[0] || null; logoEnAttente = fi; setAp(fi ? URL.createObjectURL(fi) : ''); }} /></label>
+          <button type="button" className="ric-cd ric-btn" onClick={() => setPp(true)}><span className="ric-tu pay-tu" aria-hidden="true">{drapeau(f.pays)}</span><span className="ric-t"><small>Pays</small><span className="ric-val">{paysDe(f.pays).nom}</span></span><PiCaretDownBold className="ric-ch" aria-hidden="true" /></button>
           <Carte i={PiBuildingsFill} label="Nom de l’école" placeholder="Groupe scolaire La Réussite" autoComplete="organization" {...c('ecole')} />
           {f.vl ? <Carte ton="ve" i={PiMapPinFill} label="Ville" placeholder="Écrivez votre ville" {...c('ville')} /> : <button type="button" className="ric-cd ric-btn" onClick={() => setPv(true)}><span className="ric-tu ve"><PiMapPinFill aria-hidden="true" /></span><span className="ric-t"><small>Ville</small><span className={f.ville ? 'ric-val' : 'ric-ph'}>{f.ville || 'Touchez pour choisir'}</span></span><PiCaretDownBold className="ric-ch" aria-hidden="true" /></button>}
-          <Carte ton="or" i={PiMapPinFill} label="Quartier" placeholder="Ex. : Kipé" {...c('quartier')} />
-          <Carte ton="vi" i={PiPhoneFill} label="Téléphone de l’école" estTel inputMode="tel" placeholder="620 11 22 33" {...c('telE')} /></>}
+          <Carte ton="or" i={PiMapPinFill} label="Quartier" placeholder={QUARTIER_EX[f.pays] ? `Ex. : ${QUARTIER_EX[f.pays]}` : 'Votre quartier'} {...c('quartier')} />
+          <Carte ton="vi" i={PiPhoneFill} label="Téléphone de l’école" estTel inputMode="tel" placeholder={paysActif().ex} {...c('telE')} /></>}
         {et === 2 && <>
           <div className="ric-co"><label><small>Nombre d’élèves</small><span><input inputMode="numeric" placeholder="0" aria-label="Nombre d’élèves" {...c('eleves')} /><em>élèves</em></span></label><div><button type="button" onClick={() => ajout(-10)} aria-label="Enlever 10 élèves"><PiMinusBold /></button><button type="button" onClick={() => ajout(10)} aria-label="Ajouter 10 élèves"><PiPlusBold /></button></div></div>
           <div className="ric-ni" role="group" aria-label="Niveaux enseignés">{NIVEAUX.map(([n, I]) => <button type="button" key={n} aria-pressed={niv.includes(n)} className={niv.includes(n) ? 'on' : ''} onClick={() => { setNiv(niv.includes(n) ? niv.filter((x) => x !== n) : [...niv, n]); e.setE(''); }}><I aria-hidden="true" />{n}</button>)}</div>
           <Carte i={PiChalkboardTeacherFill} label="Nombre de classes" inputMode="numeric" placeholder="Ex. : 8" {...c('classes')} />
-          {tr && <div className="ric-tf" aria-live="polite"><span className="ric-bd">{TRANCHES.find(([k]) => k === tr)?.[1]}</span><div className="h"><PiCrownSimpleFill aria-hidden="true" />Votre tarif</div>{t?.prix_mois ? <><div className="pr">{gnf(t.prix_mois)} <em>/ mois</em></div><small>ou {gnf(t.prix_an)} par an, 4 mois offerts</small></> : <div className="pr p2">À voir avec Scolaris</div>}<ul><li><PiCheckCircleFill aria-hidden="true" />Toutes les fonctions de Scolaris</li><li><PiCheckCircleFill aria-hidden="true" />Reçus, relances, caisse et rapports</li></ul></div>}</>}
+          {tr && <div className="ric-tf" aria-live="polite"><span className="ric-bd">{TRANCHES.find(([k]) => k === tr)?.[1]}</span><div className="h"><PiCrownSimpleFill aria-hidden="true" />Votre tarif</div>{t?.prix_mois ? <><div className="pr">{gnf(t.prix_mois)} <em>/ mois</em></div><small>ou {gnf(t.prix_an)} par an, 4 mois offerts{dv !== 'XOF' && dv !== 'XAF' ? ` · ${fcfa(t.fm)} par mois` : ''}</small></> : <div className="pr p2">À voir avec Scolaris</div>}<ul><li><PiCheckCircleFill aria-hidden="true" />{f.pays === 'GN' ? '500 SMS de relance inclus chaque mois' : 'Relances WhatsApp illimitées'}</li><li><PiCheckCircleFill aria-hidden="true" />Toutes les fonctions de Scolaris</li><li><PiCheckCircleFill aria-hidden="true" />Reçus, relances, caisse et rapports</li></ul></div>}</>}
         {et === 3 && <>
           <div className="ric-2"><Carte i={PiUserFill} label="Prénom" placeholder="Mohamed" autoComplete="given-name" {...c('prenom')} /><Carte i={PiUserFill} label="Nom" placeholder="Diallo" autoComplete="family-name" {...c('nom')} /></div>
-          <Carte ton="vi" i={PiPhoneFill} label="Votre téléphone" estTel inputMode="tel" placeholder="620 11 22 33" autoComplete="tel-national" {...c('tel')} />
+          <Carte ton="vi" i={PiPhoneFill} label="Votre téléphone" estTel inputMode="tel" placeholder={paysActif().ex} autoComplete="tel-national" {...c('tel')} />
           <Carte ton="ve" i={PiEnvelopeSimpleFill} label="Adresse e-mail" type="email" placeholder="vous@exemple.com" autoComplete="email" autoCapitalize="none" spellCheck={false} {...c('email')} />
           <Carte ton="or" i={PiLockKeyFill} label="Mot de passe" mdp placeholder="8 caractères minimum" autoComplete="new-password" {...c('m')} />
           {f.m && <><div className="ric-pw" aria-hidden="true">{[1, 2, 3, 4].map((k) => <i key={k} className={k <= force ? 'y' : ''} />)}</div><p className={`ric-pwt${force < 4 ? ' f' : ''}`}>{force < 4 ? 'Ajoutez une majuscule, une minuscule, un chiffre, 8 caractères' : 'Mot de passe solide'}</p></>}

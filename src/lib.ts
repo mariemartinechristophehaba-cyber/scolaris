@@ -1,22 +1,62 @@
 export const nb = (n: any) => Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-export const gnf = (n: any) => `${nb(n)} GNF`;
+// Pays africains : indicatif, monnaie, chiffres du numéro national. Les prix Scolaris sont fixés en FCFA puis convertis.
+export type Pays = { c: string; nom: string; ind: string; dev: string; ch: number; mn: number; z: boolean; zone: string; ex: string };
+// Pays où l'on peut payer par Orange Money ou MTN Mobile Money (et par carte). Mêmes règles que la base (table pays_ref).
+const P = (c: string, nom: string, ind: string, dev: string, mn: number, ch: number, z: boolean, zone: string, ex: string): Pays => ({ c, nom, ind, dev, mn, ch, z, zone, ex });
+const O = "Afrique de l'Ouest", C = 'Afrique centrale', E = "Afrique de l'Est et australe", N = 'Afrique du Nord';
+export const PAYS: Pays[] = [
+  P('GN', 'Guinée', '224', 'GNF', 9, 9, false, O, '621 34 56 78'), P('SN', 'Sénégal', '221', 'XOF', 9, 9, false, O, '77 640 21 93'),
+  P('CI', "Côte d'Ivoire", '225', 'XOF', 10, 10, false, O, '07 08 41 29 65'), P('ML', 'Mali', '223', 'XOF', 8, 8, false, O, '76 40 21 93'),
+  P('BF', 'Burkina Faso', '226', 'XOF', 8, 8, false, O, '70 40 21 93'), P('BJ', 'Bénin', '229', 'XOF', 10, 10, false, O, '01 97 40 21 93'),
+  P('GW', 'Guinée-Bissau', '245', 'XOF', 9, 9, false, O, '955 40 21 93'), P('SL', 'Sierra Leone', '232', 'SLE', 8, 8, true, O, '76 40 21 93'),
+  P('LR', 'Liberia', '231', 'LRD', 8, 9, true, O, '77 040 21 93'), P('GH', 'Ghana', '233', 'GHS', 9, 9, true, O, '24 481 09 36'),
+  P('NG', 'Nigeria', '234', 'NGN', 10, 10, true, O, '803 418 22 96'),
+  P('CM', 'Cameroun', '237', 'XAF', 9, 9, false, C, '6 71 40 21 93'), P('CG', 'Congo', '242', 'XAF', 9, 9, false, C, '06 640 21 93'),
+  P('CD', 'RD Congo', '243', 'CDF', 9, 9, true, C, '81 640 21 93'), P('CF', 'Centrafrique', '236', 'XAF', 8, 8, false, C, '70 40 21 93'),
+  P('RW', 'Rwanda', '250', 'RWF', 9, 9, true, E, '78 640 21 93'), P('UG', 'Ouganda', '256', 'UGX', 9, 9, true, E, '772 40 21 93'),
+  P('ZM', 'Zambie', '260', 'ZMW', 9, 9, true, E, '96 640 21 93'), P('MG', 'Madagascar', '261', 'MGA', 9, 9, true, E, '32 40 214 93'),
+  P('BW', 'Botswana', '267', 'BWP', 8, 8, false, E, '71 40 21 93'),
+  P('MA', 'Maroc', '212', 'MAD', 9, 9, true, N, '612 40 21 93'), P('TN', 'Tunisie', '216', 'TND', 8, 8, false, N, '20 40 21 93'),
+];
+export const paysDe = (c: any) => PAYS.find((p) => p.c === c) || PAYS[0];
+// Symbole affiché : FCFA pour les deux francs CFA, sinon le code de la monnaie.
+export const symbole = (dev: string) => (dev === 'XOF' || dev === 'XAF' ? 'FCFA' : dev);
+let ACTIF: Pays = PAYS[0];
+export const paysActif = () => ACTIF;
+export function choisirPays(c: any) { ACTIF = paysDe(c); }
+// Montant dans la monnaie de l'école (le nom gnf est gardé pour ne rien casser).
+export const gnf = (n: any) => `${nb(n)} ${symbole(ACTIF.dev)}`;
+export const dv = () => symbole(ACTIF.dev);
+export const fcfa = (n: any) => `${nb(n)} FCFA`;
+export const drapeau = (c: string) => String.fromCodePoint(...[...c.toUpperCase()].map((x) => 0x1f1e6 + x.charCodeAt(0) - 65));
+// Prix fixé en FCFA -> monnaie du pays, arrondi proprement (GNF au millier).
+export function convertir(f: any, dev: string, taux: any): number | null {
+  if (f == null) return null; const v = Number(f) * (dev === 'XOF' || dev === 'XAF' ? 1 : Number(taux?.[dev]) || 0); if (!v) return null;
+  if (dev === 'XOF' || dev === 'XAF') return Math.round(v);
+  const pas = dev === 'GNF' ? 1000 : Math.max(1, 10 ** (Math.floor(Math.log10(v)) - 2)); return Math.round(v / pas) * pas;
+}
 export const entier = (s: any) => Number(String(s ?? '').replace(/\D/g, '')) || 0;
 export const dateFr = (d: any) => (d ? new Date(String(d).length === 10 ? d + 'T00:00:00' : d).toLocaleDateString('fr-FR') : '');
 export const heure = (d: any) => (d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '');
 export const TRANCHES: [string, string][] = [['t_100', "Jusqu'à 100 élèves"], ['t_200', '101 à 200 élèves'], ['t_300', '201 à 300 élèves'], ['t_400', '301 à 400 élèves'], ['t_500', '401 à 500 élèves'], ['t_700', '501 à 700 élèves'], ['t_1000', '701 à 1 000 élèves'], ['plus_1000', 'Plus de 1 000 élèves']];
 export const trancheDe = (n: number) => (n <= 100 ? 't_100' : n <= 200 ? 't_200' : n <= 300 ? 't_300' : n <= 400 ? 't_400' : n <= 500 ? 't_500' : n <= 700 ? 't_700' : n <= 1000 ? 't_1000' : 'plus_1000');
 export const auj = () => new Date().toISOString().slice(0, 10);
-export const tel = (v: any) => { let t = String(v ?? '').replace(/\D/g, '').replace(/^00/, ''); if (/^224\d{9}$/.test(t)) t = t.slice(3); return t; };
+export const tel = (v: any) => { let t = String(v ?? '').replace(/\D/g, '').replace(/^00/, ''); const p = ACTIF; if (p.c === 'GN') return t.replace(/^224(?=\d{9}$)/, ''); const n = t.length - p.ind.length; if (t.startsWith(p.ind) && n >= p.mn && n <= p.ch) return t.slice(p.ind.length); if (p.z && t.startsWith('0') && t.length - 1 >= p.mn && t.length - 1 <= p.ch) return t.slice(1); return t; };
 // Numéro guinéen (+224) : 9 chiffres, mobile 61 à 69, fixe 3x pour une école. Mêmes règles que la base.
 export function erreurTel(v: any, fixe = false): string {
   const t = tel(v); if (!t) return '';
   if (!/^\d+$/.test(t)) return 'Le numéro ne doit contenir que des chiffres';
+  if (/(\d)\1{6}/.test(t) || /1234567|2345678|3456789|9876543|8765432|7654321/.test(t)) return 'Ce numéro semble faux. Saisissez un vrai numéro.';
+  if (ACTIF.c !== 'GN') return t.length >= ACTIF.mn && t.length <= ACTIF.ch ? '' : `Un numéro (${ACTIF.nom}) a ${ACTIF.mn === ACTIF.ch ? ACTIF.ch : `${ACTIF.mn} ou ${ACTIF.ch}`} chiffres, sans le +${ACTIF.ind} (vous en avez ${t.length})`;
+  return erreurTelGn(t, fixe);
+}
+function erreurTelGn(t: string, fixe: boolean): string {
   if (t.length !== 9) return `Un numéro guinéen a 9 chiffres (vous en avez ${t.length})`;
   if (!(/^6[1-9]/.test(t) || (fixe && /^3/.test(t)))) return fixe ? 'Numéro guinéen invalide : il doit commencer par 6 (mobile) ou 3 (fixe)' : 'Numéro guinéen invalide : il doit commencer par 61 à 69 (Orange, MTN, Cellcom)';
   if (/(\d)\1{6}/.test(t) || /1234567|2345678|3456789|9876543|8765432|7654321/.test(t)) return 'Ce numéro semble faux. Saisissez un vrai numéro.';
   return '';
 }
-export const telAff = (v: any) => { const t = String(v ?? ''); return /^\d{9}$/.test(t) ? `${t.slice(0, 3)} ${t.slice(3, 5)} ${t.slice(5, 7)} ${t.slice(7)}` : t; };
+export const telAff = (v: any) => { const t0 = String(v ?? ''); if (!/^\d+$/.test(t0)) return t0; const ex = PAYS.find((p) => p.c !== 'GN' && p.c !== ACTIF.c && t0.startsWith(p.ind) && t0.length - p.ind.length >= p.mn && t0.length - p.ind.length <= p.ch); if (ex) { const n = t0.slice(ex.ind.length); const d = n.length % 2 ? 3 : 2; return `+${ex.ind} ${[n.slice(0, d), ...(n.slice(d).match(/\d{2}/g) || [])].join(' ')}`; } if (ACTIF.c === 'GN' && t0.length === 9) return `${t0.slice(0, 3)} ${t0.slice(3, 5)} ${t0.slice(5, 7)} ${t0.slice(7)}`; const t = tel(t0); const d = t.length % 2 ? 3 : 2; const g = [t.slice(0, d), ...(t.slice(d).match(/\d{2}/g) || [])].join(' '); return t !== t0 ? `+${ACTIF.ind} ${g}` : g; };
 const MOIS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 // Mois de l'année scolaire : [{cle:'2026-10', label:'Oct'}…]

@@ -1,7 +1,7 @@
 // Espaces par rôle : secrétaire, caissier, et blocs propres au fondateur et au comptable.
 import { PiCalendarCheckDuotone, PiCaretRightBold, PiEyeSlashDuotone, PiMoneyWavyDuotone, PiStudentDuotone, PiUserPlusDuotone, PiWarningCircleFill } from 'react-icons/pi';
 import { db, getSession } from './api';
-import { auj, dateFr, gnf, grouperClasses, nb } from './lib';
+import { auj, dateFr, gnf, grouperClasses, nb, dv } from './lib';
 import { Avatar, Bandeau, Etat, Lien, SelAnnee, Tuile, Vague, useApp, useQ } from './ui';
 
 export const prenomUtil = () => { const md = getSession()?.user?.user_metadata || {}; return String(md.prenom || md.nom || '').trim(); };
@@ -82,7 +82,7 @@ export function TableauCaissier() {
         <div className="hero-haut"><div className="hero-g">
           <Bonjour />
           <div className="hero-titre"><span className="hero-lab">Encaissé aujourd'hui</span><SelAnnee className="tel" /></div>
-          <div className="hero-val"><b>{nb(total)}</b><small>GNF</small></div>
+          <div className="hero-val"><b>{nb(total)}</b><small>{dv()}</small></div>
           <span className="hero-sur">{nb(ok.length)} paiement{ok.length > 1 ? 's' : ''}{att ? ` · dont ${nb(att)} en attente de validation` : ''}</span>
         </div></div>
         <Vague />

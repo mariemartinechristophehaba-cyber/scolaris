@@ -3,7 +3,7 @@ import { Haut } from './abonnement';
 import { useMemo, useRef, useState } from 'react';
 import { PiChatCircleDotsDuotone, PiClockCountdownDuotone, PiCheckCircleDuotone, PiPaperPlaneTiltFill, PiInfoFill, PiKeyDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { SUPA, auth, db, getSession, message } from './api';
-import { TRANCHES, auj, dateFr, erreurTel, gnf, grouperClasses, telAff, lireTableau, nb, tel, telechargerExcel, trancheDe } from './lib';
+import { TRANCHES, auj, dateFr, erreurTel, gnf, grouperClasses, telAff, lireTableau, nb, tel, telechargerExcel, trancheDe, dv } from './lib';
 import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Vague, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
@@ -28,13 +28,13 @@ function AutoRelances({ reg, peut, abo, fini }: any) {
   const quota = abo?.sms_quota, reste = abo?.sms_restants;
   return <section className="carte c-large auto-r">
     <div className="ar-h"><Tuile i={PiChatCircleDotsDuotone} ton="vert" t={44} /><div><h2>Relances automatiques par SMS</h2><p className="note">Scolaris prévient les parents tout seul.</p></div>
-      <button type="button" role="switch" aria-checked={actif} aria-label="Relances automatiques par SMS" className={`inter${actif ? ' on' : ''}`} disabled={!peut || e.occupe} onClick={basculer}><i /></button></div>
+      <button type="button" role="switch" aria-checked={actif} aria-label="Relances automatiques par SMS" className={`inter${actif ? ' on' : ''}`} disabled={!peut || e.occupe || abo?.sms_autorises === false} onClick={basculer}><i /></button></div>
     <ul className="regles">
       <li><Tuile i={PiCalendarCheckDuotone} ton="bleu" t={36} /><div><b>{av} jours avant chaque tranche</b><small>Un rappel aux parents qui n’ont pas encore payé.</small></div></li>
       <li><Tuile i={PiClockCountdownDuotone} ton="rouge" t={36} /><div><b>{ap} jours après, si toujours impayé</b><small>Une seule relance. Ensuite, Scolaris s’arrête.</small></div></li>
       <li><Tuile i={PiCheckCircleDuotone} ton="vert" t={36} /><div><b>Le parent a payé ? Plus aucun SMS.</b><small>2 SMS au maximum par tranche.</small></div></li>
     </ul>
-    {quota != null ? <div className="sms-q"><div><span>SMS de l’école</span><b>{nb(reste)}<small> restants sur {nb(quota)}</small></b></div><div className="barre-p"><i style={{ width: `${Math.max(0, Math.min(100, (reste / quota) * 100))}%` }} /></div></div>
+    {abo && abo.sms_autorises === false ? <p className="sms-b"><PiInfoFill aria-hidden="true" />Les SMS sont réservés aux écoles qui ont payé leur abonnement. Pendant l’essai, relancez par WhatsApp, c’est gratuit.</p> : quota != null ? <div className="sms-q"><div><span>SMS de l’école</span><b>{nb(reste)}<small> restants sur {nb(quota)}</small></b></div><div className="barre-p"><i style={{ width: `${Math.max(0, Math.min(100, (reste / quota) * 100))}%` }} /></div></div>
       : <p className="sms-b"><PiInfoFill aria-hidden="true" />Les SMS arrivent bientôt. En attendant, relancez par WhatsApp, c’est gratuit.</p>}
     {!peut && <p className="note">Seul le directeur peut activer ou couper les relances automatiques.</p>}
     <Erreur t={e.erreur} />
@@ -43,7 +43,7 @@ function AutoRelances({ reg, peut, abo, fini }: any) {
 
 const sansAcc = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’]/g, "'");
 const nbSms = (t: string) => (t.length <= 160 ? 1 : Math.ceil(t.length / 153));
-export const messageSms = (etab: string, r: any) => sansAcc(`${etab}: ${r.prenom} ${r.nom} (${r.classe}) a un retard de paiement de ${nb(r.impaye_echu)} GNF. Merci de passer regler.`);
+export const messageSms = (etab: string, r: any) => sansAcc(`${etab}: ${r.prenom} ${r.nom} (${r.classe}) a un retard de paiement de ${nb(r.impaye_echu)} ${dv()}. Merci de passer regler.`);
 
 function EnvoiGroupe({ g, fermer, lien, etab }: any) {
   const [etape, setEtape] = useState<'voir' | 'envoi' | 'fini'>('voir'); const [k, setK] = useState(0); const [ouv, setOuv] = useState<string | null>(null);
@@ -136,7 +136,7 @@ export function Relances() {
             <div className="hero-haut"><div className="hero-g">
               <div className="hero-titre"><h1>Relances</h1></div>
               <span className="hero-lab">En retard de paiement</span>
-              <div className="hero-val"><b>{nb(som)}</b><small>GNF</small></div>
+              <div className="hero-val"><b>{nb(som)}</b><small>{dv()}</small></div>
               <span className="hero-sur">{nb(d.ret.length)} élève{d.ret.length > 1 ? 's' : ''} · {nb(parCl.size)} classe{parCl.size > 1 ? 's' : ''} · {nb(relances)} relancé{relances > 1 ? 's' : ''} aujourd'hui</span>
             </div></div>
             <Vague />

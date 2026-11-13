@@ -11,6 +11,7 @@ import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
 import { Abonnement, BandeauAbonnement } from './abonnement';
 import { EspaceAdmin } from './admin';
+import { choisirPays } from './lib';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 const MENU: [string, string, any, string[]?, string?, any?, string?][] = [
@@ -133,9 +134,10 @@ function Espace() {
     let l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)&order=cree_le`);
     if (!l.length) {
       const md = getSession()?.user?.user_metadata || {}; const nom = md.etablissement;
-      if (nom) { const idE = await db.rpc('creer_etablissement', { p_nom: nom, p_ville: md.ville || null, p_telephone: md.tel_ecole || null, p_email: getSession()?.user?.email || null, p_details: md.eleves ? { quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null }); const lg = prendreLogo(); if (lg) await db.poserLogo(idE, lg).catch(() => null); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
+      if (nom) { const idE = await db.rpc('creer_etablissement', { p_nom: nom, p_ville: md.ville || null, p_telephone: md.tel_ecole || null, p_email: getSession()?.user?.email || null, p_details: md.eleves ? { pays: md.pays || 'GN', quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null }); const lg = prendreLogo(); if (lg) await db.poserLogo(idE, lg).catch(() => null); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
     }
     if (!l.length) return { m: null, annees: [] };
+    choisirPays(l[0].etablissements?.pays || 'GN');
     const annees = await db.get(`annees_scolaires?etablissement_id=eq.${l[0].etablissement_id}&order=date_debut.desc`);
     const abo = await db.rpc('abonnement_etat', { p_etab: l[0].etablissement_id }).catch(() => null);
     return { m: l[0], annees, abo };

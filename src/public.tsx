@@ -2,7 +2,7 @@ import { FaArrowLeft } from 'react-icons/fa6';
 import { PiArrowLeftBold, PiCheckBold, PiPrinterDuotone, PiWhatsappLogoFill, PiXBold } from 'react-icons/pi';
 import { useState } from 'react';
 import { db, getSession } from './api';
-import { dateFr, gnf, nb } from './lib';
+import { dateFr, gnf, nb, dv, choisirPays } from './lib';
 import { Chargement, Lien, Logo, naviguer, useQ } from './ui';
 
 const retourTexte = () => { if (history.length > 1) history.back(); else naviguer('/'); };
@@ -15,13 +15,13 @@ function PageTexte({ titre, autre, children }: any) {
 export function Conditions() {
   return <PageTexte titre="Conditions d'utilisation" autre={['/confidentialite', 'Voir la politique de confidentialité']}>
     <h2>1. Le service</h2>
-    <p>Scolaris est un logiciel en ligne qui aide les écoles privées de Guinée à gérer leurs élèves, leurs frais scolaires, les paiements des parents, les reçus, les relances et les dépenses. Scolaris n'encaisse jamais l'argent des parents : chaque école reçoit ses paiements elle-même et les enregistre dans l'application.</p>
+    <p>Scolaris est un logiciel en ligne qui aide les écoles privées d'Afrique à gérer leurs élèves, leurs frais scolaires, les paiements des parents, les reçus, les relances et les dépenses. Scolaris n'encaisse jamais l'argent des parents : chaque école reçoit ses paiements elle-même et les enregistre dans l'application.</p>
     <h2>2. Votre compte</h2>
-    <p>La personne qui inscrit l'école en devient le fondateur. Elle donne des informations exactes : nom de l'école, ville, numéros de téléphone guinéens valides et adresse e-mail. Chaque utilisateur garde son mot de passe secret et reste responsable de ce qui est fait avec son compte.</p>
+    <p>La personne qui inscrit l'école en devient le fondateur. Elle donne des informations exactes : nom de l'école, ville, numéros de téléphone valides de son pays et adresse e-mail. Chaque utilisateur garde son mot de passe secret et reste responsable de ce qui est fait avec son compte.</p>
     <h2>3. L'équipe de l'école</h2>
     <p>Le fondateur ajoute les membres de son équipe et choisit leur rôle : directeur, comptable, secrétaire, caissier ou enseignant. Chaque rôle ne voit que ce dont il a besoin. Le fondateur retire l'accès d'une personne qui quitte l'école.</p>
     <h2>4. Essai et abonnement</h2>
-    <p>Le prix de l'abonnement dépend du nombre d'élèves et est affiché sur la page Abonnement, au mois ou à l'année. Le paiement se fait par Orange Money, MTN Mobile Money ou un autre moyen indiqué, puis il est vérifié par l'équipe Scolaris avant d'activer l'abonnement.</p>
+    <p>Le prix de l'abonnement dépend du nombre d'élèves et est affiché sur la page Abonnement, au mois ou à l'année. Le paiement se fait en ligne par Mobile Money ou carte bancaire, ou par un autre moyen indiqué, puis il est vérifié par l'équipe Scolaris avant d'activer l'abonnement.</p>
     <p>Quand l'abonnement se termine, l'école garde un délai de 7 jours. Ensuite, elle peut toujours consulter ses données, mais ne peut plus rien enregistrer tant qu'elle n'a pas renouvelé. Aucune donnée n'est supprimée à cause d'un retard de paiement.</p>
     <h2>5. Les données de l'école</h2>
     <p>Les informations saisies (élèves, parents, frais, paiements, dépenses) appartiennent à l'école. Elles ne sont jamais visibles par une autre école. L'école reste responsable de leur exactitude et de l'information des parents.</p>
@@ -34,7 +34,7 @@ export function Conditions() {
     <h2>9. Changements</h2>
     <p>Ces conditions peuvent évoluer. Les écoles sont prévenues dans l'application avant tout changement important.</p>
     <h2>10. Droit applicable et contact</h2>
-    <p>Ces conditions sont soumises au droit guinéen. Pour toute question, contactez l'équipe Scolaris sur WhatsApp, au numéro indiqué sur la page Abonnement.</p>
+    <p>Ces conditions sont soumises au droit de la République de Guinée, où Scolaris est établi. Pour toute question, contactez l'équipe Scolaris sur WhatsApp, au numéro indiqué sur la page Abonnement.</p>
   </PageTexte>;
 }
 
@@ -42,7 +42,7 @@ export function Confidentialite() {
   return <PageTexte titre="Politique de confidentialité" autre={['/conditions', "Voir les conditions d'utilisation"]}>
     <h2>1. Les informations enregistrées</h2>
     <ul>
-      <li><b>L'école :</b> nom, ville, quartier, téléphone, logo, numéros Orange Money et MTN.</li>
+      <li><b>L'école :</b> nom, ville, quartier, téléphone, logo, numéros de paiement mobile (Orange Money, MTN, Wave…).</li>
       <li><b>L'équipe :</b> prénom, nom, téléphone, e-mail et rôle de chaque membre.</li>
       <li><b>Les élèves :</b> nom, prénom, matricule, classe, date de naissance, sexe.</li>
       <li><b>Les parents :</b> nom et numéro de téléphone.</li>
@@ -55,7 +55,7 @@ export function Confidentialite() {
     <h2>4. Séparation des écoles</h2>
     <p>Chaque école a son propre espace. La base de données refuse qu'une école lise ou modifie les données d'une autre.</p>
     <h2>5. Hébergement et sécurité</h2>
-    <p>Les données sont hébergées chez des prestataires techniques reconnus (Supabase et Vercel), dont les serveurs peuvent se trouver hors de Guinée. Les échanges sont chiffrés, les mots de passe ne sont jamais stockés en clair et chaque action importante est inscrite dans l'historique de l'école (« Qui a fait quoi »).</p>
+    <p>Les données sont hébergées chez des prestataires techniques reconnus (Supabase et Vercel), dont les serveurs peuvent se trouver hors du pays de l'école. Les échanges sont chiffrés, les mots de passe ne sont jamais stockés en clair et chaque action importante est inscrite dans l'historique de l'école (« Qui a fait quoi »).</p>
     <h2>6. Durée de conservation</h2>
     <p>Les données sont gardées tant que l'école utilise Scolaris. Quand le fondateur demande la fermeture du compte, elles sont supprimées, sauf ce que la loi oblige à garder.</p>
     <h2>7. Vos droits</h2>
@@ -78,8 +78,8 @@ async function imageRecu(r: any): Promise<Blob> {
   x.strokeStyle = '#fff'; x.lineWidth = 12; x.lineCap = 'round'; x.beginPath();
   if (annule) { x.moveTo(W / 2 - 24, 246); x.lineTo(W / 2 + 24, 294); x.moveTo(W / 2 + 24, 246); x.lineTo(W / 2 - 24, 294); } else { x.moveTo(W / 2 - 28, 272); x.lineTo(W / 2 - 6, 294); x.lineTo(W / 2 + 30, 248); } x.stroke();
   x.fillStyle = vert; x.font = '700 36px Poppins, sans-serif'; x.fillText(annule ? 'Reçu annulé' : 'Paiement validé', W / 2, 390);
-  x.fillStyle = '#0B1F5C'; x.font = '800 110px Poppins, sans-serif'; const m = nb(r.montant); const mw = x.measureText(m).width; x.font = '600 44px Poppins, sans-serif'; const gw = x.measureText(' GNF').width;
-  x.textAlign = 'left'; x.font = '800 110px Poppins, sans-serif'; x.fillText(m, (W - mw - gw) / 2, 520); x.font = '600 44px Poppins, sans-serif'; x.fillStyle = '#55617A'; x.fillText(' GNF', (W - mw - gw) / 2 + mw, 520);
+  x.fillStyle = '#0B1F5C'; x.font = '800 110px Poppins, sans-serif'; const m = nb(r.montant); const mw = x.measureText(m).width; x.font = '600 44px Poppins, sans-serif'; const gw = x.measureText(' ' + dv()).width;
+  x.textAlign = 'left'; x.font = '800 110px Poppins, sans-serif'; x.fillText(m, (W - mw - gw) / 2, 520); x.font = '600 44px Poppins, sans-serif'; x.fillStyle = '#55617A'; x.fillText(' ' + dv(), (W - mw - gw) / 2 + mw, 520);
   x.textAlign = 'center'; x.font = '600 34px Poppins, sans-serif'; x.fillText(`${r.ecole}${r.ville ? `, ${r.ville}` : ''}`, W / 2, 585);
   x.setLineDash([16, 12]); x.strokeStyle = '#D6E2F7'; x.lineWidth = 4; x.beginPath(); x.moveTo(120, 650); x.lineTo(W - 120, 650); x.stroke(); x.setLineDash([]);
   const lignes: [string, string][] = [['Reçu n°', String(r.numero)], ['Élève', `${r.prenom} ${r.nom}`], ['Matricule', r.matricule || ''], ['Classe', r.classe || ''], ['Année scolaire', r.annee || ''], ['Date', dateFr(r.date)], ['Moyen', r.moyen || '']];
@@ -93,7 +93,7 @@ async function imageRecu(r: any): Promise<Blob> {
 export function RecuPublic({ jeton }: { jeton: string }) {
   const q = useQ(() => db.rpc('recu_public', { p_jeton: jeton }), [jeton]); const [occ, setOcc] = useState(false);
   if (q.charge && !q.data) return <main className="recu-p"><Chargement /></main>;
-  const r: any = q.data;
+  const r: any = q.data; if (r) choisirPays(r.pays || 'GN');
   if (!r) return <main className="pub"><section className="carte-pub"><Logo /><h1>Reçu introuvable</h1></section></main>;
   const annule = r.statut === 'annule';
   const membre = !!getSession();
@@ -115,7 +115,7 @@ export function RecuPublic({ jeton }: { jeton: string }) {
         <div className="ticket-o"><section className="ticket">
           <span className={annule ? 'sceau annule' : 'sceau'}>{annule ? <PiXBold aria-hidden="true" /> : <PiCheckBold aria-hidden="true" />}</span>
           <p className="t-etat">{annule ? 'Reçu annulé' : 'Paiement validé'}</p>
-          <div className="t-mt"><b>{nb(r.montant)}</b><small>GNF</small></div>
+          <div className="t-mt"><b>{nb(r.montant)}</b><small>{dv()}</small></div>
           <p className="t-ec">{r.ecole}{r.ville ? `, ${r.ville}` : ''}</p>
           <div className="pointilles" aria-hidden="true" />
           <dl>
@@ -143,7 +143,7 @@ export function RecuPublic({ jeton }: { jeton: string }) {
 export function FamillePublic({ jeton }: { jeton: string }) {
   const q = useQ(() => db.rpc('famille_public', { p_jeton: jeton }), [jeton]);
   if (q.charge && !q.data) return <main className="pub"><Chargement /></main>;
-  const r: any = q.data;
+  const r: any = q.data; if (r) choisirPays(r.pays || 'GN');
   if (!r || !Array.isArray(r.enfants)) return <main className="pub"><section className="carte-pub"><Logo /><h1>Lien introuvable</h1></section></main>;
   return (
     <main className="pub"><section className="carte-pub recu"><Logo petit /><h1>{r.ecole}</h1><p className="intro">Situation de la famille de {r.parent}</p>

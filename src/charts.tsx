@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gnf, nb } from './lib';
+import { gnf, nb, dv } from './lib';
 
 const court = (n: number) => (n >= 1e9 ? `${+(n / 1e9).toFixed(1)} Md` : n >= 1e6 ? `${+(n / 1e6).toFixed(n % 1e6 ? 1 : 0)} M` : n >= 1e3 ? `${Math.round(n / 1e3)} k` : String(n));
 function pasRond(max: number) { const m = Math.max(max, 3000000); const p = 10 ** Math.floor(Math.log10(m)); for (const f of [1.5, 3, 6, 9, 15]) if (f * p >= m) return f * p; return 15 * p; }
@@ -68,7 +68,7 @@ export function Anneau({ data }: { data: { label: string; valeur: number }[] }) 
     <div className="anneau">
       <svg viewBox="0 0 120 120" role="img" aria-label="Répartition des paiements">
         <circle cx="60" cy="60" r={R} fill="none" stroke="#EEF2F9" strokeWidth="18" />
-        {l.map((d, k) => { const part = d.valeur / (tot || 1); const dash = Math.max(part * C - (l.length > 1 ? 1.5 : 0), 0); const el = <circle key={k} cx="60" cy="60" r={R} fill="none" stroke={COUL[k]} strokeWidth="18" strokeDasharray={`${dash} ${C}`} strokeDashoffset={-cumul * C} transform="rotate(-90 60 60)"><title>{`${d.label} : ${nb(d.valeur)} GNF`}</title></circle>; cumul += part; return el; })}
+        {l.map((d, k) => { const part = d.valeur / (tot || 1); const dash = Math.max(part * C - (l.length > 1 ? 1.5 : 0), 0); const el = <circle key={k} cx="60" cy="60" r={R} fill="none" stroke={COUL[k]} strokeWidth="18" strokeDasharray={`${dash} ${C}`} strokeDashoffset={-cumul * C} transform="rotate(-90 60 60)"><title>{`${d.label} : ${nb(d.valeur)} ${dv()}`}</title></circle>; cumul += part; return el; })}
       </svg>
       <ul>{l.map((d, k) => <li key={k}><i style={{ background: COUL[k] }} />{d.label}<b>{tot ? Math.round((d.valeur / tot) * 100) : 0} %</b></li>)}</ul>
     </div>

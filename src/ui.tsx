@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { createPortal } from 'react-dom';
 import { PiArrowLeftBold, PiCalendarBlankDuotone, PiCaretDownBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiXBold, PiXCircleFill } from 'react-icons/pi';
 import { message } from './api';
-import { grouperClasses, nb } from './lib';
+import { grouperClasses, nb, paysActif, symbole, dv } from './lib';
 
 export const Ctx = createContext<any>(null);
 export const useApp = () => useContext(Ctx);
@@ -69,8 +69,8 @@ export function Modale({ titre, fermer, children }: any) {
 
 export const Champ = ({ label, children, aide }: any) => <label className="champ"><span>{label}</span>{children}{aide && <small>{aide}</small>}</label>;
 
-export function Montant({ value, onChange, placeholder, label }: any) {
-  return <div className="montant"><input inputMode="numeric" aria-label={label} value={value ? nb(value) : ''} placeholder={placeholder || '0'} onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, '')) || 0)} /><b>GNF</b></div>;
+export function Montant({ value, onChange, placeholder, label, devise }: any) {
+  return <div className="montant"><input inputMode="numeric" aria-label={label} value={value ? nb(value) : ''} placeholder={placeholder || '0'} onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, '')) || 0)} /><b>{devise || symbole(paysActif().dev)}</b></div>;
 }
 
 // Formulaire avec envoi, erreur et bouton occupé
@@ -117,7 +117,7 @@ export function Avatar({ nom, grand }: { nom: string; grand?: boolean }) {
 }
 
 export const Tuile = ({ i: I, ton, t }: any) => <span className={`tuile ${ton}${t ? ' t' + t : ''}`}><I aria-hidden="true" /></span>;
-export const Gnf = ({ n }: { n: any }) => <span className="gnf"><b>{nb(n)}</b><small>GNF</small></span>;
+export const Gnf = ({ n }: { n: any }) => <span className="gnf"><b>{nb(n)}</b><small>{dv()}</small></span>;
 
 const ST: any = {
   a_jour: ['vert', PiCheckCircleFill, 'À jour'],

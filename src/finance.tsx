@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
-import { auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel } from './lib';
+import { auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel, dv } from './lib';
 import { EtatPaiement } from './gestion';
 import { ADecider, BlocCompta, Bonjour, TableauCaissier, TableauSecretaire } from './espaces';
 import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
@@ -81,7 +81,7 @@ function TableauFinance() {
             {fin && <Bonjour />}
             <div className="hero-titre"><h1>Tableau de bord</h1><SelAnnee className="tel" /></div>
             <span className="hero-lab">{titreLab}</span>
-            <div className="hero-val"><b>{nb(vueJour ? jour : encaisse)}</b><small>GNF</small></div>
+            <div className="hero-val"><b>{nb(vueJour ? jour : encaisse)}</b><small>{dv()}</small></div>
             {vueJour ? <span className="hero-sur">{nb(duJour.length)} paiement{duJour.length > 1 ? 's' : ''} reçu{duJour.length > 1 ? 's' : ''} aujourd'hui</span> : objectif > 0 ? <span className="hero-sur">sur {gnf(objectif)}</span> : fin && frais > 0 && !per && <span className="hero-sur">sur {gnf(frais)} attendus</span>}
             {pct !== null && objectif > 0 && !vueJour && <div className="hero-etat"><span className={bonne ? 'chip-v' : 'chip-a'}>{bonne ? <PiTrendUpBold aria-hidden="true" /> : <PiWarningCircleFill aria-hidden="true" />}{bonne ? 'Objectif en bonne voie' : 'Objectif à surveiller'}</span><span className="hero-note">{bonne ? 'En avance' : 'En retard'} de {gnf(Math.abs(ecart))} sur le rythme prévu</span></div>}
             {!objectif && can('directeur') && <Lien to="/parametres" className="chip-l"><PiCalendarDotsFill aria-hidden="true" />Définir l'objectif annuel</Lien>}
@@ -177,7 +177,7 @@ export function NouveauPaiement() {
             {s ? <div className="eleve-choisi"><Avatar nom={`${s.nom} ${s.prenom}`} /><div><b>{s.nom} {s.prenom}</b><small>{s.matricule}, {s.classe}</small></div><button type="button" className="btn lien" onClick={() => setEl('')}>Changer</button></div> :
               <div className="choix-eleve"><div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={txt} onChange={(v) => setT(v.target.value)} placeholder="Rechercher l'élève" aria-label="Rechercher l'élève" /></div>
                 {t && <ul>{d.l.filter((y: any) => `${y.matricule} ${y.nom} ${y.prenom}`.toLowerCase().includes(t)).slice(0, 6).map((y: any) => <li key={y.eleve_id}><button type="button" onClick={() => { setEl(y.eleve_id); setT(''); }}><Avatar nom={`${y.nom} ${y.prenom}`} /><span>{y.nom} {y.prenom}<small>{y.classe}</small></span></button></li>)}</ul>}</div>}
-            <label className="saisie-m"><span>Montant reçu</span><div><input inputMode="numeric" value={m ? nb(m) : ''} placeholder="0" onChange={(v) => setM(entier(v.target.value))} aria-label="Montant reçu" /><b>GNF</b></div></label>
+            <label className="saisie-m"><span>Montant reçu</span><div><input inputMode="numeric" value={m ? nb(m) : ''} placeholder="0" onChange={(v) => setM(entier(v.target.value))} aria-label="Montant reçu" /><b>{dv()}</b></div></label>
             {s && s.reste > 0 && <div className="vite"><button type="button" className={m === s.reste ? 'on' : ''} onClick={() => setM(s.reste)}>Tout le reste<b>{nb(s.reste)}</b></button>{s.impaye_echu > 0 && s.impaye_echu !== s.reste && <button type="button" className={m === s.impaye_echu ? 'on' : ''} onClick={() => setM(s.impaye_echu)}>En retard<b>{nb(s.impaye_echu)}</b></button>}</div>}
             <div className="champ"><span>Moyen de paiement</span><div className="moyens">{moyens.map((y: any) => <button type="button" key={y.id} aria-pressed={choix === y.id} className={choix === y.id ? 'on' : ''} onClick={() => setMoy(y.id)}><TuileMoyen type={y.type} /><span>{y.libelle}</span></button>)}</div></div>
             <Champ label="Référence de la transaction"><input value={ref} onChange={(v) => setR(v.target.value)} placeholder="Facultatif" /></Champ>
@@ -350,10 +350,10 @@ export function Rapports() {
         const base = o === 'classes' ? d.c : d.s; const cumul = (k: string) => base.reduce((t: number, x: any) => t + Number(x[k]), 0);
         const t = txt.trim().toLowerCase(); const eleves = t ? d.s.filter((x: any) => `${x.matricule} ${x.nom} ${x.prenom} ${x.classe}`.toLowerCase().includes(t)) : d.s;
         const excel = () => {
-          if (o === 'recettes') telechargerExcel(nom, [['Date', 'Reçu', 'Élève', 'Classe', 'Moyen', 'Montant GNF'], ...p.map((x: any) => [x.date_paiement, x.numero_recu, `${x.nom} ${x.prenom}`, x.classe || '', x.moyen, x.montant])]);
+          if (o === 'recettes') telechargerExcel(nom, [['Date', 'Reçu', 'Élève', 'Classe', 'Moyen', `Montant ${dv()}`], ...p.map((x: any) => [x.date_paiement, x.numero_recu, `${x.nom} ${x.prenom}`, x.classe || '', x.moyen, x.montant])]);
           if (o === 'eleves') telechargerExcel(nom, [['Matricule', 'Élève', 'Classe', 'Frais', 'Payé', 'Reste', 'Impayé échu', 'Avance'], ...d.s.map((x: any) => [x.matricule || '', `${x.nom} ${x.prenom}`, x.classe, x.facture_net, x.regle, x.reste, x.impaye_echu, x.avance])]);
           if (o === 'classes') telechargerExcel(nom, [['Classe', 'Effectif', 'Frais', 'Payé', 'Reste', 'Impayé échu', 'Taux %'], ...d.c.map((x: any) => [x.nom, x.effectif, x.facture_net, x.regle, x.reste, x.impaye_echu, Number(x.taux_recouvrement)])]);
-          if (o === 'depenses') telechargerExcel(nom, [['Date', 'Libellé', 'Catégorie', 'Bénéficiaire', 'Montant GNF'], ...dep.map((x: any) => [x.date_depense, x.libelle, x.categories_depense?.libelle || '', x.beneficiaire || '', x.montant])]);
+          if (o === 'depenses') telechargerExcel(nom, [['Date', 'Libellé', 'Catégorie', 'Bénéficiaire', `Montant ${dv()}`], ...dep.map((x: any) => [x.date_depense, x.libelle, x.categories_depense?.libelle || '', x.beneficiaire || '', x.montant])]);
         };
         return <>
           <div className="segment noprint" role="tablist">{ONGLETS.map(([k, l]) => <button key={k} role="tab" aria-selected={o === k} className={o === k ? 'on' : ''} onClick={() => setO(k)}>{l}</button>)}</div>

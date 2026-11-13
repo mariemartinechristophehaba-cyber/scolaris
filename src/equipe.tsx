@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PiChatTextFill, PiEnvelopeSimpleFill, PiAddressBookDuotone, PiCalculatorDuotone, PiCalendarBlankDuotone, PiChalkboardTeacherDuotone, PiCheckBold, PiCheckCircleDuotone, PiCheckCircleFill, PiCopyBold, PiHandCoinsDuotone, PiKeyDuotone, PiPlusBold, PiReceiptDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTagDuotone, PiTargetDuotone, PiUserMinusDuotone, PiUserPlusDuotone, PiUsersFourDuotone, PiUsersThreeDuotone, PiWhatsappLogoFill, PiWifiHighDuotone, PiXCircleDuotone } from 'react-icons/pi';
 import { db, equipeApi } from './api';
-import { auj, dateFr, erreurTel, gnf, heure, nb, tel, telAff } from './lib';
+import { auj, dateFr, erreurTel, gnf, heure, nb, tel, telAff, paysActif } from './lib';
 import { Avatar, Champ, Erreur, Etat, Modale, Titre, Tuile, Vide, useApp, useEnvoi, useQ } from './ui';
 
 const ROLES: [string, string, string, any][] = [
@@ -48,7 +48,7 @@ function Identifiants({ r, fermer }: any) {
     <dl className="ident"><div><dt>Téléphone</dt><dd>{telAff(r.telephone)}</dd></div><div><dt>Mot de passe provisoire</dt><dd className="code">{r.mot_de_passe}</dd></div></dl>
     <div className="ident-env"><span>Envoyer ces informations par</span>
       <a className="ie wa" href={`https://wa.me/224${tel(r.telephone)}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" /><b>WhatsApp</b><small>Gratuit avec Internet</small></a>
-      <a className="ie sms" href={`sms:+224${tel(r.telephone)}?&body=${encodeURIComponent(msg)}`}><PiChatTextFill aria-hidden="true" /><b>SMS</b><small>Depuis votre téléphone</small></a>
+      <a className="ie sms" href={`sms:+${paysActif().ind}${tel(r.telephone)}?&body=${encodeURIComponent(msg)}`}><PiChatTextFill aria-hidden="true" /><b>SMS</b><small>Depuis votre téléphone</small></a>
       {mail ? <a className="ie mail" href={`mailto:${mail}?subject=${encodeURIComponent(`Votre accès à Scolaris, ${etab.nom}`)}&body=${encodeURIComponent(msg)}`}><PiEnvelopeSimpleFill aria-hidden="true" /><b>E-mail</b><small>{mail}</small></a> : null}
     </div>
     <button className="btn contour" onClick={copier}><PiCopyBold aria-hidden="true" />{copie ? 'Message copié' : 'Copier le message'}</button>

@@ -477,3 +477,4 @@ html.modale-ouverte body{position:fixed;left:0;right:0;width:100%}
 @media(min-width:861px){.support{bottom:24px;right:24px}}
 html.modale-ouverte .support{display:none}
 @media print{.support{display:none}}
+.pa-et{margin:4px 0 12px;padding-left:20px;display:grid;gap:8px;font-size:14px;color:#33415C}.pa-url{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}.pa-url code{font-size:12px;background:#F2F5FB;padding:6px 8px;border-radius:8px;word-break:break-all;min-width:0}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiChatCircleDots, PiChatCircleDotsFill, PiShoppingCartFill, PiInfoFill, PiDatabaseDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
+import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiChatCircleDots, PiChatCircleDotsFill, PiShoppingCartFill, PiInfoFill, PiDatabaseDuotone, PiLightningDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
 import { PAYS, auj, dateFr, drapeau, erreurTel, fcfa as gnf, nb, paysDe, telAff } from './lib';
@@ -278,6 +278,22 @@ function Sauvegarde({ d, fini }: any) {
   </section>;
 }
 
+const URL_PULSE = 'https://hezntpvvsukdlehpbqzs.supabase.co/functions/v1/chariow-pulse';
+// Activation automatique : Chariow prévient Scolaris à chaque vente, l'abonnement s'active tout seul.
+function PaiementAuto({ d, fini }: any) {
+  const e = useEnvoi(); const [sec, setSec] = useState(''); const [ok, setOk] = useState(''); const [cp, setCp] = useState(false);
+  const copier = async () => { try { await navigator.clipboard.writeText(URL_PULSE); setCp(true); setTimeout(() => setCp(false), 2000); } catch { setCp(false); } };
+  const enreg = (x: any) => { x.preventDefault(); if (!/^whsec_\S{8,}$/.test(sec.trim())) return e.setE('Collez le secret du Pulse : il commence par whsec_'); setOk(''); e.envoyer(async () => { await db.rpc('admin_chariow_secret', { p_secret: sec.trim() }); setSec(''); setOk('Secret enregistré. Les paiements Chariow activent maintenant les écoles tout seuls.'); await fini(); }); };
+  return <form className="carte para sauv" onSubmit={enreg} noValidate><div className="sauv-h"><Tuile i={PiLightningDuotone} ton={d.chariow_secret ? 'vert' : 'orange'} t={44} /><div><h2>Activation automatique</h2><p className="note">Quand une école paie sur Chariow, son abonnement ou ses SMS s'activent tout seuls, sans validation de ta part.</p></div></div>
+    <p className={d.chariow_secret ? 'vert' : 'orange'}><b>{d.chariow_secret ? 'Activée : Chariow est relié à Scolaris' : 'Pas encore activée'}</b></p>
+    <ol className="pa-et"><li>Sur Chariow : <b>Automatisation</b>, puis <b>Pulses</b>, puis <b>Créer un Pulse</b>.</li><li>URL du Pulse : <span className="pa-url"><code>{URL_PULSE}</code><button type="button" className="btn contour mini" onClick={copier}>{cp ? 'Copié' : 'Copier'}</button></span></li><li>Événement : <b>Vente réussie</b>, puis Créer.</li><li>Ouvre le Pulse, copie son <b>secret</b> (il commence par whsec_) et colle-le ici.</li></ol>
+    <Champ label="Secret du Pulse"><input value={sec} onChange={(x) => { setSec(x.target.value); e.setE(''); }} placeholder="whsec_…" autoComplete="off" spellCheck={false} /></Champ>
+    {d.chariow_ventes_a_rattacher > 0 && <p className="note orange">{nb(d.chariow_ventes_a_rattacher)} vente{d.chariow_ventes_a_rattacher > 1 ? 's' : ''} Chariow pas encore reliée{d.chariow_ventes_a_rattacher > 1 ? 's' : ''} à une école (e-mail ou numéro différent, ou montant trop bas). L'école sera activée dès qu'elle touche « J'ai déjà payé ».</p>}
+    <Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}
+    <button className="btn plein" disabled={e.occupe}>{e.occupe ? 'Enregistrement…' : 'Enregistrer le secret'}</button>
+  </form>;
+}
+
 function FormReglages({ d, fini }: any) {
   const [f, setF] = useState({ orange_money: d.orange_money || '', mtn_money: d.mtn_money || '', whatsapp: d.whatsapp || '' }); const [cout, setCout] = useState<number>(Number(d.cout_mensuel)); const [lb, setLb] = useState(String(d.limite_base_mo)); const [lf, setLf] = useState(String(d.limite_fichiers_mo)); const [t, setT] = useState<any[]>(d.tarifs); const [pk, setPk] = useState({ q: Number(d.pack_sms_quantite || 500), p: Number(d.pack_sms_prix_guinee_fcfa || 8000), l: d.pack_sms_lien || '', pa: Number(d.pack_sms_prix_afrique_fcfa || 10000), la: d.pack_sms_lien_afrique || '' }); const [tx, setTx] = useState<any>(d.taux || {}); const DEVS = [...new Set(PAYS.map((p) => p.dev))].filter((v) => v !== 'XOF' && v !== 'XAF'); const [ok, setOk] = useState(false); const e = useEnvoi();
   const c = (k: string) => ({ value: (f as any)[k], onChange: (x: any) => { setOk(false); setF({ ...f, [k]: x.target.value }); } });
@@ -348,7 +364,7 @@ function Sms() {
 
 function Reglages() {
   const { tableau } = useApp(); const q = useQ(() => db.rpc('admin_reglages'), []);
-  return <><Titre t="Réglages" /><Etat q={q}>{(d: any) => <><Sauvegarde d={d} fini={async () => { await q.reload(); tableau.reload(); }} /><FormReglages d={d} fini={async () => { await q.reload(); tableau.reload(); }} /></>}</Etat></>;
+  return <><Titre t="Réglages" /><Etat q={q}>{(d: any) => <><Sauvegarde d={d} fini={async () => { await q.reload(); tableau.reload(); }} /><PaiementAuto d={d} fini={q.reload} /><FormReglages d={d} fini={async () => { await q.reload(); tableau.reload(); }} /></>}</Etat></>;
 }
 
 export function EspaceAdmin() {

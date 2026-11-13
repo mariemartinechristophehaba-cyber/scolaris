@@ -119,7 +119,7 @@ export function Abonnement() {
           : <><h3>Avantages inclus :</h3>
           <ul className="abp-av"><li className="sms"><span><PiChatCircleDotsFill aria-hidden="true" /></span>{smsOk ? `${nb(smsMois)} SMS de relance chaque mois` : 'Relances WhatsApp illimitées'}</li>{AVANTAGES.map(([I, t]) => <li key={t}><span><I aria-hidden="true" /></span>{t}</li>)}</ul></>}
           {(per === 'sms' ? pk.lien : abo?.[`lien_${per}`]) ? <>
-            <p className="abp-info"><PiInfoFill aria-hidden="true" />Payez en ligne par Mobile Money (Orange, MTN, Wave, Moov…) ou par carte, puis revenez ici et appuyez sur « J'ai déjà payé ».</p>
+            <p className="abp-info"><PiInfoFill aria-hidden="true" />Payez en ligne par Mobile Money (Orange, MTN, Wave, Moov…) ou par carte. Payez avec l'e-mail ou le numéro de votre compte Scolaris : votre accès s'active tout seul.</p>
             <div className="abp-bas deux-b"><a className="abp-cta" href={per === 'sms' ? pk.lien : abo[`lien_${per}`]} target="_blank" rel="noopener noreferrer">Payer en ligne<PiArrowRightBold aria-hidden="true" /></a><button type="button" className="abp-sec" onClick={() => aller(3)}>J'ai déjà payé</button></div>
           </> : <>
             <p className="abp-info"><PiInfoFill aria-hidden="true" />Le paiement en ligne n'est pas encore ouvert pour ce tarif. Écrivez à Scolaris, on vous envoie le lien de paiement.</p>
@@ -137,7 +137,7 @@ export function Abonnement() {
         <div className="abp-co">
           <div className="abp-resume"><span className="abp-tuile"><plan.Ic /></span><div><b>{per === 'sms' ? plan.nom : `Plan ${plan.nom}`}</b><small>{per === 'sms' ? 'SMS pour les relances' : `Abonnement ${per === 'an' ? 'annuel' : 'mensuel'}`}</small></div><strong>{gnf(montant)}</strong></div>
           <h3>Confirmez votre paiement en ligne</h3>
-          <p className="abp-info"><PiInfoFill aria-hidden="true" />Indiquez le numéro de téléphone qui a payé sur la page de paiement, ou votre numéro de commande. Scolaris vérifie et active {per === 'sms' ? 'vos SMS' : 'votre abonnement'}, en général en quelques heures.</p>
+          <p className="abp-info"><PiInfoFill aria-hidden="true" />Indiquez le numéro de téléphone qui a payé, ou votre numéro de commande. Si le paiement est déjà reçu, {per === 'sms' ? 'vos SMS s’activent' : 'votre abonnement s’active'} tout de suite.</p>
           <div className="abp-envoi"><label htmlFor="abp-ref">Numéro qui a payé ou n° de commande</label><input id="abp-ref" className="abp-ref" autoComplete="off" value={num} onChange={(x) => { setNum(x.target.value); e.setE(''); }} placeholder={`Ex. : ${paysActif().ex}`} /></div>
           <Erreur t={e.erreur} />
           <div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>{e.occupe ? 'Envoi…' : <><PiCheckBold aria-hidden="true" />J'ai payé</>}</button></div>

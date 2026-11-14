@@ -433,7 +433,11 @@ function santeX(X) {
   const apps = [['fixpro', 'FixPro Guinée', app('fixpro')], ['scolaris', 'Scolaris', app('scolaris')]].filter(a => S.quoi === 'tous' || a[0] === S.quoi);
   const pb = apps.filter(a => a[2].statut !== 'ok').length + services.filter(x => x.etat === 'ko' || x.etat === 'att').length;
   const ko = apps.some(a => a[2].statut === 'ko') || services.some(x => x.etat === 'ko');
-  return { apps, services, pb, ko, incidents: sa.incidents || [], verif: sa.verifie_le || S.pingT };
+  let score = 100;
+  apps.forEach(([, , a]) => { if (a.statut === 'ko') score -= 40; else if (a.statut === 'att') score -= 15; if (a.erreurs) score -= Math.min(10, a.erreurs); });
+  services.forEach(x => { if (x.etat === 'ko') score -= 15; else if (x.etat === 'att') score -= 5; });
+  score = Math.max(0, Math.min(100, score));
+  return { apps, services, pb, ko, score, incidents: sa.incidents || [], verif: sa.verifie_le || S.pingT };
 }
 function barresDispo(jours) {
   const L = jours && jours.length ? jours.slice(-30) : [];
@@ -445,7 +449,12 @@ function blocSanteBandeau(X, compact) {
   const titre = H.ko ? 'Une application a un problème' : H.pb ? `${pl(H.pb, 'point', 'points')} à surveiller` : 'Tout fonctionne bien';
   const sous = H.apps.map(([k, n, a]) => `${n.split(' ')[0]} ${a.ms ? a.ms + ' ms' : (a.statut === 'ok' ? 'en ligne' : 'hors ligne')}`).join(' · ');
   if (compact) return `<a class="card sbande" href="#sante" style="--sc:${c}"><span class="sb-ic">${H.ko ? I.rouge : H.pb ? I.att : I.vert}</span><div><b>${titre}</b><small>${sous}</small></div><span class="sb-f">Santé ›</span></a>`;
-  return `<div class="card shero" style="--sc:${c}"><div class="sh-ic">${I.sante}</div><div><b>${titre}</b><small>${H.verif ? `Vérifié ${ilYa(H.verif)}` : 'Vérification en cours…'} · ${pl(H.apps.length, 'application')}, ${pl(H.services.length, 'service')}</small></div><button class="btn" data-act="ping" title="Vérifier maintenant">${I.copie}<span>Vérifier</span></button></div>`;
+  const R = 40, L = 2 * Math.PI * R, v = H.score / 100 * L;
+  const anneau = `<div class="sh-g"><svg viewBox="0 0 100 100"><defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2F6BFF"/><stop offset="1" stop-color="${H.ko ? '#F04438' : H.pb ? '#F79009' : '#12B76A'}"/></linearGradient></defs>
+    <circle cx="50" cy="50" r="${R}" fill="none" stroke="#E6ECFA" stroke-width="9"/><circle class="sg-a" cx="50" cy="50" r="${R}" fill="none" stroke="url(#sg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${v} ${L}" transform="rotate(-90 50 50)" style="--L:${L}"/></svg>
+    <svg class="sg-t" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="#2F6BFF" stroke-width="1.6" stroke-dasharray="3 7" opacity=".5"/><circle cx="50" cy="2" r="3" fill="#2F6BFF"/></svg>
+    <div class="sg-c"><b class="num">${H.score}%</b><small>santé</small></div></div>`;
+  return `<div class="card shero" style="--sc:${c}">${anneau}<div><b>${titre}</b><small>${H.verif ? `Vérifié ${ilYa(H.verif)}` : 'Vérification en cours…'} · ${pl(H.apps.length, 'application')}, ${pl(H.services.length, 'service')}</small></div><button class="btn" data-act="ping" title="Vérifier maintenant">${I.copie}<span>Vérifier</span></button></div>`;
 }
 function blocSanteApp(k, nom, a) {
   const [c, lib, cl] = ETAT[a.statut] || ETAT.ok;

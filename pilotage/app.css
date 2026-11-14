@@ -233,3 +233,15 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .hd-d{margin-top:12px;font-size:12px}
 .hd-r{width:112px;height:112px;position:relative}
 @media (min-width:1024px){.heroD{grid-template-columns:1fr 120px}.hd-r{width:120px;height:120px}}
+
+/* Jauge santé qui tourne */
+.shero{grid-template-columns:104px 1fr auto!important}
+.sh-g{position:relative;width:104px;height:104px}
+.sh-g svg{position:absolute;inset:0;width:100%;height:100%}
+.sg-a{animation:sgA 1.4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sgA{from{stroke-dasharray:0 var(--L)}}
+.sg-t{animation:sgT 6s linear infinite;inset:-6px!important;width:calc(100% + 12px)!important;height:calc(100% + 12px)!important}
+@keyframes sgT{to{transform:rotate(360deg)}}
+.sg-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sg-c b{font:700 24px Inter;letter-spacing:-.03em;color:#0B1424}.sg-c small{font-size:11px;color:var(--m);margin-top:-2px}
+@media (max-width:1023px){.shero{grid-template-columns:92px 1fr auto!important}.sh-g{width:92px;height:92px}.sg-c b{font-size:21px}}

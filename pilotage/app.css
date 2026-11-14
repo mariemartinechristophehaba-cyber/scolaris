@@ -141,3 +141,21 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 }
 @media (min-width:1024px) and (max-width:1279px){.g-kpi{grid-template-columns:repeat(3,1fr)}.g-kpi .hero{grid-column:span 3}.g111{grid-template-columns:1fr 1fr}}
 .reglages svg{width:18px;height:18px;flex:none}
+
+.lien{color:var(--p);font-weight:600;font-size:14px}
+/* Connexion téléphone : tient dans l'écran, sans défilement */
+@media (max-width:1023px){
+  .cx{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  .cx-haut{height:auto;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:calc(10px + env(safe-area-inset-top)) 0 44px}
+  .lg-grand img{width:clamp(56px,10dvh,92px)!important;height:clamp(56px,10dvh,92px)!important}
+  .wm-grand{margin-top:clamp(8px,1.6dvh,16px)}.wm-grand .wm{font-size:clamp(30px,5.4dvh,46px)!important}
+  .chips{margin-top:clamp(8px,1.6dvh,16px)}
+  .cx-feuille{flex:none;margin-top:-30px;padding:clamp(18px,3.2dvh,30px) 22px calc(clamp(14px,2.4dvh,26px) + env(safe-area-inset-bottom))}
+  .cx-form h2{font-size:clamp(23px,3.6dvh,30px)}
+  .cx-form>p.s{font-size:14.5px}
+  .cx-form .fld{margin-top:clamp(8px,1.4dvh,14px);padding:clamp(7px,1.1dvh,12px) 12px}
+  .cx-form .fld:first-of-type{margin-top:clamp(12px,2.4dvh,24px)}
+  .fld .fi{width:clamp(36px,5dvh,44px);height:clamp(36px,5dvh,44px)}
+  .cta{margin-top:clamp(12px,2.2dvh,22px);padding:clamp(13px,2dvh,18px)}
+  .sur{margin-top:clamp(8px,1.6dvh,18px)}
+}

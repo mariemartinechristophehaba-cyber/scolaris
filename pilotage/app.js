@@ -58,8 +58,8 @@ function B(k, z) {
     case 'orange': return box('#fff', sv(PA.orange, '#FF7900', Math.round(z * .7)), 1);
     case 'mtn': return box('#FFCB05', `<svg viewBox="0 0 1280 640" width="${Math.round(z * .8)}"><path d="${PA.mtn}" fill="#000"/></svg>`);
     case 'chariow': return txt('#6941C6', 'C');
-    case 'fixpro': return txt('#1E7BFF', 'Fx');
-    case 'scolaris': return txt('#10B26C', 'Sc');
+    case 'fixpro': return `<img src="/fixpro.png" width="${z}" height="${z}" alt="FixPro" style="flex:none;display:inline-block;border-radius:${r}px;box-shadow:inset 0 0 0 1px #E7EBF3;background:#fff">`;
+    case 'scolaris': return `<img src="/scolaris.png" width="${z}" height="${z}" alt="Scolaris" style="flex:none;display:inline-block;border-radius:${r}px">`;
     case 'google': return txt('#fff', 'G', '#4285F4').replace('display:inline-grid', 'box-shadow:inset 0 0 0 1px #E7EBF3;display:inline-grid');
     case 'linkedin': return txt('#0A66C2', 'in');
     case 'twitter': return txt('#000', 'X');
@@ -104,7 +104,7 @@ async function charger(silence) {
     const j = await r.json().catch(() => ({}));
     if (r.status === 401) { deconnexion(); return; }
     if (!r.ok) {
-      if (/admin/i.test(j.message || '') || r.status === 403) { S.err = "Ce compte n'est pas administrateur. Utilise ton compte admin Scolaris."; deconnexion(); return; }
+      if (/pilotage|admin/i.test(j.message || '') || r.status === 403) { S.err = "Ce compte n'a pas accès à Pilotage."; deconnexion(); return; }
       throw new Error(j.message || 'Erreur ' + r.status);
     }
     S.data = j; S.vu = new Date(); S.err = ''; store('pilotage_cache', { d: j, t: Date.now() });
@@ -356,14 +356,25 @@ function pageReglages(X) {
 
 /* ---------- rendu ---------- */
 function vueConnexion() {
-  const form = `<form class="cx-form" id="fcx" autocomplete="on"><h2>Connexion</h2><p class="s">Accédez à votre tableau de bord</p>
-    <div class="fld" style="margin-top:26px"><span class="fi">${I.mail}</span><label><small>E-mail administrateur</small><input name="email" type="email" inputmode="email" autocomplete="username" placeholder="vous@exemple.com" required></label></div>
-    <div class="fld"><span class="fi">${I.cadenas}</span><label><small>Mot de passe</small><input name="mdp" type="${S.oeil ? 'text' : 'password'}" autocomplete="current-password" placeholder="Votre mot de passe" required></label><button type="button" class="oeil" data-act="oeil" aria-label="Afficher le mot de passe">${I.oeil}</button></div>
+  const act = S.mode === 'activer';
+  const champ = (ic, nom, lab, type, ph, auto, oeil) => `<div class="fld"><span class="fi">${ic}</span><label><small>${lab}</small><input name="${nom}" type="${oeil ? (S.oeil ? 'text' : 'password') : type}" ${type === 'email' ? 'inputmode="email" autocapitalize="off"' : ''} autocomplete="${auto}" placeholder="${ph}" required></label>${oeil ? `<button type="button" class="oeil" data-act="oeil" aria-label="Afficher le mot de passe">${I.oeil}</button>` : ''}</div>`;
+  const form = act
+    ? `<form class="cx-form" id="fact" autocomplete="on"><h2>Mot de passe</h2><p class="s">Entre le code reçu et choisis ton mot de passe</p>
+    ${champ(I.mail, 'email', 'Identifiant Pilotage', 'email', 'ton identifiant', 'username')}
+    ${champ('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h7"/></svg>', 'code', "Code d'activation", 'text', '8 caractères', 'one-time-code')}
+    ${champ(I.cadenas, 'mdp', 'Nouveau mot de passe', 'password', '10 caractères minimum', 'new-password', 1)}
+    ${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}
+    <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Enregistrement…' : 'Enregistrer et entrer'}</button>
+    <p class="sur"><button type="button" class="lien" data-act="mode">← Retour à la connexion</button></p></form>`
+    : `<form class="cx-form" id="fcx" autocomplete="on"><h2>Connexion</h2><p class="s">Accédez à votre tableau de bord</p>
+    ${champ(I.mail, 'email', 'Identifiant Pilotage', 'email', 'ton identifiant', 'username')}
+    ${champ(I.cadenas, 'mdp', 'Mot de passe', 'password', 'Votre mot de passe', 'current-password', 1)}
     ${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}
     <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Connexion…' : 'Se connecter'}</button>
-    <p class="sur">${I.bouclier}Accès réservé à l'administrateur</p></form>`;
+    <p class="sur"><button type="button" class="lien" data-act="mode">Première connexion ou mot de passe oublié ?</button></p>
+    <p class="sur" style="margin-top:8px">${I.bouclier}Accès réservé à l'administrateur</p></form>`;
   return `<div class="cx">
-  <div class="cx-haut grille"><div>${LOGO(92)}<div style="margin-top:16px">${WM(46, '#fff')}</div><div class="chips"><span class="chip">${B('fixpro', 22)}FixPro Guinée</span><span class="chip">${B('scolaris', 22)}Scolaris</span></div></div></div>
+  <div class="cx-haut grille"><div><span class="lg-grand">${LOGO(92)}</span><div class="wm-grand">${WM(46, '#fff')}</div><div class="chips"><span class="chip">${B('fixpro', 22)}FixPro Guinée</span><span class="chip">${B('scolaris', 22)}Scolaris</span></div></div></div>
   <div class="cx-gauche grille"><div style="display:flex;align-items:center;gap:14px">${LOGO(52)}${WM(34, '#fff')}</div>
     <h1>Tout ce que rapportent <span>tes applications</span>, au même endroit.</h1><p>L'argent qui rentre, les visiteurs, les inscriptions et les réseaux qui t'amènent des clients. En direct.</p>
     <div class="apercu" style="position:relative"><div style="left:0;top:0;width:330px"><div style="font-size:13px;color:var(--m)">Revenu total encaissé</div><div class="num" style="font-size:32px;font-weight:700;margin-top:6px;letter-spacing:.08em">•• ••• ••• <small style="font-size:14px;color:var(--m2);letter-spacing:0">GNF</small></div><div style="display:flex;gap:6px;margin-top:14px">${B('mtn', 30)}${B('orange', 30)}${B('chariow', 30)}</div></div>
@@ -401,15 +412,30 @@ document.addEventListener('click', e => {
   else if (b.dataset.per) { S.per = b.dataset.per; store('pilotage_vue', { quoi: S.quoi, per: S.per }); rendre(); }
   else if (b.dataset.act === 'maj') charger();
   else if (b.dataset.act === 'sortir') deconnexion();
+  else if (b.dataset.act === 'mode') { S.mode = S.mode === 'activer' ? '' : 'activer'; S.err = ''; S.oeil = false; rendre(); }
   else if (b.dataset.act === 'oeil') { const i = document.querySelector('input[name=mdp]'); S.oeil = !S.oeil; if (i) i.type = S.oeil ? 'text' : 'password'; }
 });
 document.addEventListener('submit', async e => {
+  if (e.target.id === 'fact') return activer(e);
   if (e.target.id !== 'fcx') return; e.preventDefault();
   const f = new FormData(e.target); S.err = ''; S.charge = true;
   const btn = e.target.querySelector('.cta'); btn.disabled = true; btn.textContent = 'Connexion…';
   try { await auth({ email: String(f.get('email')).trim(), password: f.get('mdp') }, 'password'); S.charge = false; await charger(); }
   catch (er) { S.charge = false; S.err = /invalid/i.test(er.message) ? 'E-mail ou mot de passe incorrect.' : er.message; rendre(); const i = document.querySelector('input[name=email]'); if (i) i.value = f.get('email'); }
 });
+async function activer(e) {
+  e.preventDefault(); const f = new FormData(e.target); const email = String(f.get('email')).trim(), mdp = String(f.get('mdp'));
+  S.err = ''; S.charge = true; rendre();
+  const remettre = () => { const g = document.getElementById('fact'); if (g) { g.email.value = email; g.code.value = f.get('code'); } };
+  if (mdp.length < 10) { S.charge = false; S.err = 'Le mot de passe doit faire au moins 10 caractères.'; rendre(); remettre(); return; }
+  try {
+    const r = await fetch(`${SB}/rest/v1/rpc/pilotage_activer`, { method: 'POST', headers: { apikey: CLE, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_email: email, p_code: String(f.get('code')).trim(), p_mdp: mdp }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.message || 'Erreur');
+    if (j !== true) throw new Error('Code incorrect.');
+    S.mode = ''; await auth({ email, password: mdp }, 'password'); S.charge = false; await charger();
+  } catch (er) { S.charge = false; S.err = er.message; rendre(); remettre(); }
+}
 window.addEventListener('hashchange', () => { S.page = (location.hash.slice(1) || 'accueil'); window.scrollTo(0, 0); rendre(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.session && (!S.vu || Date.now() - S.vu > 6e4)) charger(true); });
 setInterval(() => { if (!document.hidden && S.session) charger(true); }, 5 * 6e4);

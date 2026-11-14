@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3D7BFF"/><stop offset=".55" stop-color="#1A3FD6"/><stop offset="1" stop-color="#0A1A6B"/></linearGradient>
+<linearGradient id="gr" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#0FB46A"/><stop offset="1" stop-color="#46F2A6"/></linearGradient>
+<linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="ds" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#030B3A" flood-opacity=".45"/></filter>
+</defs>
+<rect width="512" height="512" rx="116" fill="url(#bg)"/>
+<rect width="512" height="512" rx="116" fill="url(#sh)"/>
+<g filter="url(#ds)">
+<path fill-rule="evenodd" d="M150 404V140a24 24 0 0 1 24-24h104c72 0 124 48 124 116s-52 116-124 116h-62v56a24 24 0 0 1-24 24h-18a24 24 0 0 1-24-24ZM216 178v108h60c36 0 60-22 60-54s-24-54-60-54Z" fill="#fff"/>
+</g>
+<g fill="none" stroke="url(#gr)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="226,272 262,232 292,254 352,178"/>
+</g>
+<path d="M330 166l52-16-12 52Z" fill="#46F2A6" stroke="#46F2A6" stroke-width="10" stroke-linejoin="round"/>
+</svg>

@@ -166,3 +166,26 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .err-l{color:#B42318!important;font-weight:500;font-size:14px!important;line-height:1.4}
 
 .cx-titre{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.cx-titre .lien{font-size:14px;white-space:nowrap}
+
+/* Barre du bas : style application */
+.nav{padding:6px 4px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px -18px rgba(16,24,40,.25)}
+.nav a{gap:3px;font-size:11px;font-weight:600;letter-spacing:.01em;min-width:62px}
+.nav .ni{position:relative;display:grid;place-items:center;width:56px;height:30px;border-radius:999px;transition:background .2s}
+.nav a svg{width:22px;height:22px}
+.nav a.on .ni{background:#E6ECFF}
+.nav a.on{color:#1D3FD8}
+.nav .pt{top:2px;right:14px}
+.side a svg{width:19px;height:19px}
+/* En-tête */
+.entete h1{font-family:Poppins,Inter,sans-serif;font-weight:700;letter-spacing:-.02em}
+.entete .lg{border-radius:12px!important;box-shadow:0 6px 14px -6px rgba(29,63,216,.6)}
+/* État vide élégant */
+.vide-g{display:flex;flex-direction:column;align-items:center;text-align:center;padding:22px 12px 8px;gap:6px}
+.vide-g .vg-ic{width:52px;height:52px;border-radius:16px;background:linear-gradient(145deg,#EEF2FF,#E0E8FF);color:#2F5BF5;display:grid;place-items:center;margin-bottom:6px}
+.vide-g .vg-ic svg{width:26px;height:26px}
+.vide-g b{font-size:14.5px}.vide-g span{font-size:13px;color:var(--m);max-width:280px;line-height:1.5}
+/* Cartes plus nettes */
+.card{border-radius:18px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 6px 16px -12px rgba(16,24,40,.12)}
+.kpi .lab{font-weight:500}
+.seg{background:#E9EDF5}
+.entete h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.entete>div:nth-child(2){min-width:0}

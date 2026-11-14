@@ -24,11 +24,11 @@ function lire(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e)
 
 /* ---------- icônes ---------- */
 const I = {
-  accueil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
-  argent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.8"/><path d="M6 10v5M18 10v5"/></svg>',
-  reseaux: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>',
-  activite: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
-  reglages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>',
+  accueil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>',
+  argent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4h-12A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/><path d="M3 6.5A2.5 2.5 0 0 0 5.5 9h14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H16a3 3 0 0 1 0-6"/><circle cx="16.2" cy="13" r=".6" fill="currentColor"/></svg>',
+  reseaux: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
+  activite: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+  reglages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.8v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
   app: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>',
   sortir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
   maj: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg>',
@@ -230,7 +230,7 @@ function blocRevenus(X, h) {
   const series = []; for (let k = 5; k >= 0; k--) { const d = new Date(X.now.getFullYear(), X.now.getMonth() - k, 1), c = cleMois(d); const ps = X.payA.filter(p => cleMois(p.date) === c); series.push({ m: MOIS[d.getMonth()], fx: ps.filter(p => p.app === 'fixpro').reduce((s, p) => s + p.gnf, 0), sc: ps.filter(p => p.app === 'scolaris').reduce((s, p) => s + p.gnf, 0) }); }
   const vide = !series.some(s => s.fx + s.sc);
   return `<div class="card"><div class="ct"><div><h3>Revenu par mois</h3><div class="sous">6 derniers mois · en GNF</div></div><div class="leg" style="margin:0"><span><i class="dot" style="background:#1E7BFF"></i>FixPro</span><span><i class="dot" style="background:#10B26C"></i>Scolaris</span></div></div>
-  ${barres(series, LARG(700), h)}${vide ? '<div class="pied">Aucun vrai paiement sur ces 6 mois. Le premier apparaîtra ici.</div>' : ''}</div>`;
+  ${vide ? `<div class="vide-g"><div class="vg-ic">${I.argent}</div><b>Pas encore de revenu</b><span>Dès le premier vrai paiement, le graphique mois par mois apparaît ici.</span></div>` : barres(series, LARG(700), h)}</div>`;
 }
 function blocVisiteurs(X, h) {
   const n = S.per === 'tout' ? 30 : +S.per; const vals = [], lab = [];
@@ -394,10 +394,10 @@ function vueApp() {
     <div class="gt">Applications</div><a href="${LIEN.fixpro}" target="_blank" rel="noopener">${I.app}FixPro Guinée</a><a href="${LIEN.scolaris}" target="_blank" rel="noopener">${I.app}Scolaris</a>
     <div class="gt">Compte</div><a href="#reglages" class="${S.page === 'reglages' ? 'on' : ''}">${I.reglages}Réglages</a>
     <div class="me"><div class="av">${esc((S.session.email || 'A')[0].toUpperCase())}</div><div><b>${esc(S.session.email || 'Administrateur')}</b><small>Mis à jour à ${heure(S.vu || new Date())}</small></div></div></aside>
-  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? 'Bonjour 👋' : p[1]}</h1><p>${p[0] === 'accueil' ? date : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations' }[p[0]]}</p></div><div class="sp"></div>
+  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? esc(X.d.moi || 'Administrateur') : p[1]}</h1><p>${p[0] === 'accueil' ? 'Bonjour 👋 · ' + date : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations' }[p[0]]}</p></div><div class="sp"></div>
     <button class="live ${vieux ? 'vieux' : ''}" data-act="maj" title="Actualiser"><i></i>${S.charge ? 'Mise à jour…' : vieux ? 'Actualiser' : 'En direct'}</button></header>
   <div class="page">${S.err ? `<div class="err" style="margin:0">${esc(S.err)}</div>` : ''}${corps}</div></main>
-  <nav class="nav">${PAGES.map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}">${I[k]}${l}${k === 'activite' && nT ? '<i class="pt"></i>' : ''}</a>`).join('')}</nav></div>`;
+  <nav class="nav">${PAGES.map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}"><span class="ni">${I[k]}${k === 'activite' && nT ? '<i class="pt"></i>' : ''}</span>${l}</a>`).join('')}</nav></div>`;
 }
 function rendre() {
   const y = window.scrollY;

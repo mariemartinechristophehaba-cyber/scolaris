@@ -24,6 +24,17 @@ function lire(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e)
 
 /* ---------- icônes ---------- */
 const I = {
+  sante: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.6-9.3-9.2C1.4 8.4 3.6 5 7 5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.4 0 5.6 3.4 4.3 6.8C19.5 16.4 12 21 12 21z"/><path d="M3 12h4l2-3 3 6 2-3h7"/></svg>',
+  usersI: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg>',
+  oeilI: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  badge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M12 3l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 21l-2.4-1.8-3 .2-.9-2.9L3.2 14.8l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z"/></svg>',
+  pieceI: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>',
+  bd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
+  copie: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg>',
+  sms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  globe2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
+  cadenasI: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  fusee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/></svg>',
   accueil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>',
   argent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4h-12A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/><path d="M3 6.5A2.5 2.5 0 0 0 5.5 9h14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H16a3 3 0 0 1 0-6"/><circle cx="16.2" cy="13" r=".6" fill="currentColor"/></svg>',
   reseaux: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
@@ -201,7 +212,7 @@ function donut(parts, sz, centre, sous) {
 }
 
 /* ---------- blocs ---------- */
-const kpi = (lab, v, u, d) => `<div class="card kpi"><div class="lab">${lab}</div><div class="v num">${v}${u ? `<small>${u}</small>` : ''}</div><div class="d">${d}</div></div>`;
+const kpi = (lab, v, u, d, ic, col) => `<div class="card kpi"><div class="lab">${ic ? `<span class="kic" style="--c:${col}">${ic}</span>` : ''}${lab}</div><div class="v num">${v}${u ? `<small>${u}</small>` : ''}</div><div class="d">${d}</div></div>`;
 function blocHero(X, titre, montant, detail) {
   const t = X.totFx + X.totSc, pf = t ? Math.round(X.totFx / t * 100) : 0, ps = t ? 100 - pf : 0;
   return `<div class="card hero kpi"><div class="lab">${titre}</div><div class="v num">${F(montant)}<small>GNF</small></div><div class="d">${detail}</div>
@@ -215,10 +226,10 @@ function blocKpis(X) {
   const nMois = (S.quoi !== 'scolaris' ? ((X.fx.comptes || []).find(c => c.mois === cleMois(X.now)) || {}).n || 0 : 0) + (S.quoi !== 'fixpro' ? X.ecoles.filter(e => cleMois(D(e.cree_le)) === cleMois(X.now)).length : 0);
   const pages = S.quoi !== 'scolaris' ? X.fx.pages_30j || 0 : 0;
   return `<div class="k2">
-    ${kpi(`Encaissé en ${MOIS[X.now.getMonth()].replace('.', '')}`, F(X.mois), 'GNF', diff === null ? (X.moisPrec ? '' : 'Rien le mois dernier') : `<b class="${diff >= 0 ? 'up' : 'dn'}">${diff >= 0 ? '+' : ''}${diff} %</b> vs mois dernier`)}
-    ${kpi('Abonnés actifs', F(actifs), '', S.quoi === 'fixpro' ? 'techniciens' : S.quoi === 'scolaris' ? 'écoles' : 'techniciens + écoles')}
-    ${kpi('Visiteurs · 30 j', F(X.visit30), '', pages ? `${F(pages)} pages vues` : 'personnes différentes')}
-    ${kpi('Inscriptions', F(inscr), '', `<b>${nMois ? '+' + nMois : '0'}</b> ce mois-ci`)}
+    ${kpi(`Encaissé en ${MOIS[X.now.getMonth()].replace('.', '')}`, F(X.mois), 'GNF', diff === null ? (X.moisPrec ? '' : 'Rien le mois dernier') : `<b class="${diff >= 0 ? 'up' : 'dn'}">${diff >= 0 ? '+' : ''}${diff} %</b> vs mois dernier`, I.argent, '#2F5BF5')}
+    ${kpi('Abonnés actifs', F(actifs), '', S.quoi === 'fixpro' ? 'techniciens' : S.quoi === 'scolaris' ? 'écoles' : 'techniciens + écoles', I.badge, '#12B76A')}
+    ${kpi('Visiteurs · 30 j', F(X.visit30), '', pages ? `${F(pages)} pages vues` : 'personnes différentes', I.oeilI, '#7A5AF8')}
+    ${kpi('Inscriptions', F(inscr), '', `<b>${nMois ? '+' + nMois : '0'}</b> ce mois-ci`, I.usersI, '#F79009')}
   </div>`;
 }
 function blocTaches(X, max) {
@@ -316,13 +327,13 @@ function blocConseil(X) {
 }
 
 /* ---------- pages ---------- */
-const PAGES = [['accueil', 'Tableau de bord', 'Accueil'], ['argent', 'Argent', 'Argent'], ['reseaux', 'Réseaux', 'Réseaux'], ['activite', 'Activité', 'Activité'], ['reglages', 'Réglages', 'Réglages']];
+const PAGES = [['accueil', 'Tableau de bord', 'Accueil'], ['argent', 'Argent', 'Argent'], ['reseaux', 'Réseaux', 'Réseaux'], ['sante', 'Santé', 'Santé'], ['activite', 'Activité', 'Activité'], ['reglages', 'Réglages', 'Réglages']];
 function filtres(per) {
   const seg = (cle, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-${cle}="${v}" class="${S[cle] === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   return `<div class="filtres">${seg('quoi', [['tous', 'Les 2 apps'], ['fixpro', 'FixPro'], ['scolaris', 'Scolaris']])}${per ? seg('per', [['7', '7 j'], ['30', '30 j'], ['90', '3 mois'], ['tout', 'Tout']]) : ''}</div>`;
 }
 function pageAccueil(X) {
-  return `${filtres()}
+  return `${filtres()}${blocSanteBandeau(X, 1)}
   <div class="g-kpi">${blocHero(X, 'Revenu total encaissé', X.total, X.payA.length ? `${pl(X.payA.length, 'paiement')} · panier moyen ${F(X.total / X.payA.length)} GNF` : 'Aucun vrai paiement encore')}${blocKpis(X)}</div>
   <div class="g21">${blocRevenus(X, 230)}${blocTaches(X, 4)}</div>
   <div class="g111">${blocVisiteurs(X, 150)}${blocSources(X, 140)}${blocApps(X)}</div>
@@ -387,17 +398,69 @@ function vueApp() {
   const p = PAGES.find(x => x[0] === S.page) || PAGES[0];
   const vieux = S.vu && Date.now() - S.vu > 15 * 6e4;
   const now = X.now; const date = `${cap(JOURS[now.getDay()])} ${now.getDate()} ${MOIS[now.getMonth()].replace('.', '')} ${now.getFullYear()}`;
-  const corps = { accueil: pageAccueil, argent: pageArgent, reseaux: pageReseaux, activite: pageActivite, reglages: pageReglages }[p[0]](X);
+  const corps = { sante: pageSante, accueil: pageAccueil, argent: pageArgent, reseaux: pageReseaux, activite: pageActivite, reglages: pageReglages }[p[0]](X);
   return `<div class="cadre">
   <aside class="side"><div class="brand">${LOGO(36)}<div>${WM(18, '#fff')}<small>FixPro · Scolaris</small></div></div>
-    <div class="gt">Vue d'ensemble</div>${PAGES.slice(0, 4).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}">${I[k]}${k === 'accueil' ? 'Tableau de bord' : l}${k === 'activite' && nT ? `<span class="cnt">${nT}</span>` : ''}</a>`).join('')}
+    <div class="gt">Vue d'ensemble</div>${PAGES.slice(0, 5).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}">${I[k]}${k === 'accueil' ? 'Tableau de bord' : l}${k === 'activite' && nT ? `<span class="cnt">${nT}</span>` : ''}</a>`).join('')}
     <div class="gt">Applications</div><a href="${LIEN.fixpro}" target="_blank" rel="noopener">${I.app}FixPro Guinée</a><a href="${LIEN.scolaris}" target="_blank" rel="noopener">${I.app}Scolaris</a>
     <div class="gt">Compte</div><a href="#reglages" class="${S.page === 'reglages' ? 'on' : ''}">${I.reglages}Réglages</a>
-    <div class="me"><div class="av">${esc((S.session.email || 'A')[0].toUpperCase())}</div><div><b>${esc(S.session.email || 'Administrateur')}</b><small>Mis à jour à ${heure(S.vu || new Date())}</small></div></div></aside>
-  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? esc(X.d.moi || 'Administrateur') : p[1]}</h1><p>${p[0] === 'accueil' ? 'Bonjour 👋 · ' + date : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations' }[p[0]]}</p></div><div class="sp"></div>
-    <button class="live ${vieux ? 'vieux' : ''}" data-act="maj" title="Actualiser"><i></i>${S.charge ? 'Mise à jour…' : vieux ? 'Actualiser' : 'En direct'}</button></header>
+    <div class="me"><div class="av">${esc(initiales(X.d.moi))}</div><div><b>${esc(X.d.moi || 'Administrateur')}</b><small>Mis à jour à ${heure(S.vu || new Date())}</small></div></div></aside>
+  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? esc(X.d.moi || 'Administrateur') : p[1]}</h1><p>${p[0] === 'accueil' ? 'Bonjour 👋 · ' + date : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations', sante: 'Tes applications vont-elles bien ?' }[p[0]]}</p></div><div class="sp"></div>
+    <button class="live ${vieux ? 'vieux' : ''}" data-act="maj" title="Actualiser"><i></i>${S.charge ? 'Mise à jour…' : vieux ? 'Actualiser' : 'En direct'}</button><a class="moi" href="#reglages" title="Réglages">${esc(initiales(X.d.moi))}</a></header>
   <div class="page">${S.err ? `<div class="err" style="margin:0">${esc(S.err)}</div>` : ''}${corps}</div></main>
-  <nav class="nav">${PAGES.map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}"><span class="ni">${I[k]}${k === 'activite' && nT ? '<i class="pt"></i>' : ''}</span>${l}</a>`).join('')}</nav></div>`;
+  <nav class="nav">${PAGES.slice(0, 5).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}"><span class="ni">${I[k]}${k === 'activite' && nT ? '<i class="pt"></i>' : ''}</span>${l}</a>`).join('')}</nav></div>`;
+}
+const initiales = n => String(n || 'A').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
+/* ---------- santé ---------- */
+const ETAT = { ok: ['#12B76A', 'Opérationnel', 'ok'], att: ['#F79009', 'À surveiller', 'or'], ko: ['#F04438', 'En panne', 'ko'], off: ['#98A2B3', 'Non configuré', 'gr'] };
+function santeX(X) {
+  const sa = X.d.sante || {}; const ping = S.ping || {};
+  const app = k => { const a = sa[k] || {}; const p = ping[k]; return { ...a, statut: p ? (p.ok ? 'ok' : 'ko') : (a.statut || 'ok'), ms: p ? p.ms : a.ms }; };
+  const fxCopie = X.fx.maj_le ? (Date.now() - D(X.fx.maj_le)) / 6e4 : 999;
+  const services = (sa.services && sa.services.length) ? sa.services : [
+    { k: 'bd', nom: 'Base de données Scolaris', etat: 'ok', info: 'Répond normalement' },
+    { k: 'copie', nom: 'Copie des chiffres FixPro', etat: fxCopie < 90 ? 'ok' : 'att', info: X.fx.maj_le ? `Dernière copie ${ilYa(X.fx.maj_le)}` : 'Aucune copie' },
+    { k: 'pieceI', nom: 'Paiements Chariow (Scolaris)', etat: 'ok', info: 'Prêt à recevoir' },
+    { k: 'sms', nom: 'SMS Nimba', etat: 'off', info: 'Pack SMS pas encore acheté' },
+    { k: 'globe2', nom: 'Nom de domaine Scolaris', etat: 'off', info: 'Pas encore acheté' },
+  ];
+  const apps = [['fixpro', 'FixPro Guinée', app('fixpro')], ['scolaris', 'Scolaris', app('scolaris')]].filter(a => S.quoi === 'tous' || a[0] === S.quoi);
+  const pb = apps.filter(a => a[2].statut !== 'ok').length + services.filter(x => x.etat === 'ko' || x.etat === 'att').length;
+  const ko = apps.some(a => a[2].statut === 'ko') || services.some(x => x.etat === 'ko');
+  return { apps, services, pb, ko, incidents: sa.incidents || [], verif: sa.verifie_le || S.pingT };
+}
+function barresDispo(jours) {
+  const L = jours && jours.length ? jours.slice(-30) : [];
+  const vides = 30 - L.length;
+  return `<div class="dispo">${Array.from({ length: vides }, () => '<i class="n"></i>').join('')}${L.map(j => `<i class="${j === 1 ? 'v' : j === 0 ? 'r' : j === 0.5 ? 'o' : 'n'}"></i>`).join('')}</div><div class="dispo-l"><span>il y a 30 j</span><span>aujourd'hui</span></div>`;
+}
+function blocSanteBandeau(X, compact) {
+  const H = santeX(X); const [c, , ] = H.ko ? ETAT.ko : H.pb ? ETAT.att : ETAT.ok;
+  const titre = H.ko ? 'Une application a un problème' : H.pb ? `${pl(H.pb, 'point', 'points')} à surveiller` : 'Tout fonctionne bien';
+  const sous = H.apps.map(([k, n, a]) => `${n.split(' ')[0]} ${a.ms ? a.ms + ' ms' : (a.statut === 'ok' ? 'en ligne' : 'hors ligne')}`).join(' · ');
+  if (compact) return `<a class="card sbande" href="#sante" style="--sc:${c}"><span class="sb-ic">${H.ko ? I.rouge : H.pb ? I.att : I.vert}</span><div><b>${titre}</b><small>${sous}</small></div><span class="sb-f">Santé ›</span></a>`;
+  return `<div class="card shero" style="--sc:${c}"><div class="sh-ic">${I.sante}</div><div><b>${titre}</b><small>${H.verif ? `Vérifié ${ilYa(H.verif)}` : 'Vérification en cours…'} · ${pl(H.apps.length, 'application')}, ${pl(H.services.length, 'service')}</small></div><button class="btn" data-act="ping" title="Vérifier maintenant">${I.copie}<span>Vérifier</span></button></div>`;
+}
+function blocSanteApp(k, nom, a) {
+  const [c, lib, cl] = ETAT[a.statut] || ETAT.ok;
+  const mes = (a.jours || []).filter(j => j !== null && j !== undefined); const dispo = mes.length ? Math.round(mes.reduce((s, j) => s + j, 0) / mes.length * 1000) / 10 : null;
+  return `<div class="card sapp"><div class="sa-h">${B(k, 40)}<div><b>${nom}</b><small>${k === 'fixpro' ? 'fixproguinee.com' : 'scolaris-murex.vercel.app'}</small></div><span class="tag ${cl}"><i class="dot puls" style="background:${c}"></i>${a.statut === 'ok' ? 'En ligne' : lib}</span></div>
+  <div class="sa-st"><div><span>Réponse</span><b class="num">${a.ms ? a.ms + ' ms' : '—'}</b></div><div><span>Disponibilité${mes.length && mes.length < 30 ? ` · ${mes.length} j` : ' 30 j'}</span><b class="num">${dispo === null ? '—' : String(dispo).replace('.', ',') + ' %'}</b></div><div><span>Erreurs 24 h</span><b class="num ${a.erreurs ? 'dn' : ''}">${a.erreurs === undefined ? '—' : F(a.erreurs)}</b></div></div>
+  ${barresDispo(a.jours)}
+  <div class="sa-f">${I.fusee}<span>${a.deploy ? `Dernière mise en ligne <b class="${a.deploy.ok ? 'up' : 'dn'}">${a.deploy.ok ? 'réussie' : 'échouée'}</b> · ${ilYa(a.deploy.quand)}` : 'Mise en ligne : —'}</span></div></div>`;
+}
+function pageSante(X) {
+  const H = santeX(X);
+  return `${filtres()}${blocSanteBandeau(X)}
+  <div class="g11">${H.apps.map(([k, n, a]) => blocSanteApp(k, n, a)).join('')}</div>
+  <div class="g11"><div class="card"><div class="ct"><h3>Services</h3><span class="s">${H.services.filter(x => x.etat === 'ok').length}/${H.services.length} opérationnels</span></div>
+  ${H.services.map(x => { const [c, lib, cl] = ETAT[x.etat]; return `<div class="row"><span class="ico" style="background:${c}1A;color:${c}">${I[x.k] || I.bd}</span><div><b>${esc(x.nom)}</b><small>${esc(x.info)}</small></div><span class="tag ${cl}">${lib}</span></div>`; }).join('')}</div>
+  <div class="card"><div class="ct"><h3>Incidents récents</h3><span class="s">7 jours</span></div>${H.incidents.length ? H.incidents.map(i => `<div class="row"><span class="ico" style="background:${ETAT[i.etat || 'att'][0]}1A;color:${ETAT[i.etat || 'att'][0]}">${i.etat === 'ko' ? I.rouge : I.att}</span><div><b>${esc(i.titre)}</b><small>${esc(i.detail || '')}</small></div><div class="r"><small style="color:var(--m2)">${ilYa(i.quand)}</small></div></div>`).join('') : `<div class="vide-g"><div class="vg-ic" style="background:#ECFDF3;color:#079455">${I.vert}</div><b>Aucun incident</b><span>Pas de panne ni d'erreur grave ces 7 derniers jours.</span></div>`}</div></div>`;
+}
+async function pinger() {
+  const t = async u => { const d = performance.now(); try { await fetch(u, { mode: 'no-cors', cache: 'no-store' }); return { ok: true, ms: Math.max(1, Math.round(performance.now() - d)) }; } catch (e) { return { ok: false }; } };
+  const [fx, sc] = await Promise.all([t(LIEN.fixpro + '/?ping=' + Date.now()), t('https://scolaris-murex.vercel.app/?ping=' + Date.now())]);
+  S.ping = { fixpro: fx, scolaris: sc }; S.pingT = new Date().toISOString(); rendre();
 }
 function rendre() {
   const y = window.scrollY;
@@ -411,6 +474,7 @@ document.addEventListener('click', e => {
   if (b.dataset.quoi) { S.quoi = b.dataset.quoi; store('pilotage_vue', { quoi: S.quoi, per: S.per }); rendre(); }
   else if (b.dataset.per) { S.per = b.dataset.per; store('pilotage_vue', { quoi: S.quoi, per: S.per }); rendre(); }
   else if (b.dataset.act === 'maj') charger();
+  else if (b.dataset.act === 'ping') pinger();
   else if (b.dataset.act === 'sortir') deconnexion();
   else if (b.dataset.act === 'mode') { S.mode = S.mode === 'activer' ? '' : 'activer'; S.err = ''; S.oeil = false; rendre(); }
   else if (b.dataset.act === 'oeil') { const i = document.querySelector('input[name=mdp]'); S.oeil = !S.oeil; if (i) i.type = S.oeil ? 'text' : 'password'; }
@@ -451,5 +515,5 @@ setInterval(() => { if (!document.hidden && S.session) charger(true); }, 5 * 6e4
   S.page = location.hash.slice(1) || 'accueil';
   if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; }
   const c = lire('pilotage_cache'); if (S.session && c && c.d) { S.data = c.d; S.vu = new Date(c.t); }
-  rendre(); if (S.session) charger(!!S.data);
+  rendre(); if (S.session) { charger(!!S.data); pinger(); }
 })();

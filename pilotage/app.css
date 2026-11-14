@@ -189,3 +189,36 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .kpi .lab{font-weight:500}
 .seg{background:#E9EDF5}
 .entete h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.entete>div:nth-child(2){min-width:0}
+
+/* Pastilles d'icônes KPI */
+.kic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);flex:none}
+.kic svg{width:16px;height:16px}
+.kpi .lab{gap:8px}
+/* Avatar en-tête */
+.moi{width:38px;height:38px;border-radius:50%;background:linear-gradient(140deg,#2F5BF5,#10B26C);color:#fff;display:grid;place-items:center;font:700 13.5px Inter;flex:none;box-shadow:0 0 0 3px #fff,0 4px 12px -4px rgba(47,91,245,.6)}
+/* Bandeau santé */
+.sbande{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-left:4px solid var(--sc)}
+.sbande .sb-ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--sc) 12%,#fff)}
+.sbande b{font-size:14px;display:block}.sbande small{font-size:12px;color:var(--m)}
+.sb-f{font-size:12.5px;font-weight:600;color:var(--p)}
+.shero{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--sc) 14%,#fff),#fff 70%);border-color:color-mix(in srgb,var(--sc) 30%,#fff)}
+.sh-ic{width:52px;height:52px;border-radius:16px;background:var(--sc);color:#fff;display:grid;place-items:center;box-shadow:0 10px 20px -10px var(--sc)}
+.sh-ic svg{width:28px;height:28px}
+.shero b{font:700 18px Poppins,Inter;letter-spacing:-.01em;display:block}.shero small{font-size:12.5px;color:var(--m)}
+.shero .btn{display:flex;align-items:center;gap:6px}.shero .btn svg{width:14px;height:14px}
+.sa-h{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center}
+.sa-h b{font-size:15px;display:block}.sa-h small{font-size:12px;color:var(--m)}
+.sa-st{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 12px;padding:12px 0;border-top:1px solid var(--l2);border-bottom:1px solid var(--l2)}
+.sa-st span{display:block;font-size:11.5px;color:var(--m)}.sa-st b{font-size:16px;font-weight:700}
+.dispo{display:grid;grid-template-columns:repeat(30,1fr);gap:3px;height:30px}
+.dispo i{border-radius:3px;background:#E4E8F0}.dispo i.v{background:#12B76A}.dispo i.o{background:#F79009}.dispo i.r{background:#F04438}
+.dispo-l{display:flex;justify-content:space-between;font-size:11px;color:var(--m2);margin-top:5px}
+.sa-f{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--m);margin-top:12px}.sa-f svg{width:16px;height:16px;color:var(--m2)}
+.puls{animation:puls 2s infinite}@keyframes puls{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 40%,transparent)}70%{box-shadow:0 0 0 6px transparent}}
+.tag.or{background:#FEF0C7;color:#B54708}
+/* Héro plus riche */
+.hero{background:radial-gradient(90% 120% at 100% 0%,#4C6BFF 0%,#1F37B8 40%,#0B1650 100%)}
+.hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.ct h3{font-family:Poppins,Inter,sans-serif;font-weight:600}
+@media (max-width:1023px){.shero{grid-template-columns:46px 1fr auto;gap:12px}.sh-ic{width:46px;height:46px}.shero .btn span{display:none}.shero .btn{padding:9px}.shero b{font-size:16.5px}}
+@media (max-width:1023px){.g-kpi{display:flex;flex-direction:column;gap:12px}}

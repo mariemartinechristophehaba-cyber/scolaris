@@ -357,20 +357,22 @@ function pageReglages(X) {
 /* ---------- rendu ---------- */
 function vueConnexion() {
   const act = S.mode === 'activer';
-  const champ = (ic, nom, lab, type, ph, auto, oeil) => `<div class="fld"><span class="fi">${ic}</span><label><small>${lab}</small><input name="${nom}" type="${oeil ? (S.oeil ? 'text' : 'password') : type}" ${type === 'email' ? 'inputmode="email" autocapitalize="off"' : ''} autocomplete="${auto}" placeholder="${ph}" required></label>${oeil ? `<button type="button" class="oeil" data-act="oeil" aria-label="Afficher le mot de passe">${I.oeil}</button>` : ''}</div>`;
+  const USER = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+  const CODE = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 12h.01M11 12h.01M15 12h.01"/></svg>';
+  const champ = (ic, nom, lab, type, ph, auto, oeil) => `<div class="fld"><span class="fi">${ic}</span><label><small>${lab}</small><input name="${nom}" type="${oeil ? (S.oeil ? 'text' : 'password') : type}" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="${auto}" placeholder="${ph}" required></label>${oeil ? `<button type="button" class="oeil" data-act="oeil" aria-label="Afficher le mot de passe">${I.oeil}</button>` : ''}</div>`;
+  const titre = (t, lien) => `<div class="cx-titre"><h2>${t}</h2><button type="button" class="lien" data-act="mode">${lien}</button></div>`;
+  const sous = (t) => S.err ? `<p class="s err-l">${esc(S.err)}</p>` : `<p class="s">${t}</p>`;
   const form = act
-    ? `<form class="cx-form" id="fact" autocomplete="on"><h2>Mot de passe</h2>${S.err ? `<p class="s err-l">${esc(S.err)}</p>` : '<p class="s">Entre le code reçu et choisis ton mot de passe</p>'}
-    ${champ(I.mail, 'email', 'Identifiant Pilotage', 'email', 'ton identifiant', 'username')}
-    ${champ('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h7"/></svg>', 'code', "Code d'activation", 'text', '8 caractères', 'one-time-code')}
-    ${champ(I.cadenas, 'mdp', 'Nouveau mot de passe', 'password', '10 caractères minimum', 'new-password', 1)}
-    <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Enregistrement…' : 'Enregistrer et entrer'}</button>
-    <p class="sur"><button type="button" class="lien" data-act="mode">← Retour à la connexion</button></p></form>`
-    : `<form class="cx-form" id="fcx" autocomplete="on"><h2>Connexion</h2>${S.err ? `<p class="s err-l">${esc(S.err)}</p>` : '<p class="s">Accédez à votre tableau de bord</p>'}
-    ${champ(I.mail, 'email', 'Identifiant Pilotage', 'email', 'ton identifiant', 'username')}
+    ? `<form class="cx-form" id="fact" autocomplete="on">${titre('Créer mon accès', '← Retour')}${sous('Mets le code reçu, puis choisis ton identifiant et ton mot de passe')}
+    ${champ(CODE, 'code', "Code d'activation", 'text', '8 caractères', 'one-time-code')}
+    ${champ(USER, 'ident', 'Choisis ton identifiant', 'text', 'ce que tu veux', 'username')}
+    ${champ(I.cadenas, 'mdp', 'Choisis ton mot de passe', 'password', '10 caractères minimum', 'new-password', 1)}
+    <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Enregistrement…' : 'Enregistrer et entrer'}</button></form>`
+    : `<form class="cx-form" id="fcx" autocomplete="on">${titre('Connexion', 'Première fois ?')}${sous('Accédez à votre tableau de bord')}
+    ${champ(USER, 'ident', 'Identifiant', 'text', 'ton identifiant', 'username')}
     ${champ(I.cadenas, 'mdp', 'Mot de passe', 'password', 'Votre mot de passe', 'current-password', 1)}
     <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Connexion…' : 'Se connecter'}</button>
-    <p class="sur"><button type="button" class="lien" data-act="mode">Première connexion ou mot de passe oublié ?</button></p>
-    <p class="sur garde" style="margin-top:8px">${I.bouclier}Accès réservé à l'administrateur</p></form>`;
+    <p class="sur garde">${I.bouclier}Accès réservé à l'administrateur</p></form>`;
   return `<div class="cx">
   <div class="cx-haut grille"><div><span class="lg-grand">${LOGO(92)}</span><div class="wm-grand">${WM(46, '#fff')}</div><div class="chips"><span class="chip">${B('fixpro', 22)}FixPro Guinée</span><span class="chip">${B('scolaris', 22)}Scolaris</span></div></div></div>
   <div class="cx-gauche grille"><div style="display:flex;align-items:center;gap:14px">${LOGO(52)}${WM(34, '#fff')}</div>
@@ -418,20 +420,25 @@ document.addEventListener('submit', async e => {
   if (e.target.id !== 'fcx') return; e.preventDefault();
   const f = new FormData(e.target); S.err = ''; S.charge = true;
   const btn = e.target.querySelector('.cta'); btn.disabled = true; btn.textContent = 'Connexion…';
-  try { await auth({ email: String(f.get('email')).trim(), password: f.get('mdp') }, 'password'); S.charge = false; await charger(); }
-  catch (er) { S.charge = false; S.err = /invalid/i.test(er.message) ? 'Identifiant ou mot de passe incorrect. Première fois ? Appuie sur le lien en bas.' : er.message; rendre(); const i = document.querySelector('input[name=email]'); if (i) i.value = f.get('email'); }
+  try { await auth({ email: await emailDe(f.get('ident')), password: f.get('mdp') }, 'password'); S.charge = false; await charger(); }
+  catch (er) { S.charge = false; S.err = /invalid/i.test(er.message) ? 'Identifiant ou mot de passe incorrect.' : er.message; rendre(); const i = document.querySelector('input[name=ident]'); if (i) i.value = f.get('ident'); }
 });
+async function emailDe(id) {
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(id || '').trim().toLowerCase()));
+  return 'p' + [...new Uint8Array(h)].map(x => x.toString(16).padStart(2, '0')).join('').slice(0, 24) + '@pilotage-admin.app';
+}
 async function activer(e) {
-  e.preventDefault(); const f = new FormData(e.target); const email = String(f.get('email')).trim(), mdp = String(f.get('mdp'));
-  S.err = ''; S.charge = true; rendre();
-  const remettre = () => { const g = document.getElementById('fact'); if (g) { g.email.value = email; g.code.value = f.get('code'); } };
+  e.preventDefault(); const f = new FormData(e.target); const ident = String(f.get('ident')).trim(), mdp = String(f.get('mdp')), code = String(f.get('code')).trim();
+  const remettre = () => { const g = document.getElementById('fact'); if (g) { g.code.value = code; g.ident.value = ident; } };
+  S.err = ''; S.charge = true; rendre(); remettre();
+  if (ident.length < 3) { S.charge = false; S.err = "L'identifiant doit faire au moins 3 caractères."; rendre(); remettre(); return; }
   if (mdp.length < 10) { S.charge = false; S.err = 'Le mot de passe doit faire au moins 10 caractères.'; rendre(); remettre(); return; }
   try {
-    const r = await fetch(`${SB}/rest/v1/rpc/pilotage_activer`, { method: 'POST', headers: { apikey: CLE, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_email: email, p_code: String(f.get('code')).trim(), p_mdp: mdp }) });
+    const r = await fetch(`${SB}/rest/v1/rpc/pilotage_activer`, { method: 'POST', headers: { apikey: CLE, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: code, p_identifiant: ident, p_mdp: mdp }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.message || 'Erreur');
-    if (j !== true) throw new Error('Code incorrect.');
-    S.mode = ''; await auth({ email, password: mdp }, 'password'); S.charge = false; await charger();
+    if (j !== true) throw new Error("Code d'activation incorrect.");
+    S.mode = ''; await auth({ email: await emailDe(ident), password: mdp }, 'password'); S.charge = false; await charger();
   } catch (er) { S.charge = false; S.err = er.message; rendre(); remettre(); }
 }
 window.addEventListener('hashchange', () => { S.page = (location.hash.slice(1) || 'accueil'); if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; } window.scrollTo(0, 0); rendre(); });

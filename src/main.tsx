@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
-import { auth, db, getSession, poserLectureSeule, surSession } from './api';
+import { auth, db, getSession, noterArrivee, poserLectureSeule, surSession } from './api';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, Confidentialite, FamillePublic, RecuPublic } from './public';
@@ -135,7 +135,7 @@ function Espace() {
   const q = useQ(async () => {
     // Un seul appel réseau (au lieu de 5 à la suite) : plus rapide sur les connexions mobiles.
     const md = getSession()?.user?.user_metadata || {};
-    const creer = md.etablissement ? { nom: md.etablissement, ville: md.ville || null, telephone: md.tel_ecole || null, email: getSession()?.user?.email || null, details: md.eleves ? { pays: md.pays || 'GN', quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null } : null;
+    const creer = md.etablissement ? { nom: md.etablissement, ville: md.ville || null, telephone: md.tel_ecole || null, email: getSession()?.user?.email || null, details: md.eleves ? { pays: md.pays || 'GN', source: md.source, quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null } : null;
     const d: any = await db.rpc('demarrage', { p_creer: creer });
     if (!d?.m) return { m: null, annees: [] };
     choisirPays(d.m.etablissements?.pays || 'GN');
@@ -161,6 +161,7 @@ function Racine() {
     auth.retour().then((t) => { if (t === 'recovery') setR(true); }).catch(() => {}).finally(() => setP(true));
     return () => { a(); removeEventListener('popstate', f); };
   }, []);
+  useEffect(() => { if (!getSession()?.access_token && !location.pathname.startsWith('/r/') && !location.pathname.startsWith('/f/') && !location.pathname.startsWith('/admin')) noterArrivee(); }, []);
   if (!pret) return <main className="pub"><Chargement /></main>;
   const c = location.pathname; const seg = c.split('/').filter(Boolean);
   if (seg[0] === 'r' && seg[1]) return <RecuPublic jeton={seg[1]} />;

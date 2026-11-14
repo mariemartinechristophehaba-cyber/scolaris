@@ -102,7 +102,7 @@ export const auth = {
     }
   },
   inscription: async (email: string, mdp: string, data: any) => {
-    const r = await appel('/functions/v1/inscription-ecole', { method: 'POST', body: JSON.stringify({ email: email.trim(), mot_de_passe: mdp, data }) });
+    const r = await appel('/functions/v1/inscription-ecole', { method: 'POST', body: JSON.stringify({ email: email.trim(), mot_de_passe: mdp, data: { ...data, source: sourceArrivee() } }) });
     if (r?.access_token) { poser(r); return true; }
     return false;
   },
@@ -132,3 +132,25 @@ export const auth = {
     return type;
   },
 };
+
+// D'où vient le visiteur (lien ?src=… de chaque réseau, sinon le site d'arrivée). Rien de personnel : seulement le réseau.
+const RESEAUX: [RegExp, string][] = [[/tiktok/, 'tiktok'], [/youtube|youtu\.be/, 'youtube'], [/facebook|fb\.|fbclid/, 'facebook'], [/instagram/, 'instagram'], [/whatsapp|wa\.me/, 'whatsapp'], [/google\./, 'google'], [/linkedin|lnkd/, 'linkedin'], [/twitter|t\.co|x\.com/, 'twitter']];
+const versReseau = (t: string) => { const x = (t || '').toLowerCase(); if (!x) return ''; const r = RESEAUX.find(([re]) => re.test(x)); return r ? r[1] : 'autre'; };
+export function sourceArrivee(): string {
+  try {
+    const deja = localStorage.getItem('scolaris_src'); if (deja) return deja;
+    const q = new URLSearchParams(location.search);
+    let s = versReseau(q.get('src') || q.get('utm_source') || '') || (q.get('fbclid') ? 'facebook' : '');
+    if (!s) { const ref = document.referrer && !document.referrer.includes(location.host) ? document.referrer : ''; s = ref ? versReseau(new URL(ref).hostname) : 'direct'; }
+    localStorage.setItem('scolaris_src', s); return s;
+  } catch { return 'direct'; }
+}
+// Une visite par appareil et par jour, comptée par réseau.
+export function noterArrivee() {
+  try {
+    const src = sourceArrivee(); const j = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem('scolaris_vu') === j) return;
+    localStorage.setItem('scolaris_vu', j);
+    appel('/rest/v1/rpc/noter_arrivee', { method: 'POST', body: JSON.stringify({ p_source: src }) }).catch(() => {});
+  } catch { /* ignoré */ }
+}

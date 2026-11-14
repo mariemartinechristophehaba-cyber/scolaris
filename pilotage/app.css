@@ -143,28 +143,24 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .reglages svg{width:18px;height:18px;flex:none}
 
 .lien{color:var(--p);font-weight:600;font-size:14px}
-/* Connexion téléphone : écran fixe (aucun défilement, aucun rebond), bandeau bleu compact */
+/* Connexion téléphone : page normale qui défile, bandeau bleu de hauteur fixe */
 @media (max-width:1023px){
-  html:has(.cx),body:has(.cx){overflow:hidden;overscroll-behavior:none;height:100%}
-  .cx{position:fixed;top:0;left:0;right:0;height:100vh;height:100svh;display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
-  .cx-haut{height:auto;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:calc(12px + env(safe-area-inset-top)) 16px 40px}
-  .cx-haut>div{gap:0}
+  .cx{min-height:100%;display:block}
+  .cx-haut{height:auto;display:flex;align-items:center;justify-content:center;padding:calc(30px + env(safe-area-inset-top)) 16px 58px}
   .lg-grand{display:block;line-height:0}
-  .lg-grand img{width:72px!important;height:72px!important;border-radius:16px!important;box-shadow:0 10px 24px -8px rgba(0,0,0,.5)}
+  .lg-grand img{width:72px!important;height:72px!important;border-radius:18px!important;box-shadow:0 10px 24px -8px rgba(0,0,0,.5)}
   .wm-grand{margin-top:10px}.wm-grand .wm{font-size:38px!important}
   .chips{margin-top:12px;gap:8px}
-  .chip{padding:5px 12px 5px 5px;font:600 13px/1 Inter,system-ui,sans-serif;letter-spacing:.005em;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);-webkit-font-smoothing:antialiased}
+  .chip{padding:5px 12px 5px 5px;font:600 13px/1 Inter,system-ui,sans-serif;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18)}
   .chip img{width:22px!important;height:22px!important;border-radius:7px!important}
-  .cx-feuille{flex:none;margin-top:-28px;border-radius:28px 28px 0 0;padding:28px 22px calc(44px + env(safe-area-inset-bottom));overflow:hidden}
+  .cx-feuille{margin-top:-28px;border-radius:28px 28px 0 0;padding:28px 22px calc(60px + env(safe-area-inset-bottom))}
   .cx-form h2{font-size:26px}
   .cx-form>p.s{font-size:14.5px}
   .cx-form .fld{margin-top:12px;padding:11px 13px}
   .cx-form .fld:first-of-type{margin-top:22px}
   .fld .fi{width:40px;height:40px}
   .cta{margin-top:20px;padding:17px}
-  .sur{margin-top:14px}
 }
-@media (max-width:1023px){.sur.garde{display:none}.cx-haut{padding-bottom:36px}}
 @media (max-width:1023px) and (max-height:620px){.chips{display:none}.cx-haut{padding-bottom:40px}}
 
 .err-l{color:#B42318!important;font-weight:500;font-size:14px!important;line-height:1.4}

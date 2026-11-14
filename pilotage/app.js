@@ -213,11 +213,17 @@ function donut(parts, sz, centre, sous) {
 
 /* ---------- blocs ---------- */
 const kpi = (lab, v, u, d, ic, col) => `<div class="card kpi"><div class="lab">${ic ? `<span class="kic" style="--c:${col}">${ic}</span>` : ''}${lab}</div><div class="v num">${v}${u ? `<small>${u}</small>` : ''}</div><div class="d">${d}</div></div>`;
-function blocHero(X, titre, montant, detail) {
-  const t = X.totFx + X.totSc, pf = t ? Math.round(X.totFx / t * 100) : 0, ps = t ? 100 - pf : 0;
-  return `<div class="card hero kpi"><div class="lab">${titre}</div><div class="v num">${F(montant)}<small>GNF</small></div><div class="d">${detail}</div>
-  <div class="split">${t ? `<i style="width:${pf}%;background:#5B9BFF"></i><i style="width:${ps}%;background:#3DDC97"></i>` : ''}</div>
-  <div class="leg"><span><i class="dot" style="background:#5B9BFF"></i>FixPro ${t ? pf + ' %' : '0'}</span><span><i class="dot" style="background:#3DDC97"></i>Scolaris ${t ? ps + ' %' : '0'}</span></div></div>`;
+function blocHero(X, titre, montant, detail, nb) {
+  const fx = S.quoi === 'scolaris' ? 0 : X.totFx, sc = S.quoi === 'fixpro' ? 0 : X.totSc, t = fx + sc;
+  const n = nb === undefined ? X.payA.length : nb;
+  const C = 2 * Math.PI * 46, lf = t ? fx / t * C : 0, ls = t ? sc / t * C : 0, gap = fx && sc ? 4 : 0;
+  const arc = (l, off, col) => l > 0 ? `<circle cx="60" cy="60" r="46" fill="none" stroke="${col}" stroke-width="13" stroke-linecap="round" stroke-dasharray="${Math.max(l - gap, 0.01)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"/>` : '';
+  const ligne = (k, nom, v) => `<span>${B(k, 22)}<em>${nom}</em><b class="num">${F(v)}</b></span>`;
+  return `<div class="card hero kpi heroD"><div class="hd-g"><div class="lab">${titre}</div><div class="v num">${F(montant)}<small>GNF</small></div>
+  <div class="hd-l">${S.quoi !== 'scolaris' ? ligne('fixpro', 'FixPro', fx) : ''}${S.quoi !== 'fixpro' ? ligne('scolaris', 'Scolaris', sc) : ''}</div>
+  <div class="d hd-d">${detail}</div></div>
+  <svg class="hd-r" viewBox="0 0 120 120"><circle cx="60" cy="60" r="46" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="13"/>${arc(ls, lf, '#3DDC97')}${arc(lf, 0, '#5B9BFF')}
+  <text x="60" y="60" text-anchor="middle" fill="#fff" font-size="24" font-weight="700" font-family="Inter">${n}</text><text x="60" y="78" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="11" font-family="Inter">paiement${n > 1 ? 's' : ''}</text></svg></div>`;
 }
 function blocKpis(X) {
   const diff = X.moisPrec ? Math.round((X.mois - X.moisPrec) / X.moisPrec * 100) : null;
@@ -334,7 +340,7 @@ function filtres(per) {
 }
 function pageAccueil(X) {
   return `${filtres()}${blocSanteBandeau(X, 1)}
-  <div class="g-kpi">${blocHero(X, 'Revenu total encaissé', X.total, X.payA.length ? `${pl(X.payA.length, 'paiement')} · panier moyen ${F(X.total / X.payA.length)} GNF` : 'Aucun vrai paiement encore')}${blocKpis(X)}</div>
+  <div class="g-kpi">${blocHero(X, 'Revenu total encaissé', X.total, X.payA.length ? `Panier moyen ${F(X.total / X.payA.length)} GNF` : 'Aucun vrai paiement encore')}${blocKpis(X)}</div>
   <div class="g21">${blocRevenus(X, 230)}${blocTaches(X, 4)}</div>
   <div class="g111">${blocVisiteurs(X, 150)}${blocSources(X, 140)}${blocApps(X)}</div>
   <div class="g11">${blocDerniers(X, 6)}<div class="col">${S.quoi !== 'fixpro' ? blocEcoles(X) : blocVilles(X)}</div></div>
@@ -344,7 +350,7 @@ function pageArgent(X) {
   const t = X.payP.reduce((s, p) => s + p.gnf, 0);
   const lib = { '7': '7 derniers jours', '30': '30 derniers jours', '90': '3 derniers mois', tout: 'depuis le début' }[S.per];
   return `${filtres(1)}
-  <div class="g21">${blocHero(X, 'Encaissé · ' + lib, t, X.payP.length ? `${pl(X.payP.length, 'paiement')} · panier moyen ${F(t / X.payP.length)} GNF` : 'Aucun vrai paiement sur cette période')}${kpi(`Encaissé en ${MOIS[X.now.getMonth()].replace('.', '')}`, F(X.mois), 'GNF', X.moisPrec ? `Mois dernier : ${F(X.moisPrec)} GNF` : 'Rien le mois dernier')}</div>
+  <div class="g21">${blocHero(X, 'Encaissé · ' + lib, t, X.payP.length ? `Panier moyen ${F(t / X.payP.length)} GNF` : 'Aucun vrai paiement sur cette période', X.payP.length)}${kpi(`Encaissé en ${MOIS[X.now.getMonth()].replace('.', '')}`, F(X.mois), 'GNF', X.moisPrec ? `Mois dernier : ${F(X.moisPrec)} GNF` : 'Rien le mois dernier')}</div>
   ${blocRevenus(X, 220)}
   <div class="g11">${blocRepartition(X, 'formule', 'Revenu par formule')}${blocRepartition(X, 'moyen', 'Moyens de paiement')}</div>
   ${blocDerniers(X, 0, 1)}`;

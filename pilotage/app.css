@@ -222,3 +222,14 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .ct h3{font-family:Poppins,Inter,sans-serif;font-weight:600}
 @media (max-width:1023px){.shero{grid-template-columns:46px 1fr auto;gap:12px}.sh-ic{width:46px;height:46px}.shero .btn span{display:none}.shero .btn{padding:9px}.shero b{font-size:16.5px}}
 @media (max-width:1023px){.g-kpi{display:flex;flex-direction:column;gap:12px}}
+
+/* Carte héro : option D (anneau) */
+.heroD{display:grid;grid-template-columns:1fr 112px;gap:12px;align-items:center;padding:20px}
+.heroD .v{margin:6px 0 12px}
+.hd-l{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.hd-l span{display:flex;align-items:center;gap:9px}.hd-l em{font-style:normal;color:rgba(255,255,255,.85)}
+.hd-l b{margin-left:auto;font-weight:700}
+.hd-l img{background:#fff}
+.hd-d{margin-top:12px;font-size:12px}
+.hd-r{width:112px;height:112px;position:relative}
+@media (min-width:1024px){.heroD{grid-template-columns:1fr 120px}.hd-r{width:120px;height:120px}}

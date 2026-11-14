@@ -462,8 +462,41 @@ function blocSanteApp(k, nom, a) {
   const mes = (a.jours || []).filter(j => j !== null && j !== undefined); const dispo = mes.length ? Math.round(mes.reduce((s, j) => s + j, 0) / mes.length * 1000) / 10 : null;
   return `<div class="card sapp"><div class="sa-h">${B(k, 40)}<div><b>${nom}</b><small>${k === 'fixpro' ? 'fixproguinee.com' : 'scolaris-murex.vercel.app'}</small></div><span class="tag ${cl}"><i class="dot puls" style="background:${c}"></i>${a.statut === 'ok' ? 'En ligne' : lib}</span></div>
   <div class="sa-st"><div><span>Réponse</span><b class="num">${a.ms ? a.ms + ' ms' : '—'}</b></div><div><span>Disponibilité${mes.length && mes.length < 30 ? ` · ${mes.length} j` : ' 30 j'}</span><b class="num">${dispo === null ? '—' : String(dispo).replace('.', ',') + ' %'}</b></div><div><span>Erreurs 24 h</span><b class="num ${a.erreurs ? 'dn' : ''}">${a.erreurs === undefined ? '—' : F(a.erreurs)}</b></div></div>
+  ${blocPouls(k, a)}${a.bd ? blocBD(a.bd) : ''}
   ${barresDispo(a.jours)}
   <div class="sa-f">${I.fusee}<span>${a.deploy ? `Dernière mise en ligne <b class="${a.deploy.ok ? 'up' : 'dn'}">${a.deploy.ok ? 'réussie' : 'échouée'}</b> · ${ilYa(a.deploy.quand)}` : 'Mise en ligne : —'}</span></div></div>`;
+}
+function blocPouls(k, a) {
+  const P = ((S.pouls || {})[k] || []); const w = 300, h = 46;
+  const vals = P.map(v => v === null ? null : v); const ok = vals.filter(v => v !== null);
+  const lo = ok.length ? Math.min(...ok) * 0.7 : 0, hi = ok.length ? Math.max(...ok) * 1.15 : 1; const st = w / Math.max(vals.length - 1, 1);
+  const pts = vals.map((v, i) => v === null ? null : [vals.length === 1 ? w : i * st, h - 6 - ((v - lo) / Math.max(hi - lo, 1)) * (h - 12)]);
+  let d = ''; pts.forEach((p, i) => { if (p) d += (d && pts[i - 1] ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1); });
+  const der = ok.length ? ok[ok.length - 1] : null; const lent = der !== null && der > 3000; const col = der === null && P.length ? '#F04438' : lent ? '#F79009' : '#12B76A';
+  const last = pts.filter(Boolean).slice(-1)[0];
+  return `<div class="pouls"><div class="pl-h"><span><i class="pl-dot" style="--pc:${col}"></i>Pouls en direct</span><b class="num">${der !== null ? der + ' ms' : (P.length ? 'injoignable' : '…')}</b></div>
+  <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none"><path d="M0,${h - 6} H${w}" stroke="#EEF1F6" stroke-dasharray="3 4"/>${d ? `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : ''}${last ? `<circle cx="${last[0] - 3}" cy="${last[1]}" r="3.5" fill="${col}"/>` : ''}</svg>
+  <div class="pl-b"><span>vérifié toutes les 20 s</span><span>${ok.length ? 'moyenne ' + Math.round(ok.reduce((x, y) => x + y, 0) / ok.length) + ' ms' : ''}</span></div></div>`;
+}
+function blocBD(b) {
+  const lim = b.limite_mo || 500, p = Math.min(100, b.taille_mo / lim * 100), col = p > 85 ? '#F04438' : p > 65 ? '#F79009' : '#2F5BF5';
+  return `<div class="bdx"><div class="pl-h"><span>${I.bd}Base de données</span><b class="num">${String(b.taille_mo).replace('.', ',')} Mo <small>/ ${lim} Mo</small></b></div><div class="bar" style="height:8px"><i style="width:${Math.max(p, 1.5)}%;background:${col}"></i></div><div class="pl-b"><span>${Math.round(100 - p)} % de place libre (offre gratuite)</span><span>${b.connexions !== undefined ? b.connexions + ' connexions' : ''}</span></div></div>`;
+}
+function blocSecurite(X) {
+  const sec = (X.d.sante || {}).securite; if (!sec) return '';
+  const apps = [['scolaris', 'Scolaris'], ['fixpro', 'FixPro']].filter(([k]) => (S.quoi === 'tous' || S.quoi === k) && sec[k]);
+  const acor = apps.flatMap(([k, n]) => (sec[k].a_corriger || []).map(x => ({ ...x, app: n, k })));
+  const normaux = apps.reduce((t, [k]) => t + (sec[k].normaux || 0), 0);
+  const col = acor.length ? '#F79009' : '#12B76A';
+  return `<div class="card"><div class="ct"><h3>Sécurité</h3><span class="tag ${acor.length ? 'or' : 'ok'}">${acor.length ? pl(acor.length, 'point à corriger', 'points à corriger') : 'Rien à corriger'}</span></div>
+  <div class="secx"><div class="sx-ic" style="--xc:${col}">${I.cadenasI}</div><div><b>${F(normaux + acor.length)} contrôles passés</b><small>${F(normaux)} conformes · ${acor.length} à corriger · vérifié par Supabase</small></div></div>
+  ${acor.map(x => `<div class="row rw">${B(x.k, 32)}<div><b>${esc(x.titre)}</b><small>${esc(x.detail)}</small></div><span class="tag or">${x.app}</span></div>`).join('')}</div>`;
+}
+function blocErreurs(X) {
+  const sa = X.d.sante || {}; const L = [];
+  [['fixpro', 'FixPro'], ['scolaris', 'Scolaris']].forEach(([k, n]) => { if (S.quoi === 'tous' || S.quoi === k) ((sa[k] || {}).erreurs_liste || []).forEach(e => L.push({ ...e, k, n })); });
+  L.sort((a, b) => D(b.quand) - D(a.quand));
+  return `<div class="card"><div class="ct"><h3>Dernières erreurs</h3><span class="s">24 h</span></div>${L.length ? L.slice(0, 8).map(e => `<div class="row">${B(e.k, 32)}<div><b>${esc(e.message || 'Erreur')}</b><small>${esc(e.n)}${e.page ? ' · ' + esc(e.page) : ''}</small></div><div class="r"><small style="color:var(--m2)">${ilYa(e.quand)}</small></div></div>`).join('') : `<div class="vide-g"><div class="vg-ic" style="background:#ECFDF3;color:#079455">${I.vert}</div><b>Aucune erreur</b><span>Aucun utilisateur n'a rencontré de bug ces dernières 24 h.</span></div>`}</div>`;
 }
 function pageSante(X) {
   const H = santeX(X);
@@ -471,12 +504,16 @@ function pageSante(X) {
   <div class="g11">${H.apps.map(([k, n, a]) => blocSanteApp(k, n, a)).join('')}</div>
   <div class="g11"><div class="card"><div class="ct"><h3>Services</h3><span class="s">${H.services.filter(x => x.etat === 'ok').length}/${H.services.length} opérationnels</span></div>
   ${H.services.map(x => { const [c, lib, cl] = ETAT[x.etat]; return `<div class="row"><span class="ico" style="background:${c}1A;color:${c}">${I[x.k] || I.bd}</span><div><b>${esc(x.nom)}</b><small>${esc(x.info)}</small></div><span class="tag ${cl}">${lib}</span></div>`; }).join('')}</div>
-  <div class="card"><div class="ct"><h3>Incidents récents</h3><span class="s">7 jours</span></div>${H.incidents.length ? H.incidents.map(i => `<div class="row"><span class="ico" style="background:${ETAT[i.etat || 'att'][0]}1A;color:${ETAT[i.etat || 'att'][0]}">${i.etat === 'ko' ? I.rouge : I.att}</span><div><b>${esc(i.titre)}</b><small>${esc(i.detail || '')}</small></div><div class="r"><small style="color:var(--m2)">${ilYa(i.quand)}</small></div></div>`).join('') : `<div class="vide-g"><div class="vg-ic" style="background:#ECFDF3;color:#079455">${I.vert}</div><b>Aucun incident</b><span>Pas de panne ni d'erreur grave ces 7 derniers jours.</span></div>`}</div></div>`;
+  <div class="col">${blocSecurite(X)}${blocErreurs(X)}</div></div>
+  <div class="g11"><div class="card"><div class="ct"><h3>Incidents récents</h3><span class="s">7 jours</span></div>${H.incidents.length ? H.incidents.map(i => `<div class="row"><span class="ico" style="background:${ETAT[i.etat || 'att'][0]}1A;color:${ETAT[i.etat || 'att'][0]}">${i.etat === 'ko' ? I.rouge : I.att}</span><div><b>${esc(i.titre)}</b><small>${esc(i.detail || '')}</small></div><div class="r"><small style="color:var(--m2)">${ilYa(i.quand)}</small></div></div>`).join('') : `<div class="vide-g"><div class="vg-ic" style="background:#ECFDF3;color:#079455">${I.vert}</div><b>Aucun incident</b><span>Pas de panne ni d'erreur grave ces 7 derniers jours.</span></div>`}</div></div>`;
 }
 async function pinger() {
   const t = async u => { const d = performance.now(); try { await fetch(u, { mode: 'no-cors', cache: 'no-store' }); return { ok: true, ms: Math.max(1, Math.round(performance.now() - d)) }; } catch (e) { return { ok: false }; } };
   const [fx, sc] = await Promise.all([t(LIEN.fixpro + '/?ping=' + Date.now()), t('https://scolaris-murex.vercel.app/?ping=' + Date.now())]);
-  S.ping = { fixpro: fx, scolaris: sc }; S.pingT = new Date().toISOString(); rendre();
+  S.ping = { fixpro: fx, scolaris: sc }; S.pingT = new Date().toISOString();
+  S.pouls = S.pouls || { fixpro: [], scolaris: [] };
+  [['fixpro', fx], ['scolaris', sc]].forEach(([k, p]) => { S.pouls[k].push(p.ok ? p.ms : null); if (S.pouls[k].length > 24) S.pouls[k].shift(); });
+  rendre();
 }
 function rendre() {
   const y = window.scrollY;
@@ -524,6 +561,7 @@ async function activer(e) {
 window.addEventListener('hashchange', () => { S.page = (location.hash.slice(1) || 'accueil'); if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; } window.scrollTo(0, 0); rendre(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.session && (!S.vu || Date.now() - S.vu > 6e4)) charger(true); });
 setInterval(() => { if (!document.hidden && S.session) charger(true); }, 5 * 6e4);
+setInterval(() => { if (!document.hidden && S.session && S.page === 'sante') pinger(); }, 20000);
 
 /* ---------- démarrage ---------- */
 (function () {

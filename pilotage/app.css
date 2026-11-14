@@ -252,3 +252,16 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .dispo.scan i.v{animation:vivre 3.6s ease-in-out infinite;animation-delay:calc(var(--i) * .07s)}
 @keyframes vivre{0%,100%{filter:none}45%{filter:brightness(1.18) saturate(1.1)}}
 @media (prefers-reduced-motion:reduce){.dispo.scan i{animation:none!important}}
+
+/* Pouls en direct + base de données */
+.pouls,.bdx{margin:12px 0;padding:12px;border-radius:14px;background:#F7F9FD;border:1px solid #EEF1F6}
+.pl-h{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--m);margin-bottom:6px}
+.pl-h span{display:flex;align-items:center;gap:7px}.pl-h svg{width:15px;height:15px;color:#2F5BF5}
+.pl-h b{font-size:14px;color:var(--t)}.pl-h b small{font-size:11.5px;color:var(--m2);font-weight:500}
+.pl-b{display:flex;justify-content:space-between;font-size:11px;color:var(--m2);margin-top:6px}
+.pl-dot{width:8px;height:8px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 0 var(--pc);animation:battre 1.6s infinite}
+@keyframes battre{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pc) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.secx{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--l2);margin-bottom:4px}
+.sx-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--xc);background:color-mix(in srgb,var(--xc) 13%,#fff)}.sx-ic svg{width:22px;height:22px}
+.secx b{font-size:14.5px;display:block}.secx small{font-size:12px;color:var(--m)}
+.row.rw b{white-space:normal}.row.rw small{display:block}

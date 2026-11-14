@@ -245,3 +245,10 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .sg-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .sg-c b{font:700 24px Inter;letter-spacing:-.03em;color:#0B1424}.sg-c small{font-size:11px;color:var(--m);margin-top:-2px}
 @media (max-width:1023px){.shero{grid-template-columns:92px 1fr auto!important}.sh-g{width:92px;height:92px}.sg-c b{font-size:21px}}
+
+/* Barres de disponibilité : remplissage bleu continu (surveillance en cours) */
+.dispo.scan i.n{animation:remplir 3.6s ease-in-out infinite;animation-delay:calc(var(--i) * .07s)}
+@keyframes remplir{0%,8%{background:#E4E8F0}22%,70%{background:linear-gradient(180deg,#5B8CFF,#2F5BF5)}88%,100%{background:#E4E8F0}}
+.dispo.scan i.v{animation:vivre 3.6s ease-in-out infinite;animation-delay:calc(var(--i) * .07s)}
+@keyframes vivre{0%,100%{filter:none}45%{filter:brightness(1.18) saturate(1.1)}}
+@media (prefers-reduced-motion:reduce){.dispo.scan i{animation:none!important}}

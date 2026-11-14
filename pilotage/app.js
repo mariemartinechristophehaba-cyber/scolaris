@@ -442,7 +442,8 @@ function santeX(X) {
 function barresDispo(jours) {
   const L = jours && jours.length ? jours.slice(-30) : [];
   const vides = 30 - L.length;
-  return `<div class="dispo">${Array.from({ length: vides }, () => '<i class="n"></i>').join('')}${L.map(j => `<i class="${j === 1 ? 'v' : j === 0 ? 'r' : j === 0.5 ? 'o' : 'n'}"></i>`).join('')}</div><div class="dispo-l"><span>il y a 30 j</span><span>aujourd'hui</span></div>`;
+  const cls = [...Array.from({ length: vides }, () => 'n'), ...L.map(j => j === 1 ? 'v' : j === 0 ? 'r' : j === 0.5 ? 'o' : 'n')];
+  return `<div class="dispo scan">${cls.map((c, i) => `<i class="${c}" style="--i:${i}"></i>`).join('')}</div><div class="dispo-l"><span>il y a 30 j</span><span>aujourd'hui</span></div>`;
 }
 function blocSanteBandeau(X, compact) {
   const H = santeX(X); const [c, , ] = H.ko ? ETAT.ko : H.pb ? ETAT.att : ETAT.ok;

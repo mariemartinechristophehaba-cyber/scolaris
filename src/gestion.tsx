@@ -191,6 +191,7 @@ function FormClasse({ nv, fermer, fini }: any) {
     await db.ins('classes', { etablissement_id: eid, annee_scolaire_id: annee.id, nom: nom.trim(), niveau_id }); fini();
   }); }}>
     <Champ label="Nom de la classe *"><input value={nom} onChange={(x) => setN(x.target.value)} placeholder="6e A" required /></Champ>
+    {nv.length > 0 && <div className="niv-ch" role="group" aria-label="Niveaux de l'école">{nv.map((n: any) => <button type="button" key={n.id} className={niv === n.nom ? 'on' : ''} aria-pressed={niv === n.nom} onClick={() => setV(niv === n.nom ? '' : n.nom)}>{n.nom}</button>)}</div>}
     <Champ label="Niveau"><input value={niv} onChange={(x) => setV(x.target.value)} list="niv" placeholder="Collège" /><datalist id="niv">{nv.map((n: any) => <option key={n.id} value={n.nom} />)}{['Primaire', 'Collège', 'Lycée'].map((n) => <option key={n} value={n} />)}</datalist></Champ>
     <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}>Enregistrer</button></form></Modale>;
 }

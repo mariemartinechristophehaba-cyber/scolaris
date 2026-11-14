@@ -1,3 +1,4 @@
+import { AideMenu } from './abonnement';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
@@ -134,6 +135,7 @@ function TableauFinance() {
             {d.st.length === 0 ? <p className="note">Définissez les frais de vos classes pour voir ce classement.</p> : <ul className="rangs">{d.st.map((c: any) => { const t = Math.round(c.taux_recouvrement); return <li key={c.classe_id}><b>{c.nom}</b><div className="barre-p"><i style={{ width: `${t}%` }} /></div><span>{t} %</span></li>; })}</ul>}
           </section>
         </div>
+        <AideMenu carte />
       </>}
     </>;
   }}</Etat></>;

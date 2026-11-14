@@ -89,7 +89,7 @@ function AFaire({ d, s }: any) {
 
 function Vue() {
   const { tableau: q } = useApp();
-  const sq = useQ(() => db.rpc('admin_suivi').catch(() => null), []);
+  const sq = useQ(() => db.rpc('admin_suivi').then((s: any) => s && s.croissance && { ...s, demarrage: s.demarrage || [], sans_ecole: s.sans_ecole || [] }).catch(() => null), []);
   const s: any = sq.data;
   return <Etat q={q}>{(d: any) => {
     const e = d.ecoles; const reglees = Number(e.essai) + Number(e.actif); const pct = e.total ? Math.round((reglees / e.total) * 100) : 0; const pc = (n: number) => (e.total ? Math.round((n / e.total) * 100) : 0);

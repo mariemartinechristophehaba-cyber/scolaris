@@ -9,7 +9,7 @@ import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
-import { Abonnement, BandeauAbonnement, BoutonSupport } from './abonnement';
+import { Abonnement, AideMenu, BandeauAbonnement, BoutonSupport } from './abonnement';
 import { EspaceAdmin } from './admin';
 import { choisirPays } from './lib';
 
@@ -79,6 +79,8 @@ function Coque({ m, annees, recharger, abo }: any) {
   }, [attente, role]);
   const ctx = { abo, eid, etab, role, can, annee, annees, zoneBandeau, zoneFiltres, setAnnee: (id: string) => { setA(id); try { localStorage.setItem('scolaris_annee', id); } catch { /* ignoré */ } }, recharger, majNotif: notif.reload };
   const seg = chemin.split('/').filter(Boolean);
+  // Bouton WhatsApp flottant seulement sur la liste des paramètres (téléphone) : ailleurs il cachait des montants. L'aide reste dans le menu et en bas de l'accueil.
+  const supportFlottant = seg[0] === 'parametres' && !seg[1];
   let page: any = <Tableau />;
   if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
   else if (seg[0] === 'eleves' && seg[1]) page = <DetailEleve id={seg[1]} key={seg[1]} />;
@@ -101,12 +103,12 @@ function Coque({ m, annees, recharger, abo }: any) {
   const nd: any = notif.data || {};
   return (
     <Ctx.Provider value={ctx}>
-      <div className={`app${chemin.startsWith('/abonnement') || (seg[0] === 'parametres' && seg[1]) ? ' plein' : ''}${chemin === '/' || seg[0] === 'tableau' ? ' ondule' : ''}`}>
+      <div className={`app${supportFlottant ? ' avec-support' : ''}${chemin.startsWith('/abonnement') || (seg[0] === 'parametres' && seg[1]) ? ' plein' : ''}${chemin === '/' || seg[0] === 'tableau' ? ' ondule' : ''}`}>
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
           <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle, J, grp], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien></Fragment>; })}</nav>
-          <div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
+          <AideMenu /><div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">
           <div className="lignes" aria-hidden="true" />
@@ -116,10 +118,10 @@ function Coque({ m, annees, recharger, abo }: any) {
             <div className="esp" />
             <SelAnnee className="bureau" />
             <div className="zone-filtres" ref={setZF} />
-            <Lien to={can('directeur', 'comptable', 'caissier') ? '/relances' : '/paiements'} className="cloche" aria-label="Notifications"><PiBellSimpleDuotone aria-hidden="true" />{nd.attente > 0 && <i>{nd.attente > 99 ? '99+' : nd.attente}</i>}</Lien>
+            <AideMenu haut /><Lien to={can('directeur', 'comptable', 'caissier') ? '/relances' : '/paiements'} className="cloche" aria-label="Notifications"><PiBellSimpleDuotone aria-hidden="true" />{nd.attente > 0 && <i>{nd.attente > 99 ? '99+' : nd.attente}</i>}</Lien>
           </header>
           <div className="zone-bandeau" ref={setZB} />
-          <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main><BoutonSupport />
+          <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main>{supportFlottant && <BoutonSupport />}
         </div>
         <BarreBas chemin={chemin} can={can} role={role} ouvrir={() => setO(true)} />
       </div>
@@ -131,16 +133,14 @@ function Espace() {
   const [nouvelle, setNouvelle] = useState(() => { try { return !!sessionStorage.getItem('scolaris_nouvelle'); } catch { return false; } });
   const uid = getSession()?.user?.id;
   const q = useQ(async () => {
-    let l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)&order=cree_le`);
-    if (!l.length) {
-      const md = getSession()?.user?.user_metadata || {}; const nom = md.etablissement;
-      if (nom) { const idE = await db.rpc('creer_etablissement', { p_nom: nom, p_ville: md.ville || null, p_telephone: md.tel_ecole || null, p_email: getSession()?.user?.email || null, p_details: md.eleves ? { pays: md.pays || 'GN', quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null }); const lg = prendreLogo(); if (lg) await db.poserLogo(idE, lg).catch(() => null); l = await db.get(`membres?profil_id=eq.${uid}&actif=is.true&select=role,etablissement_id,etablissements(*)`); }
-    }
-    if (!l.length) return { m: null, annees: [] };
-    choisirPays(l[0].etablissements?.pays || 'GN');
-    const annees = await db.get(`annees_scolaires?etablissement_id=eq.${l[0].etablissement_id}&order=date_debut.desc`);
-    const abo = await db.rpc('abonnement_etat', { p_etab: l[0].etablissement_id }).catch(() => null);
-    return { m: l[0], annees, abo };
+    // Un seul appel réseau (au lieu de 5 à la suite) : plus rapide sur les connexions mobiles.
+    const md = getSession()?.user?.user_metadata || {};
+    const creer = md.etablissement ? { nom: md.etablissement, ville: md.ville || null, telephone: md.tel_ecole || null, email: getSession()?.user?.email || null, details: md.eleves ? { pays: md.pays || 'GN', quartier: md.quartier, eleves: md.eleves, classes: md.classes, niveaux: md.niveaux } : null } : null;
+    const d: any = await db.rpc('demarrage', { p_creer: creer });
+    if (!d?.m) return { m: null, annees: [] };
+    choisirPays(d.m.etablissements?.pays || 'GN');
+    if (d.cree) { const lg = prendreLogo(); if (lg) { const ch = await db.poserLogo(d.m.etablissement_id, lg).catch(() => null); if (ch && d.m.etablissements) d.m.etablissements.logo_chemin = ch; } }
+    return { m: d.m, annees: d.annees || [], abo: d.abo || null };
   }, [uid]);
   if (nouvelle) return <Finalisation pret={!!q.data} erreur={q.erreur} abo={(q.data as any)?.abo} ecole={(q.data as any)?.m?.etablissements} fini={(to: string) => { try { sessionStorage.removeItem('scolaris_nouvelle'); } catch { /* ignoré */ } history.replaceState(null, '', to); setNouvelle(false); }} />;
   if (q.erreur && !q.data) return <main className="pub"><section className="carte-pub"><Logo /><Erreur t={q.erreur} /><button className="btn plein" onClick={q.reload}>Réessayer</button><button className="btn lien" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;

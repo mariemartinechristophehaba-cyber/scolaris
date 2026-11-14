@@ -179,3 +179,12 @@ export function BoutonSupport() {
   const msg = `Bonjour Scolaris, je vous écris depuis l'école ${etab?.nom || ''}. J'ai besoin d'aide : `;
   return <a className="support" href={waScolaris(abo.whatsapp, msg)} target="_blank" rel="noopener noreferrer" aria-label="Écrire au support Scolaris sur WhatsApp"><span className="support-r"><PiWhatsappLogoFill aria-hidden="true" /></span><b>Support</b></a>;
 }
+
+// Lien d'aide dans le menu : toujours accessible, sans rien cacher dans les pages.
+export function AideMenu({ carte, haut }: { carte?: boolean; haut?: boolean }) {
+  const { abo, etab } = useApp();
+  if (!abo?.whatsapp) return null;
+  const msg = `Bonjour Scolaris, je vous écris depuis l'école ${etab?.nom || ''}. J'ai besoin d'aide : `;
+  if (haut) return <a className="aide-haut" href={waScolaris(abo.whatsapp, msg)} target="_blank" rel="noopener noreferrer" title="Support Scolaris sur WhatsApp"><PiWhatsappLogoFill aria-hidden="true" /><span>Aide</span></a>;
+  return <a className={carte ? 'menu-aide aide-carte' : 'menu-aide'} href={waScolaris(abo.whatsapp, msg)} target="_blank" rel="noopener noreferrer"><span className="menu-aide-i"><PiWhatsappLogoFill aria-hidden="true" /></span><span><b>Besoin d'aide ?</b><small>Support Scolaris sur WhatsApp</small></span></a>;
+}

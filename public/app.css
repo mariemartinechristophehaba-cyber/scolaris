@@ -514,3 +514,23 @@ html.modale-ouverte .support{display:none}
   .fin3 .fin-he{height:300px}.fin3 .ric-sp2{flex:0 0 18px}
   .fin3 .ric-ft{position:static;max-width:none;padding:6px 24px 26px;background:none}.fin3 .fin-tk{margin:-44px 24px 0}
 }
+/* Aide WhatsApp dans le menu (remplace le bouton flottant hors accueil) */
+.menu-aide{display:flex;align-items:center;gap:11px;margin:10px 12px 0;padding:11px 12px;border-radius:16px;background:rgba(37,211,102,.12);color:#fff;text-decoration:none;border:1px solid rgba(37,211,102,.28)}
+.menu-aide:hover{background:rgba(37,211,102,.2)}
+.menu-aide-i{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#25D366;color:#fff;font-size:21px}
+.menu-aide b{display:block;font:600 13.5px var(--pop)}.menu-aide small{display:block;margin-top:1px;font-size:11.5px;color:#BFD0F5}
+@media(min-width:861px){.support{display:none}}
+@media(max-width:860px){.app.avec-support .feuille{padding-bottom:84px}}
+/* Choix rapide du niveau dans « Ajouter une classe » */
+.niv-ch{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px}
+.niv-ch button{padding:9px 15px;border-radius:999px;border:1px solid #D5DEF0;background:#fff;color:#0B1F5C;font:600 13.5px var(--pop);cursor:pointer}
+.niv-ch button.on{background:#1557F0;border-color:#1557F0;color:#fff}
+.aide-carte{margin:16px 0 4px;padding:14px 16px;background:#fff;color:#0B1F5C;border:1px solid #CFEFDC;box-shadow:0 10px 24px -18px rgba(11,40,120,.35)}
+.aide-carte:hover{background:#F3FCF7}.aide-carte small{color:#55638A;font-size:12.5px}.aide-carte b{font-size:14.5px}
+@media(min-width:861px){.aide-carte{display:none}}
+.aide-haut{display:none}
+@media(min-width:861px){
+  .menu .menu-aide{display:none}
+  .aide-haut{display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 15px 0 11px;margin-right:10px;border-radius:999px;background:rgba(37,211,102,.16);border:1px solid rgba(37,211,102,.35);color:#fff;font:600 14px var(--pop);text-decoration:none}
+  .aide-haut svg{font-size:21px;color:#3EE07F}.aide-haut:hover{background:rgba(37,211,102,.26)}
+}

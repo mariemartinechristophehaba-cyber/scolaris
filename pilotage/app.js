@@ -359,17 +359,15 @@ function vueConnexion() {
   const act = S.mode === 'activer';
   const champ = (ic, nom, lab, type, ph, auto, oeil) => `<div class="fld"><span class="fi">${ic}</span><label><small>${lab}</small><input name="${nom}" type="${oeil ? (S.oeil ? 'text' : 'password') : type}" ${type === 'email' ? 'inputmode="email" autocapitalize="off"' : ''} autocomplete="${auto}" placeholder="${ph}" required></label>${oeil ? `<button type="button" class="oeil" data-act="oeil" aria-label="Afficher le mot de passe">${I.oeil}</button>` : ''}</div>`;
   const form = act
-    ? `<form class="cx-form" id="fact" autocomplete="on"><h2>Mot de passe</h2><p class="s">Entre le code reçu et choisis ton mot de passe</p>
+    ? `<form class="cx-form" id="fact" autocomplete="on"><h2>Mot de passe</h2>${S.err ? `<p class="s err-l">${esc(S.err)}</p>` : '<p class="s">Entre le code reçu et choisis ton mot de passe</p>'}
     ${champ(I.mail, 'email', 'Identifiant Pilotage', 'email', 'ton identifiant', 'username')}
     ${champ('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h7"/></svg>', 'code', "Code d'activation", 'text', '8 caractères', 'one-time-code')}
     ${champ(I.cadenas, 'mdp', 'Nouveau mot de passe', 'password', '10 caractères minimum', 'new-password', 1)}
-    ${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}
     <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Enregistrement…' : 'Enregistrer et entrer'}</button>
     <p class="sur"><button type="button" class="lien" data-act="mode">← Retour à la connexion</button></p></form>`
-    : `<form class="cx-form" id="fcx" autocomplete="on"><h2>Connexion</h2><p class="s">Accédez à votre tableau de bord</p>
+    : `<form class="cx-form" id="fcx" autocomplete="on"><h2>Connexion</h2>${S.err ? `<p class="s err-l">${esc(S.err)}</p>` : '<p class="s">Accédez à votre tableau de bord</p>'}
     ${champ(I.mail, 'email', 'Identifiant Pilotage', 'email', 'ton identifiant', 'username')}
     ${champ(I.cadenas, 'mdp', 'Mot de passe', 'password', 'Votre mot de passe', 'current-password', 1)}
-    ${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}
     <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Connexion…' : 'Se connecter'}</button>
     <p class="sur"><button type="button" class="lien" data-act="mode">Première connexion ou mot de passe oublié ?</button></p>
     <p class="sur garde" style="margin-top:8px">${I.bouclier}Accès réservé à l'administrateur</p></form>`;
@@ -421,7 +419,7 @@ document.addEventListener('submit', async e => {
   const f = new FormData(e.target); S.err = ''; S.charge = true;
   const btn = e.target.querySelector('.cta'); btn.disabled = true; btn.textContent = 'Connexion…';
   try { await auth({ email: String(f.get('email')).trim(), password: f.get('mdp') }, 'password'); S.charge = false; await charger(); }
-  catch (er) { S.charge = false; S.err = /invalid/i.test(er.message) ? 'E-mail ou mot de passe incorrect.' : er.message; rendre(); const i = document.querySelector('input[name=email]'); if (i) i.value = f.get('email'); }
+  catch (er) { S.charge = false; S.err = /invalid/i.test(er.message) ? 'Identifiant ou mot de passe incorrect. Première fois ? Appuie sur le lien en bas.' : er.message; rendre(); const i = document.querySelector('input[name=email]'); if (i) i.value = f.get('email'); }
 });
 async function activer(e) {
   e.preventDefault(); const f = new FormData(e.target); const email = String(f.get('email')).trim(), mdp = String(f.get('mdp'));
@@ -436,7 +434,7 @@ async function activer(e) {
     S.mode = ''; await auth({ email, password: mdp }, 'password'); S.charge = false; await charger();
   } catch (er) { S.charge = false; S.err = er.message; rendre(); remettre(); }
 }
-window.addEventListener('hashchange', () => { S.page = (location.hash.slice(1) || 'accueil'); window.scrollTo(0, 0); rendre(); });
+window.addEventListener('hashchange', () => { S.page = (location.hash.slice(1) || 'accueil'); if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; } window.scrollTo(0, 0); rendre(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.session && (!S.vu || Date.now() - S.vu > 6e4)) charger(true); });
 setInterval(() => { if (!document.hidden && S.session) charger(true); }, 5 * 6e4);
 
@@ -444,6 +442,7 @@ setInterval(() => { if (!document.hidden && S.session) charger(true); }, 5 * 6e4
 (function () {
   S.session = lire('pilotage_session'); const v = lire('pilotage_vue') || {}; S.quoi = v.quoi || 'tous'; S.per = v.per || 'tout';
   S.page = location.hash.slice(1) || 'accueil';
+  if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; }
   const c = lire('pilotage_cache'); if (S.session && c && c.d) { S.data = c.d; S.vu = new Date(c.t); }
   rendre(); if (S.session) charger(!!S.data);
 })();

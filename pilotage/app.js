@@ -245,7 +245,7 @@ function blocVisiteurs(X, h) {
 function blocSources(X, sz) {
   const L = Object.entries(X.src).map(([k, v]) => ({ k, ...v })).sort((a, b) => (b.argent - a.argent) || (b.visites - a.visites));
   const tot = L.reduce((s, x) => s + x.visites, 0);
-  if (!L.length) return `<div class="card"><div class="ct"><h3>D'où viennent les visiteurs</h3></div><div class="vide"><div class="logos-gris">${['tiktok', 'facebook', 'whatsapp', 'youtube'].map(k => B(k, 34)).join('')}</div><b>Pas encore de données</b>Le suivi des réseaux s'active quand les mises à jour de FixPro et de Scolaris sont publiées.</div></div>`;
+  if (!L.length) return `<div class="card"><div class="ct"><h3>D'où viennent les visiteurs</h3></div><div class="vide"><div class="logos-gris">${['tiktok', 'facebook', 'whatsapp', 'youtube'].map(k => B(k, 34)).join('')}</div><b>Pas encore de visite venant des réseaux</b>Le suivi est actif depuis le 14 nov. Dès que quelqu'un clique sur tes liens TikTok ou Facebook, il apparaît ici${S.quoi !== 'scolaris' ? ' (FixPro : mis à jour chaque heure)' : ''}.</div></div>`;
   return `<div class="card"><div class="ct"><h3>D'où viennent les visiteurs</h3><span class="s">90 jours</span></div>
   <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">${donut(L.filter(x => x.visites).map(x => ({ v: x.visites, c: SOURCES[x.k][1] })), sz, F(tot), 'visites')}
   <div style="flex:1;min-width:150px">${L.slice(0, 6).map(x => `<div style="display:flex;align-items:center;gap:9px;font-size:13px;padding:3px 0">${B(x.k, 22)}<span style="flex:1">${SOURCES[x.k][0]}</span><b class="num">${tot ? Math.round(x.visites / tot * 100) : 0} %</b></div>`).join('')}</div></div></div>`;
@@ -304,12 +304,12 @@ function blocActivite(X) {
 }
 function blocReseauxTable(X) {
   const L = Object.entries(X.src).map(([k, v]) => ({ k, ...v })).sort((a, b) => (b.argent - a.argent) || (b.inscrits - a.inscrits) || (b.visites - a.visites));
-  if (!L.length) return `<div class="card"><div class="ct"><h3>Du réseau au paiement</h3></div><div class="vide"><div class="logos-gris">${['tiktok', 'facebook', 'whatsapp', 'youtube'].map(k => B(k, 34)).join('')}</div><b>En attente des premières données</b>Chaque visite sera rattachée au réseau d'où elle vient (TikTok, Facebook, WhatsApp, YouTube…), puis suivie jusqu'à l'inscription et au paiement.</div></div>`;
+  if (!L.length) return `<div class="card"><div class="ct"><h3>Du réseau au paiement</h3></div><div class="vide"><div class="logos-gris">${['tiktok', 'facebook', 'whatsapp', 'youtube'].map(k => B(k, 34)).join('')}</div><b>En attente des premiers clics</b>Le suivi est actif. Chaque visite est rattachée au réseau d'où elle vient (TikTok, Facebook, WhatsApp, YouTube…), puis suivie jusqu'à l'inscription et au paiement.</div></div>`;
   return `<div class="card"><div class="ct"><h3>Du réseau au paiement</h3><span class="s">90 jours</span></div>${L.map(x => `<div class="row">${B(x.k)}<div><b>${SOURCES[x.k][0]}</b><small>${pl(x.visites, 'visite')} · ${pl(x.inscrits, 'inscrit')} · ${pl(x.payants, 'payant')}</small></div><div class="r num">${F(x.argent)}<small>GNF</small></div></div>`).join('')}</div>`;
 }
 function blocConseil(X) {
   const L = Object.entries(X.src).map(([k, v]) => ({ k, ...v }));
-  let t = "Quand le suivi sera actif, Pilotage te dira quel réseau t'amène des clients <b>qui paient</b>, pas seulement des vues.";
+  let t = "Dès les premiers clics sur tes liens, Pilotage te dira quel réseau t'amène des clients <b>qui paient</b>, pas seulement des vues.";
   if (L.length) { const best = L.slice().sort((a, b) => (b.argent - a.argent) || (b.inscrits - a.inscrits) || (b.visites - a.visites))[0]; const nom = SOURCES[best.k][0];
     t = best.argent ? `<b>${nom}</b> t'a rapporté le plus d'argent (${F(best.argent)} GNF). Publie plus là-bas.` : best.inscrits ? `<b>${nom}</b> t'amène le plus d'inscriptions (${best.inscrits}). Pousse-les vers le paiement.` : `<b>${nom}</b> t'amène le plus de visites. Mets ton lien d'inscription bien en vue.`; }
   return `<div class="card conseil"><b style="font-size:13.5px">💡 Conseil</b><p>${t}</p></div>`;

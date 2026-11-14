@@ -164,4 +164,5 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
   .cta{margin-top:20px;padding:17px}
   .sur{margin-top:14px}
 }
+@media (max-width:1023px){.sur.garde{display:none}.cx-haut{padding-bottom:36px}}
 @media (max-width:1023px) and (max-height:620px){.chips{display:none}.cx-haut{padding-bottom:40px}}

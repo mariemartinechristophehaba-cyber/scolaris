@@ -372,7 +372,7 @@ function vueConnexion() {
     ${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}
     <button class="cta" type="submit" ${S.charge ? 'disabled' : ''}>${S.charge ? 'Connexion…' : 'Se connecter'}</button>
     <p class="sur"><button type="button" class="lien" data-act="mode">Première connexion ou mot de passe oublié ?</button></p>
-    <p class="sur" style="margin-top:8px">${I.bouclier}Accès réservé à l'administrateur</p></form>`;
+    <p class="sur garde" style="margin-top:8px">${I.bouclier}Accès réservé à l'administrateur</p></form>`;
   return `<div class="cx">
   <div class="cx-haut grille"><div><span class="lg-grand">${LOGO(92)}</span><div class="wm-grand">${WM(46, '#fff')}</div><div class="chips"><span class="chip">${B('fixpro', 22)}FixPro Guinée</span><span class="chip">${B('scolaris', 22)}Scolaris</span></div></div></div>
   <div class="cx-gauche grille"><div style="display:flex;align-items:center;gap:14px">${LOGO(52)}${WM(34, '#fff')}</div>

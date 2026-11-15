@@ -332,6 +332,100 @@ function blocConseil(X) {
   return `<div class="card conseil"><b style="font-size:13.5px">💡 Conseil</b><p>${t}</p></div>`;
 }
 
+
+/* ---------- bénéfice réel ---------- */
+function couts(X) {
+  const c = X.d.couts || {}, rg = c.reglages || { gnf_par_usd: 8600, chariow_pct: 15, sms_gnf: 140 };
+  const frais = (c.frais || []).map(f => ({ ...f, gnf: (+f.montant || 0) * (f.devise === 'GNF' ? 1 : +rg.gnf_par_usd) }));
+  const fixes = frais.reduce((s, f) => s + f.gnf, 0);
+  const smsN = {}; (c.sms_mois || []).forEach(x => { smsN[x.mois] = x.n; });
+  const debut = cleMois(D('2026-11-14'));
+  const calc = k => {
+    const encSc = X.pay.filter(p => p.app === 'scolaris' && cleMois(p.date) === k).reduce((s, p) => s + p.gnf, 0);
+    const encFx = X.pay.filter(p => p.app === 'fixpro' && cleMois(p.date) === k).reduce((s, p) => s + p.gnf, 0);
+    const pc = (+rg.chariow_pct || 0) / 100, sms = (smsN[k] || 0) * (+rg.sms_gnf || 0), n = smsN[k] || 0;
+    const sc = encSc - encSc * pc - sms - fixes / 2, fx = encFx - encFx * pc - fixes / 2;
+    const voir = S.quoi === 'tous' ? ['sc', 'fx'] : S.quoi === 'scolaris' ? ['sc'] : ['fx'];
+    const enc = (voir.includes('sc') ? encSc : 0) + (voir.includes('fx') ? encFx : 0);
+    const smsV = voir.includes('sc') ? sms : 0, fix = fixes * voir.length / 2;
+    return { k, encSc, encFx, sc, fx, enc, ch: enc * pc, sms: smsV, n: voir.includes('sc') ? n : 0, fix, reste: enc - enc * pc - smsV - fix };
+  };
+  const now = X.now, mois = [];
+  for (let i = 11; i >= 0; i--) { const k = cleMois(new Date(now.getFullYear(), now.getMonth() - i, 1)); if (k >= debut) mois.push(calc(k)); }
+  return { rg, frais, fixes, mois, cur: mois[mois.length - 1] || calc(cleMois(now)), prec: mois.length > 1 ? mois[mois.length - 2] : null };
+}
+function blocBenefice(X) {
+  const C = couts(X), m = C.cur, now = X.now;
+  const base = Math.max(m.enc, m.ch + m.sms + m.fix, 1);
+  const pct = v => Math.max(0, Math.min(100, v / base * 100));
+  const neg = m.reste < 0; const moins = v => Math.round(v) ? '− ' + F(v) : '0';
+  let gauche = 100;
+  const barre = (v, col) => { const w = pct(v); gauche -= w; return `<div class="bf-b"><i style="left:${Math.max(0, gauche)}%;width:${w}%;background:${col}"></i></div>`; };
+  const enc = `<div class="bf-b"><i style="left:0;width:${pct(m.enc)}%;background:#5B9BFF"></i></div>`;
+  gauche = pct(m.enc);
+  const lCh = barre(m.ch, '#F97066'), lSms = barre(m.sms, '#FDB022'), lFix = barre(m.fix, '#A9B1CE');
+  const reste = `<div class="bf-b"><i style="left:0;width:${neg ? 0 : pct(m.reste)}%;background:#2EE59D"></i></div>`;
+  const diff = C.prec && C.prec.reste ? Math.round((m.reste - C.prec.reste) / Math.abs(C.prec.reste) * 100) : null;
+  const ligne = (lab, b, v, cls) => `<div class="bf-r"><span>${lab}</span>${b}<b class="num ${cls || ''}">${v}</b></div>`;
+  const hero = `<div class="card bf-hero"><div class="lab">Ce qu'il te reste · ${MOIS[now.getMonth()].replace('.', '')} ${now.getFullYear()}</div>
+    <div class="v num ${neg ? 'neg' : ''}">${neg ? '− ' : ''}${F(Math.abs(m.reste))}<small>GNF</small></div>
+    ${diff !== null ? `<span class="bf-up ${diff < 0 ? 'dn' : ''}">${diff >= 0 ? '▲ +' : '▼ '}${diff} % vs ${MOIS[(now.getMonth() + 11) % 12].replace('.', '')}</span>` : `<span class="bf-up neutre">${m.enc ? 'Premier mois suivi' : 'Aucun vrai paiement ce mois-ci'}</span>`}
+    <div class="bf-w">${ligne('Encaissé', enc, F(m.enc))}${ligne(`− Chariow ${F(C.rg.chariow_pct)} %`, lCh, moins(m.ch))}${ligne(`− SMS${m.n ? ` (${F(m.n)})` : ''}`, lSms, moins(m.sms))}${ligne('− Frais fixes', lFix, moins(m.fix))}
+    ${ligne(neg ? '<b>= Il manque</b>' : '<b>= Il reste</b>', reste, (neg ? '− ' : '') + F(Math.abs(m.reste)), neg ? 'rouge' : 'vert')}</div></div>`;
+  const tot = Math.max(1, Math.max(0, m.sc) + Math.max(0, m.fx));
+  const app = (k, nom, encV, net) => `<div class="bf-app">${B(k, 38)}<div class="bf-ai"><b>${nom}</b><small>Encaissé ${F(encV)}</small><div class="bf-mb"><i style="width:${Math.max(0, net) / tot * 100}%;background:${k === 'scolaris' ? '#2F5BF5' : '#1E7BFF'}"></i></div></div>
+    <div class="bf-an"><b class="num ${net < 0 ? 'rouge' : ''}">${net < 0 ? '− ' : ''}${F(Math.abs(net))}</b><small class="${net < 0 ? 'rouge' : 'vert'}">${net > 0 ? Math.round(net / tot * 100) + ' %' : net < 0 ? 'en perte' : '—'}</small></div></div>`;
+  const parApp = `<div class="card"><div class="ct"><h3>Par application</h3><span class="s">après tous les frais</span></div>
+    ${S.quoi !== 'fixpro' ? app('scolaris', 'Scolaris', m.encSc, m.sc) : ''}${S.quoi !== 'scolaris' ? app('fixpro', 'FixPro', m.encFx, m.fx) : ''}</div>`;
+  const vals = C.mois.map(x => x.reste), w = LARG(520), h = 150;
+  const mn = Math.min(0, ...vals), mx = Math.max(1, ...vals), st = vals.length > 1 ? w / (vals.length - 1) : 0;
+  const y = v => 12 + (mx - v) / (mx - mn || 1) * (h - 40);
+  const pts = vals.map((v, i) => [vals.length > 1 ? i * st : w / 2, y(v)]);
+  const dd = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const lab = C.mois.map((x, i) => [i, MOIS[+x.k.slice(5) - 1]]).filter((x, i, a) => a.length < 7 || i === 0 || i === a.length - 1 || i % 3 === 0);
+  const courbe12 = `<div class="card"><div class="ct"><h3>Sur 12 mois</h3><span class="s">ce qu'il te reste chaque mois</span></div>
+    <svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;overflow:visible"><defs><linearGradient id="bfg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#12B76A" stop-opacity=".28"/><stop offset="1" stop-color="#12B76A" stop-opacity="0"/></linearGradient></defs>
+    <line x1="0" x2="${w}" y1="${y(0)}" y2="${y(0)}" stroke="#E4E8F0" stroke-dasharray="4 4"/>
+    ${pts.length > 1 ? `<path d="${dd} L${pts[pts.length - 1][0]},${y(mn)} L0,${y(mn)}Z" fill="url(#bfg)"/><path d="${dd}" fill="none" stroke="#12B76A" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
+    ${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 4.5 : 3}" fill="${vals[i] < 0 ? '#F04438' : '#12B76A'}"/>`).join('')}
+    ${lab.map(([i, t]) => `<text x="${pts[i][0]}" y="${h - 4}" fill="#98A2B3" font-size="11" text-anchor="${pts.length < 2 ? 'middle' : i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle'}">${t}</text>`).join('')}</svg>
+    ${C.mois.length < 2 ? '<div class="sous" style="margin-top:6px">La courbe se remplit mois après mois, depuis novembre 2026.</div>' : ''}</div>`;
+  const fixesCarte = S.editFrais ? editFrais(C) : `<div class="card"><div class="ct"><h3>Frais fixes du mois</h3><button class="bf-mod" data-act="frais">Modifier</button></div>
+    ${C.frais.map(f => `<div class="bf-f"><span>${esc(f.nom)}</span><span class="num">${f.devise === 'USD' ? `<small>${(+f.montant || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} $ · </small>` : ''}${F(f.gnf)}</span></div>`).join('')}
+    <div class="bf-f bf-t"><span>Total</span><span class="num">${F(C.fixes)} GNF</span></div>
+    <div class="sous" style="margin-top:8px">Partagés moitié Scolaris, moitié FixPro · 1 $ = ${F(C.rg.gnf_par_usd)} GNF · Chariow ${F(C.rg.chariow_pct)} % · SMS ${F(C.rg.sms_gnf)} GNF</div></div>`;
+  return `${hero}<div class="g11">${parApp}${courbe12}</div>${fixesCarte}`;
+}
+function editFrais(C) {
+  const L = S.fraisBrouillon || (S.fraisBrouillon = C.frais.map(f => ({ nom: f.nom, montant: f.montant, devise: f.devise })));
+  const R = S.reglBrouillon || (S.reglBrouillon = { ...C.rg });
+  return `<div class="card bf-ed"><div class="ct"><h3>Modifier les frais fixes</h3><span class="s">par mois</span></div>
+    ${L.map((f, i) => `<div class="bf-er"><input data-fr="${i}" data-ch="nom" value="${esc(f.nom)}" placeholder="Nom (ex. Claude)" maxlength="60">
+      <input data-fr="${i}" data-ch="montant" value="${esc(f.montant)}" inputmode="decimal" placeholder="0">
+      <select data-fr="${i}" data-ch="devise"><option value="USD" ${f.devise === 'USD' ? 'selected' : ''}>$</option><option value="GNF" ${f.devise === 'GNF' ? 'selected' : ''}>GNF</option></select>
+      <button data-act="frais-suppr" data-i="${i}" aria-label="Supprimer">✕</button></div>`).join('')}
+    <button class="bf-aj" data-act="frais-ajout">+ Ajouter une ligne</button>
+    <div class="bf-rg"><label><small>1 $ en GNF</small><input data-rg="gnf_par_usd" value="${esc(R.gnf_par_usd)}" inputmode="decimal"></label>
+      <label><small>Chariow (%)</small><input data-rg="chariow_pct" value="${esc(R.chariow_pct)}" inputmode="decimal"></label>
+      <label><small>Prix d'un SMS (GNF)</small><input data-rg="sms_gnf" value="${esc(R.sms_gnf)}" inputmode="decimal"></label></div>
+    ${S.fraisErr ? `<div class="err" style="margin:10px 0 0">${esc(S.fraisErr)}</div>` : ''}
+    <div class="bf-bt"><button class="btn" data-act="frais-annuler">Annuler</button><button class="btn p" data-act="frais-ok" ${S.fraisCharge ? 'disabled' : ''}>${S.fraisCharge ? 'Enregistrement…' : 'Enregistrer'}</button></div></div>`;
+}
+async function enregistrerFrais() {
+  const t = await jeton(); if (!t) return;
+  const num = v => { const n = parseFloat(String(v).replace(/\s/g, '').replace(',', '.')); return isFinite(n) && n >= 0 ? n : 0; };
+  const corps = { p: { frais: S.fraisBrouillon.filter(f => String(f.nom).trim()).map(f => ({ nom: String(f.nom).trim(), montant: num(f.montant), devise: f.devise })), reglages: { gnf_par_usd: num(S.reglBrouillon.gnf_par_usd) || 8600, chariow_pct: Math.min(100, num(S.reglBrouillon.chariow_pct)), sms_gnf: num(S.reglBrouillon.sms_gnf) } } };
+  S.fraisCharge = true; S.fraisErr = ''; rendre();
+  try {
+    const r = await fetch(`${SB}/rest/v1/rpc/pilotage_frais_maj`, { method: 'POST', headers: { apikey: CLE, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.message || 'Erreur ' + r.status);
+    if (S.data) S.data.couts = j;
+    S.editFrais = false; S.fraisBrouillon = null; S.reglBrouillon = null;
+  } catch (e) { S.fraisErr = "Impossible d'enregistrer : " + e.message; }
+  S.fraisCharge = false; rendre();
+}
+
 /* ---------- pages ---------- */
 const PAGES = [['accueil', 'Tableau de bord', 'Accueil'], ['argent', 'Argent', 'Argent'], ['reseaux', 'Réseaux', 'Réseaux'], ['sante', 'Santé', 'Santé'], ['activite', 'Activité', 'Activité'], ['reglages', 'Réglages', 'Réglages']];
 function filtres(per) {
@@ -349,7 +443,7 @@ function pageAccueil(X) {
 function pageArgent(X) {
   const t = X.payP.reduce((s, p) => s + p.gnf, 0);
   const lib = { '7': '7 derniers jours', '30': '30 derniers jours', '90': '3 derniers mois', tout: 'depuis le début' }[S.per];
-  return `${filtres(1)}
+  return `${filtres(1)}${blocBenefice(X)}
   <div class="g21">${blocHero(X, 'Encaissé · ' + lib, t, X.payP.length ? `Panier moyen ${F(t / X.payP.length)} GNF` : 'Aucun vrai paiement sur cette période', X.payP.length)}${kpi(`Encaissé en ${MOIS[X.now.getMonth()].replace('.', '')}`, F(X.mois), 'GNF', X.moisPrec ? `Mois dernier : ${F(X.moisPrec)} GNF` : 'Rien le mois dernier')}</div>
   ${blocRevenus(X, 220)}
   <div class="g11">${blocRepartition(X, 'formule', 'Revenu par formule')}${blocRepartition(X, 'moyen', 'Moyens de paiement')}</div>
@@ -528,9 +622,19 @@ document.addEventListener('click', e => {
   else if (b.dataset.per) { S.per = b.dataset.per; store('pilotage_vue', { quoi: S.quoi, per: S.per }); rendre(); }
   else if (b.dataset.act === 'maj') charger();
   else if (b.dataset.act === 'ping') pinger();
+  else if (b.dataset.act === 'frais') { S.editFrais = true; S.fraisBrouillon = null; S.reglBrouillon = null; S.fraisErr = ''; rendre(); }
+  else if (b.dataset.act === 'frais-annuler') { S.editFrais = false; S.fraisErr = ''; rendre(); }
+  else if (b.dataset.act === 'frais-ajout') { S.fraisBrouillon.push({ nom: '', montant: 0, devise: 'USD' }); rendre(); }
+  else if (b.dataset.act === 'frais-suppr') { S.fraisBrouillon.splice(+b.dataset.i, 1); rendre(); }
+  else if (b.dataset.act === 'frais-ok') enregistrerFrais();
   else if (b.dataset.act === 'sortir') deconnexion();
   else if (b.dataset.act === 'mode') { S.mode = S.mode === 'activer' ? '' : 'activer'; S.err = ''; S.oeil = false; rendre(); }
   else if (b.dataset.act === 'oeil') { const i = document.querySelector('input[name=mdp]'); S.oeil = !S.oeil; if (i) i.type = S.oeil ? 'text' : 'password'; }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.fr !== undefined && S.fraisBrouillon) S.fraisBrouillon[+t.dataset.fr][t.dataset.ch] = t.value;
+  else if (t.dataset.rg && S.reglBrouillon) S.reglBrouillon[t.dataset.rg] = t.value;
 });
 document.addEventListener('submit', async e => {
   if (e.target.id === 'fact') return activer(e);

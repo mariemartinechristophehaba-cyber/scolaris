@@ -289,3 +289,4 @@ svg text{font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
 .bf-rg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--l2)}.bf-rg small{display:block;font-size:11.5px;color:var(--m);margin-bottom:4px}
 .bf-bt{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 @media(min-width:1024px){.bf-hero{display:grid;grid-template-columns:1fr 1.25fr;gap:28px;align-items:center;padding:24px}.bf-hero .bf-w{margin-top:0;grid-column:2;grid-row:1/4}.bf-hero .v{font-size:40px}}
+.ef-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}.ef-h .v{font-size:30px;font-weight:700}.ef-h .v small{font-size:14px;color:var(--m2);font-weight:600}

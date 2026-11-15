@@ -394,7 +394,7 @@ function blocBenefice(X) {
     ${C.frais.map(f => `<div class="bf-f"><span>${esc(f.nom)}</span><span class="num">${f.devise === 'USD' ? `<small>${(+f.montant || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} $ · </small>` : ''}${F(f.gnf)}</span></div>`).join('')}
     <div class="bf-f bf-t"><span>Total</span><span class="num">${F(C.fixes)} GNF</span></div>
     <div class="sous" style="margin-top:8px">Partagés moitié Scolaris, moitié FixPro · 1 $ = ${F(C.rg.gnf_par_usd)} GNF · Chariow ${F(C.rg.chariow_pct)} % · SMS ${F(C.rg.sms_gnf)} GNF</div></div>`;
-  return `${hero}<div class="g11">${parApp}${courbe12}</div>${fixesCarte}`;
+  return `${hero}<div class="g11">${parApp}${courbe12}</div><div class="g11">${fixesCarte}${blocFondatrices(X)}</div>`;
 }
 function editFrais(C) {
   const L = S.fraisBrouillon || (S.fraisBrouillon = C.frais.map(f => ({ nom: f.nom, montant: f.montant, devise: f.devise })));
@@ -424,6 +424,16 @@ async function enregistrerFrais() {
     S.editFrais = false; S.fraisBrouillon = null; S.reglBrouillon = null;
   } catch (e) { S.fraisErr = "Impossible d'enregistrer : " + e.message; }
   S.fraisCharge = false; rendre();
+}
+
+function blocFondatrices(X) {
+  const f = X.sc.fondatrices; if (!f || S.quoi === 'fixpro') return '';
+  const L = f.liste || [], n = L.length, P = Math.max(1, f.places), C = 2 * Math.PI * 15, v = n / P * C;
+  return `<div class="card"><div class="ct"><h3>★ Écoles fondatrices</h3><span class="tag ${f.actif ? 'or' : 'gr'}">${f.actif ? `Code ${esc(f.code)} · −${f.remise} %` : 'Offre arrêtée'}</span></div>
+  <div class="ef-h"><div><div class="v num">${n}<small> / ${F(f.places)} places</small></div><div class="sous">${F(Math.max(0, f.places - n))} places restantes · 12 mois par école</div></div>
+  <svg viewBox="0 0 36 36" width="74" height="74"><circle cx="18" cy="18" r="15" fill="none" stroke="#F0F2F7" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="#E8732C" stroke-width="4" stroke-linecap="round" stroke-dasharray="${Math.max(n ? v : 0, 0.01)} ${C}" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="8" font-weight="700" fill="#0B1424">${Math.round(n / P * 100)} %</text></svg></div>
+  ${n ? L.map(e => `<div class="row"><span class="ico" style="background:#FFF1E2;color:#B25405;font-weight:700">${esc(initiales(e.nom))}</span><div><b>${esc(e.nom)}</b><small>${e.eleves ? F(e.eleves) + ' élèves · ' : ''}${e.dernier ? (e.dernier.periode === 'an' ? 'annuel' : 'mensuel') + ' · ' : ''}depuis le ${jourCourt(D(e.debut))}</small></div><div class="r num">${e.dernier ? F(e.dernier.gnf) : '—'}<small style="color:#079455">✓ payé</small></div></div>`).join('')
+    : `<div class="vide" style="padding:8px">Aucune école fondatrice pour l'instant. Les 20 premières écoles qui paient avec le code ${esc(f.code)} apparaîtront ici.</div>`}</div>`;
 }
 
 /* ---------- pages ---------- */

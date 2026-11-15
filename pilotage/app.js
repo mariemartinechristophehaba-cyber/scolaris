@@ -464,17 +464,51 @@ function pageArgent(X) {
 function pageReseaux(X) { return `${filtres()}<div class="g11">${blocSources(X, 160)}<div class="col">${blocConseil(X)}${blocTaches(X).includes('Suivi des réseaux') ? '' : ''}</div></div>${blocReseauxTable(X)}${blocVisiteurs(X, 160)}`; }
 function pageActivite(X) { return `${filtres()}<div class="g11"><div class="col">${blocTaches(X)}${blocRelancer(X)}</div>${blocActivite(X)}</div>`; }
 function pageReglages(X) {
-  const fx = X.fx.maj_le ? D(X.fx.maj_le) : null;
-  return `<div class="card reglages">
-    <div style="display:flex;align-items:center;gap:12px;padding-bottom:14px"><span class="av" style="background:#E0E8FF;color:var(--p);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700">${esc((S.session.email || 'A')[0].toUpperCase())}</span><div><b style="font-size:14.5px">Administrateur</b><div class="sous">${esc(S.session.email || '')}</div></div></div>
-    <button data-act="maj"><span>Actualiser les chiffres</span>${I.maj}</button>
-    <a href="${LIEN.scolaris}" target="_blank" rel="noopener"><span>Ouvrir l'admin Scolaris</span>${I.ext}</a>
-    <a href="${LIEN.fixpro}" target="_blank" rel="noopener"><span>Ouvrir FixPro</span>${I.ext}</a>
-    <button data-act="sortir" style="color:var(--ko)"><span>Se déconnecter</span>${I.sortir}</button></div>
-  <div class="card"><div class="ct"><h3>À propos des chiffres</h3></div><div style="font-size:13px;color:var(--m);line-height:1.6">
-    • Scolaris est lu <b>en direct</b>.<br>• FixPro est recopié <b>toutes les heures</b>${fx ? ` (dernière copie ${ilYa(fx)}, à ${heure(fx)})` : ''}.<br>
-    • Les paiements de test et les écoles de test (créées avant le 14 nov. 2026) ne sont pas comptés.<br>• Les montants Scolaris (FCFA) sont convertis en GNF.</div></div>
-  <div class="pied">Pilotage · FixPro Guinée & Scolaris</div>`;
+  const fx = X.fx.maj_le ? D(X.fx.maj_le) : null, C = couts(X), H = santeX(X), fo = X.sc.fondatrices;
+  const ligne = (ic, titre, sous, droite, attr) => `<${attr ? 'a ' + attr : 'div'} class="rp-l">${ic ? `<span class="rp-i">${ic}</span>` : ''}<div class="rp-x"><b>${titre}</b>${sous ? `<small>${sous}</small>` : ''}</div>${droite || ''}</${attr ? 'a' : 'div'}>`;
+  const etat = (ok, t) => `<span class="rp-s ${ok ? '' : 'ko'}"><i></i>${t}</span>`;
+  const val = v => `<span class="rp-v num">${v}</span>`, chev = '<span class="rp-c">›</span>';
+  const prises = fo ? (fo.liste || []).length : 0, P = fo ? Math.max(1, fo.places) : 1, R = 2 * Math.PI * 16;
+  const app = (k, nom, dom, l1, l2, lien) => { const a = (H.apps.find(x => x[0] === k) || [])[2] || {}; const ok = a.statut !== 'ko';
+    return `<div class="rp-app"><div class="rp-ah">${B(k, 44)}<div><b>${nom}</b><small>${dom}</small></div></div>
+      <div class="rp-am"><div><span>${l1[0]}</span><b class="num">${l1[1]}</b></div><div><span>${l2[0]}</span><b class="num">${l2[1]}</b></div></div>
+      <div class="rp-af">${etat(ok, ok ? `En ligne${a.ms ? ' · ' + a.ms + ' ms' : ''}` : 'Hors ligne')}<a href="${lien}" target="_blank" rel="noopener">Ouvrir ${I.ext}</a></div></div>`; };
+  return `<div class="rp">
+  <section class="card rp-moi"><div class="rp-av">${esc(initiales(X.d.moi))}</div><div class="rp-mi"><b>${esc(X.d.moi || 'Administrateur')}</b><small>Propriétaire · FixPro Guinée & Scolaris</small></div>
+    <span class="rp-bad">${I.bouclier}Protégé</span>
+    <div class="rp-st"><div><b class="num">2</b><span>applications</span></div><div><b class="num">${F(X.ecoles.length)}</b><span>école${X.ecoles.length > 1 ? 's' : ''}</span></div><div><b class="num">${F(X.comptesFx)}</b><span>comptes</span></div><div><b class="num">${F(X.actifsSc + X.actifsFx)}</b><span>abonnés</span></div></div></section>
+
+  <h2 class="rp-h">Applications</h2>
+  <div class="rp-apps">${app('scolaris', 'Scolaris', 'scolaris-murex.vercel.app', ['Écoles', F(X.ecoles.length)], ['Payantes', F(X.actifsSc)], LIEN.scolaris)}
+    ${app('fixpro', 'FixPro Guinée', 'fixproguinee.com', ['Comptes', F(X.comptesFx)], ['Abonnés', F(X.actifsFx)], LIEN.fixpro)}</div>
+
+  <div class="g11"><div class="col">
+  <h2 class="rp-h">Coûts et tarifs <a href="#argent" data-act="frais" class="rp-mod">Modifier</a></h2>
+  <section class="card rp-g">
+    ${ligne(I.argent, 'Frais fixes', 'Par mois · partagés entre les 2 applications', val(F(C.fixes) + ' GNF'))}
+    ${C.frais.map(f => `<div class="rp-sub"><span>${esc(f.nom)}</span><span class="num">${+f.montant ? (f.devise === 'USD' ? (+f.montant).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' $' : F(f.montant) + ' GNF') : 'Gratuit'}</span></div>`).join('')}
+    ${ligne(I.pieceI, 'Commission Chariow', 'Sur chaque paiement', val(F(C.rg.chariow_pct) + ' %'))}
+    ${ligne(I.sms, 'Coût d\'un SMS', 'Nimba SMS', val(F(C.rg.sms_gnf) + ' GNF'))}
+    ${ligne(I.globe2, 'Taux de change', '1 dollar américain', val(F(C.rg.gnf_par_usd) + ' GNF'))}</section>
+  ${fo ? `<h2 class="rp-h">Offre de lancement</h2>
+  <section class="card rp-g rp-of"><svg viewBox="0 0 40 40" width="58" height="58"><circle cx="20" cy="20" r="16" fill="none" stroke="#EEF1F6" stroke-width="5"/><circle cx="20" cy="20" r="16" fill="none" stroke="#2F5BF5" stroke-width="5" stroke-linecap="round" stroke-dasharray="${Math.max(prises / P * R, .01)} ${R}" transform="rotate(-90 20 20)"/></svg>
+    <div class="rp-x"><b>Scolaris −${fo.remise} % · ${F(fo.places)} premières écoles</b><small>${F(prises)} / ${F(fo.places)} places prises · prix réduit 12 mois par école</small></div>${etat(fo.actif, fo.actif ? 'Active' : 'Arrêtée')}</section>` : ''}
+  </div><div class="col">
+  <h2 class="rp-h">Surveillance</h2>
+  <section class="card rp-g">
+    ${ligne(I.activite, 'Notifications', 'Inscriptions, paiements, pannes', etat(true, 'Activées'))}
+    ${ligne(I.sante, 'État des applications', `Contrôle toutes les heures${H.verif ? ' · ' + ilYa(H.verif) : ''}`, etat(!H.ko, H.ko ? 'Incident' : 'Normal') + chev, 'href="#sante"')}
+    ${ligne(I.reseaux, 'Suivi des réseaux', 'TikTok · Facebook · WhatsApp', etat(true, 'Actif') + chev, 'href="#reseaux"')}</section>
+  <h2 class="rp-h">Sécurité et données</h2>
+  <section class="card rp-g">
+    ${ligne(I.cadenasI, 'Accès', 'Identifiant et mot de passe personnels · compte séparé', etat(true, 'Protégé'))}
+    ${ligne(I.bd, 'Scolaris', 'Données lues en direct', etat(true, 'Direct'))}
+    ${ligne(I.copie, 'FixPro', fx ? `Copie toutes les heures · ${ilYa(fx)}` : 'Copie toutes les heures', val(fx ? heure(fx) : '—'))}
+    ${ligne(I.badge, 'Données de test', "Exclues avant le 14 nov. 2026", etat(true, 'Exclues'))}</section>
+  </div></div>
+
+  <div class="rp-act"><button class="btn" data-act="maj">${I.maj}Actualiser${S.vu ? ' · ' + heure(S.vu) : ''}</button><button class="btn rp-out" data-act="sortir">${I.sortir}Se déconnecter</button></div>
+  <div class="pied">${LOGO(20)}<span>Pilotage · version 2026.11</span></div></div>`;
 }
 
 /* ---------- rendu ---------- */
@@ -634,7 +668,7 @@ document.addEventListener('click', e => {
   else if (b.dataset.per) { S.per = b.dataset.per; store('pilotage_vue', { quoi: S.quoi, per: S.per }); rendre(); }
   else if (b.dataset.act === 'maj') charger();
   else if (b.dataset.act === 'ping') pinger();
-  else if (b.dataset.act === 'frais') { S.editFrais = true; S.fraisBrouillon = null; S.reglBrouillon = null; S.fraisErr = ''; rendre(); }
+  else if (b.dataset.act === 'frais') { if (b.tagName === 'A') { e.preventDefault(); location.hash = 'argent'; } S.editFrais = true; S.fraisBrouillon = null; S.reglBrouillon = null; S.fraisErr = ''; rendre(); }
   else if (b.dataset.act === 'frais-annuler') { S.editFrais = false; S.fraisErr = ''; rendre(); }
   else if (b.dataset.act === 'frais-ajout') { S.fraisBrouillon.push({ nom: '', montant: 0, devise: 'USD' }); rendre(); }
   else if (b.dataset.act === 'frais-suppr') { S.fraisBrouillon.splice(+b.dataset.i, 1); rendre(); }

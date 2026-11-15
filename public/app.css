@@ -534,3 +534,19 @@ html.modale-ouverte .support{display:none}
   .aide-haut{display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 15px 0 11px;margin-right:10px;border-radius:999px;background:rgba(37,211,102,.16);border:1px solid rgba(37,211,102,.35);color:#fff;font:600 14px var(--pop);text-decoration:none}
   .aide-haut svg{font-size:21px;color:#3EE07F}.aide-haut:hover{background:rgba(37,211,102,.26)}
 }
+
+/* Offre École fondatrice */
+.abp-fond{display:grid;gap:12px;padding:16px;border-radius:20px;background:linear-gradient(150deg,#FFF6DD,#FFE9B0);border:1.5px solid #F2C44B;color:#0B1F5C}
+.af-tag{display:inline-flex;align-items:center;gap:6px;width:max-content;padding:4px 11px;border-radius:999px;background:#0B1F5C;color:#FFD23F;font:700 11px var(--pop);letter-spacing:.05em;text-transform:uppercase}
+.abp-fond h3{margin-top:9px;font:700 19px/1.2 var(--pop)}.abp-fond h3 b{display:block;color:#C25A00}
+.abp-fond p{margin-top:6px;font-size:13px;line-height:1.4;color:#5B4A1A}
+.af-pl{display:flex;align-items:center;gap:10px;margin-top:11px}.af-bar{flex:1;height:8px;border-radius:5px;background:rgba(11,31,92,.12);overflow:hidden}.af-bar i{display:block;height:100%;border-radius:5px;background:#E8732C}.af-pl small{font:700 12px var(--pop);color:#8A4A00;white-space:nowrap}
+.af-code{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 10px 10px 14px;border-radius:14px;background:#fff;border:1.5px dashed #E8732C}
+.af-code small{display:block;font-size:11px;color:#8A4A00}.af-code b{font:800 20px var(--pop);letter-spacing:.08em}
+.af-code button{flex:none;height:38px;padding:0 15px;border:0;border-radius:10px;background:#0B1F5C;color:#fff;font:700 13px var(--pop);cursor:pointer}
+.af-et{display:block;margin-top:8px;font-size:12px;line-height:1.45;color:#5B4A1A}
+.abp-barre{display:flex;align-items:center;gap:7px;margin-top:4px}.abp-barre s{font-size:12.5px;color:#8A96B5}.abp-barre em{padding:1px 8px;border-radius:999px;background:#E8732C;color:#fff;font:700 11px var(--pop);font-style:normal}
+.abp-pts.af span:first-child{color:#B25405}.abp-pts.af span:first-child svg{color:#E8732C}.abp-pts.af span:nth-child(2){font-weight:700;color:#067647}.abp-pts.af span:nth-child(2) svg{color:#0FA968}
+.abp-fnote{font-size:12px;line-height:1.45;color:var(--g);text-align:center}
+.abp-fcode{display:flex;align-items:center;gap:11px;margin-bottom:10px;padding:12px 13px;border-radius:14px;background:#FFF3DA;border:1.5px dashed #E8732C;font-size:13px;line-height:1.4;color:#5B4A1A}.abp-fcode svg{flex:none;font-size:22px;color:#E8732C}
+@media(min-width:861px){.abp-acc .abp-fond{grid-template-columns:1.3fr 1fr;gap:26px;align-items:center;padding:22px 26px}.abp-acc .abp-fond h3{font-size:24px}.abp-acc .abp-fond h3 b{display:inline}.abp-acc .af-code b{font-size:26px}.abp-acc .abp-barre s{font-size:14px}}

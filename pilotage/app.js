@@ -168,6 +168,8 @@ function taches(X) {
   if (S.quoi !== 'fixpro' && !X.pay.some(p => p.app === 'scolaris')) t.push({ ic: I.rouge, bg: '#FEF3F2', titre: 'Scolaris : 0 école payante', sous: X.ecoles.length ? `${pl(X.ecoles.length, 'école inscrite', 'écoles inscrites')}, aucune n'a encore payé` : 'Aucune vraie inscription pour l\'instant', btn: 'Voir', lien: LIEN.scolaris });
   if (S.quoi !== 'scolaris' && !X.pay.some(p => p.app === 'fixpro')) t.push({ ic: I.rouge, bg: '#FEF3F2', titre: 'FixPro : 0 technicien payant', sous: `${F(X.comptesFx)} comptes, aucun vrai paiement encore`, btn: 'Voir', lien: LIEN.fixpro });
   if (!Object.keys(X.src).length) t.push({ ic: I.bleu, bg: '#EEF2FF', titre: 'Suivi des réseaux pas encore actif', sous: "Pour savoir d'où viennent les clients", btn: 'Voir', lien: '#reseaux' });
+  const fo = X.sc.fondatrices; const resteF = fo && fo.actif ? fo.places - (fo.liste || []).length : null;
+  if (S.quoi !== 'fixpro' && resteF !== null && resteF <= 2) t.push({ ic: resteF <= 0 ? I.rouge : I.att, bg: resteF <= 0 ? '#FEF3F2' : '#FFFAEB', titre: resteF <= 0 ? 'Offre −50 % terminée : remets les prix normaux dans Chariow' : `Plus que ${pl(resteF, 'place')} à −50 %`, sous: resteF <= 0 ? `Les ${fo.places} places sont prises. Sinon les écoles paient moitié prix et ne sont pas activées.` : 'Prépare-toi à remettre les prix normaux dans Chariow', btn: '', lien: '', p: 1 });
   const majFx = X.fx.maj_le ? (Date.now() - D(X.fx.maj_le)) / 36e5 : 99;
   if (S.quoi !== 'scolaris' && majFx > 3) t.push({ ic: I.att, bg: '#FFFAEB', titre: 'Chiffres FixPro pas à jour', sous: X.fx.maj_le ? `Dernière copie ${ilYa(X.fx.maj_le)}` : 'Aucune copie reçue', btn: '', lien: '' });
   return t;
@@ -429,11 +431,11 @@ async function enregistrerFrais() {
 function blocFondatrices(X) {
   const f = X.sc.fondatrices; if (!f || S.quoi === 'fixpro') return '';
   const L = f.liste || [], n = L.length, P = Math.max(1, f.places), C = 2 * Math.PI * 15, v = n / P * C;
-  return `<div class="card"><div class="ct"><h3>★ Écoles fondatrices</h3><span class="tag ${f.actif ? 'or' : 'gr'}">${f.actif ? `Code ${esc(f.code)} · −${f.remise} %` : 'Offre arrêtée'}</span></div>
+  return `<div class="card"><div class="ct"><h3>★ Écoles fondatrices</h3><span class="tag ${f.actif ? 'or' : 'gr'}">${f.actif ? `−${f.remise} % · ${F(f.places)} premières écoles` : 'Offre arrêtée'}</span></div>
   <div class="ef-h"><div><div class="v num">${n}<small> / ${F(f.places)} places</small></div><div class="sous">${F(Math.max(0, f.places - n))} places restantes · 12 mois par école</div></div>
   <svg viewBox="0 0 36 36" width="74" height="74"><circle cx="18" cy="18" r="15" fill="none" stroke="#F0F2F7" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="#E8732C" stroke-width="4" stroke-linecap="round" stroke-dasharray="${Math.max(n ? v : 0, 0.01)} ${C}" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="8" font-weight="700" fill="#0B1424">${Math.round(n / P * 100)} %</text></svg></div>
   ${n ? L.map(e => `<div class="row"><span class="ico" style="background:#FFF1E2;color:#B25405;font-weight:700">${esc(initiales(e.nom))}</span><div><b>${esc(e.nom)}</b><small>${e.eleves ? F(e.eleves) + ' élèves · ' : ''}${e.dernier ? (e.dernier.periode === 'an' ? 'annuel' : 'mensuel') + ' · ' : ''}depuis le ${jourCourt(D(e.debut))}</small></div><div class="r num">${e.dernier ? F(e.dernier.gnf) : '—'}<small style="color:#079455">✓ payé</small></div></div>`).join('')
-    : `<div class="vide" style="padding:8px">Aucune école fondatrice pour l'instant. Les 20 premières écoles qui paient avec le code ${esc(f.code)} apparaîtront ici.</div>`}</div>`;
+    : `<div class="vide" style="padding:8px">Aucune école fondatrice pour l'instant. Les ${F(f.places)} premières écoles qui paient au prix réduit apparaîtront ici.</div>`}</div>`;
 }
 
 /* ---------- pages ---------- */

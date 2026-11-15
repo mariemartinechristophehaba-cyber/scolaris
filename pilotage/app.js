@@ -305,7 +305,7 @@ function blocVilles(X) {
 function blocEcoles(X) {
   const L = X.ecoles.slice(0, 6);
   return `<div class="card"><div class="ct"><h3>Dernières écoles Scolaris</h3><span class="s">${pl(X.ecoles.length, 'école')}</span></div>${L.length ? L.map(e => `<div class="row">${B(e.source)}<div><b>${esc(e.nom)}</b><small>${esc(e.ville || '')}${e.eleves ? ` · ${F(e.eleves)} élèves` : ''} · ${(SOURCES[e.source] || SOURCES.autre)[0]}</small></div><div class="r"><span class="tag ${e.situation === 'actif' ? 'ok' : e.situation === 'essai' ? 'fx' : 'gr'}">${cap(e.situation || '—')}</span><small style="color:var(--m2);margin-top:3px">${ilYa(e.cree_le)}</small></div></div>`).join('')
-    : `<div class="vide"><b>Aucune vraie école pour l'instant</b>Les écoles de test d'avant le 14 nov. ne sont pas comptées.${X.sc.tarifs ? `<br>Abonnement dès ${F(X.sc.tarifs.mois)} FCFA/mois.` : ''}</div>`}</div>`;
+    : `<div class="vide"><b>Aucune vraie école pour l'instant</b>Les écoles de test d'avant le 15 nov. ne sont pas comptées.${X.sc.tarifs ? `<br>Abonnement dès ${F(X.sc.tarifs.mois)} FCFA/mois.` : ''}</div>`}</div>`;
 }
 function blocRelancer(X) {
   const L = X.fx.relancer || [];
@@ -504,7 +504,7 @@ function pageReglages(X) {
     ${ligne(I.cadenasI, 'Accès', 'Identifiant et mot de passe personnels · compte séparé', etat(true, 'Protégé'))}
     ${ligne(I.bd, 'Scolaris', 'Données lues en direct', etat(true, 'Direct'))}
     ${ligne(I.copie, 'FixPro', fx ? `Copie toutes les heures · ${ilYa(fx)}` : 'Copie toutes les heures', val(fx ? heure(fx) : '—'))}
-    ${ligne(I.badge, 'Données de test', "Exclues avant le 14 nov. 2026", etat(true, 'Exclues'))}</section>
+    ${ligne(I.badge, 'Données de test', "Exclues avant le 15 nov. 2026", etat(true, 'Exclues'))}</section>
   </div></div>
 
   <div class="rp-act"><button class="btn" data-act="maj">${I.maj}Actualiser${S.vu ? ' · ' + heure(S.vu) : ''}</button><button class="btn rp-out" data-act="sortir">${I.sortir}Se déconnecter</button></div>

@@ -232,11 +232,10 @@ function blocKpis(X) {
   const actifs = (S.quoi !== 'scolaris' ? X.actifsFx : 0) + (S.quoi !== 'fixpro' ? X.actifsSc : 0);
   const inscr = (S.quoi !== 'scolaris' ? X.comptesFx : 0) + (S.quoi !== 'fixpro' ? X.ecoles.length : 0);
   const nMois = (S.quoi !== 'scolaris' ? ((X.fx.comptes || []).find(c => c.mois === cleMois(X.now)) || {}).n || 0 : 0) + (S.quoi !== 'fixpro' ? X.ecoles.filter(e => cleMois(D(e.cree_le)) === cleMois(X.now)).length : 0);
-  const pages = S.quoi !== 'scolaris' ? X.fx.pages_30j || 0 : 0;
   return `<div class="k2">
     ${kpi(`Encaissé en ${MOIS[X.now.getMonth()].replace('.', '')}`, F(X.mois), 'GNF', diff === null ? (X.moisPrec ? '' : 'Rien le mois dernier') : `<b class="${diff >= 0 ? 'up' : 'dn'}">${diff >= 0 ? '+' : ''}${diff} %</b> vs mois dernier`, I.argent, '#2F5BF5')}
     ${kpi('Abonnés actifs', F(actifs), '', S.quoi === 'fixpro' ? 'techniciens' : S.quoi === 'scolaris' ? 'écoles' : 'techniciens + écoles', I.badge, '#12B76A')}
-    ${kpi('Visiteurs · 30 j', F(X.visit30), '', pages ? `${F(pages)} pages vues` : 'personnes différentes', I.oeilI, '#7A5AF8')}
+    ${kpi("Visiteurs aujourd'hui", F(X.vis[cleJour(X.now)] || 0), '', `Hier : <b>${F(X.vis[cleJour(new Date(X.now - 864e5))] || 0)}</b>`, I.oeilI, '#7A5AF8')}
     ${kpi('Inscriptions', F(inscr), '', `<b>${nMois ? '+' + nMois : '0'}</b> ce mois-ci`, I.usersI, '#F79009')}
   </div>`;
 }
@@ -258,6 +257,7 @@ function blocVisiteurs(X, h) {
   idx.forEach(i => lab.push([i, jourCourt(new Date(X.now - (n - 1 - i) * 864e5))]));
   const pr = X.fx.profils_30j || {};
   return `<div class="card"><div class="ct"><div><h3>Visiteurs par jour</h3><div class="sous">${n} derniers jours · ${S.quoi === 'tous' ? 'les 2 apps' : S.quoi === 'fixpro' ? 'FixPro' : 'Scolaris'}</div></div><span class="tag gr">${F(vals.reduce((a, b) => a + b, 0))} au total</span></div>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;margin:-2px 0 10px;font-size:12.5px;color:var(--m)"><span>30 derniers jours : <b style="color:var(--t,inherit)">${F(X.visit30)}</b> visiteurs</span>${S.quoi !== 'scolaris' && X.fx.pages_30j ? `<span><b style="color:var(--t,inherit)">${F(X.fx.pages_30j)}</b> pages vues</span>` : ''}</div>
   ${courbe(vals, lab, LARG(420), h, '#2F5BF5')}
   ${S.quoi !== 'scolaris' ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;border-top:1px solid var(--l2);padding-top:12px">${[['Simples visiteurs', pr.visiteur || 0], ['Techniciens', pr.technicien || 0], ['Clients', pr.client || 0]].map(([a, b]) => `<div><div style="font-size:11.5px;color:var(--m)">${a} · 30 j</div><div class="num" style="font-size:17px;font-weight:700;margin-top:2px">${F(b)}</div></div>`).join('')}</div>` : ''}</div>`;
 }

@@ -47,7 +47,8 @@ window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimation
 (function(){
 // vidéo : chargée seulement quand on arrive dessus (économie de 4G)
 var v=document.getElementById('vv');
-if(v){var go=function(){if(!v.src){v.src=v.getAttribute('data-src');}var p=v.play();if(p&&p.catch)p.catch(function(){});};
+if(v){v.addEventListener('contextmenu',function(e){e.preventDefault();});v.controlsList&&v.controlsList.add&&v.controlsList.add('nodownload');v.disablePictureInPicture=true;
+var go=function(){if(!v.src){v.src=v.getAttribute('data-src');}var p=v.play();if(p&&p.catch)p.catch(function(){});};
  if('IntersectionObserver' in window){var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){go();}else if(v.src&&!v.paused&&v.muted){v.pause();}})},{rootMargin:'200px'});o.observe(v);}else go();
  var sb=document.getElementById('snd');if(sb)sb.addEventListener('click',function(){if(!v.src)v.src=v.getAttribute('data-src');clic('video');},true);}
 // compteur de clics pour Pilotage (aucune donnée personnelle)

@@ -1,9 +1,9 @@
 import { PiChatCircleDotsFill } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
 import { PiLockKeyFill } from 'react-icons/pi';
-import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCrownSimpleFill, PiInfoFill, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
+import { PiCaretRightBold, PiArrowLeftBold, PiArrowRightBold, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCrownSimpleFill, PiInfoFill, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, getSession, payerAbonnement } from './api';
-import { TRANCHES, dateFr, erreurTel, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
+import { TRANCHES, dateFr, drapeau, erreurTel, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
 import { Erreur, Lien, Modale, Pastille, Titre, Tuile, Vide, useApp, useEnvoi } from './ui';
 
 export const LIB_T: any = { ...Object.fromEntries(TRANCHES), moins_200: "Jusqu'à 200 élèves", '201_500': '201 à 500 élèves', '501_1000': '501 à 1 000 élèves' };
@@ -89,7 +89,7 @@ export function Abonnement() {
   const gn = paysActif().c === 'GN';
   const MP = gn ? [{ k: 'orange_money', nom: 'Orange Money', sous: 'Paiement mobile rapide', img: '/img/paiement/orange-money.png', mobile: true }, { k: 'mtn_money', nom: 'MTN Mobile Money', sous: 'Paiement mobile rapide', img: '/img/paiement/mtn-money.png', mobile: true }, { k: 'carte', nom: 'Carte bancaire', sous: 'Visa, Mastercard', img: '/img/paiement/carte-bancaire.png', mobile: false }]
     : [{ k: 'mobile_money', nom: 'Mobile Money', sous: 'Orange, MTN, Wave, Moov…', img: '/img/paiement/orange-money.png', mobile: true }, { k: 'carte', nom: 'Carte bancaire', sous: 'Visa, Mastercard', img: '/img/paiement/carte-bancaire.png', mobile: false }];
-  const [moy, setMoy] = useState(MP[0].k); const [numP, setNumP] = useState(() => tel(getSession()?.user?.user_metadata?.telephone || ''));
+  const [moy, setMoy] = useState(MP[0].k); const [sous, setSous] = useState(false); const [numP, setNumP] = useState(() => tel(getSession()?.user?.user_metadata?.telephone || ''));
   const [att, setAtt] = useState(() => new URLSearchParams(location.search).get('retour') === '1'); const [essais, setEssais] = useState(0);
   useEffect(() => { if (!att) return; const t = setTimeout(async () => { await recharger(); setEssais((n) => n + 1); }, 5000); return () => clearTimeout(t); }, [att, essais]);
   useEffect(() => { if (att && abo?.situation === 'actif' && essais > 0 && (abo.historique || []).some((p: any) => p.statut === 'valide' && Date.now() - new Date(p.traite_le || p.declare_le).getTime() < 15 * 60000)) { setAtt(false); history.replaceState(null, '', '/abonnement?paye=1'); } }, [abo, essais]);
@@ -119,11 +119,11 @@ export function Abonnement() {
   const lienHist = <button type="button" className="abp-lien" onClick={() => setHist(true)}>Historique des paiements</button>;
   // Paiement en un geste : page Chariow déjà remplie (nom, téléphone, produit) ; la personne confirme sur son téléphone.
 
-  const payer = async () => {
-    const mob = MP.find((x) => x.k === moy)?.mobile; const n = tel(numP);
+  const payer = async (k = moy) => {
+    const mob = MP.find((x) => x.k === k)?.mobile; const n = tel(numP);
     if (mob) { if (!n) return setErrP('Indiquez le numéro qui va payer'); const er = erreurTel(numP); if (er) return setErrP(er); }
     setPart(true); setErrP('');
-    try { const r = await payerAbonnement({ etablissement_id: eid, periode: per, moyen: moy, telephone: mob ? n : null, retour: `${location.origin}/abonnement?retour=1&per=${per}` }); try { sessionStorage.setItem('sc_paie', String(Date.now())); } catch { /* ignoré */ } location.href = r.url; }
+    try { const r = await payerAbonnement({ etablissement_id: eid, periode: per, moyen: k, telephone: mob ? n : null, retour: `${location.origin}/abonnement?retour=1&per=${per}` }); try { sessionStorage.setItem('sc_paie', String(Date.now())); } catch { /* ignoré */ } location.href = r.url; }
     catch (x: any) { setErrP(x.message || 'Paiement indisponible, réessayez'); setPart(false); }
   };
   // Retour de Chariow : on attend la confirmation automatique (quelques secondes), sans rien demander.
@@ -154,35 +154,32 @@ export function Abonnement() {
     );
   }
 
-  if (etape === 2) return (
-    <><Titre t="Abonnement" />
-      <div className="abp">
-        <Haut t={per === 'sms' ? 'Détails du pack' : 'Détails du plan'} retour={() => aller(1)} />
-        {per === 'sms' ? <div className="abp-det"><span className="abp-tuile g"><Bulle /></span><h2>{plan.nom}</h2><strong>{gnf(montant)}</strong><small>{nb(Math.round(montant / pk.quantite))} {symbole(paysActif().dev)} le SMS</small></div>
-          : <div className="abp-det"><span className="abp-tuile g"><plan.Ic /></span><h2>Plan {plan.nom}</h2><strong>{gnf(montant)} / {plan.unite}</strong><small>{LIB_T[abo.tranche]}{abo.devise && !['XOF', 'XAF'].includes(abo.devise) && (per === 'an' ? abo.prix_an_fcfa : abo.prix_mois_fcfa) ? ` · soit ${fcfa(per === 'an' ? abo.prix_an_fcfa : abo.prix_mois_fcfa)}` : ''}</small></div>}
-        <div className="abp-co">
-          {per === 'sms' ? <><h3>Ce que vous obtenez :</h3>
-            <ul className="abp-av"><li><span><PiChatCircleDotsFill aria-hidden="true" /></span>{nb(pk.quantite)} SMS de plus pour cette année scolaire</li><li><span><PiBellRingingFill aria-hidden="true" /></span>Relances envoyées automatiquement aux parents</li><li><span><PiUsersThreeFill aria-hidden="true" /></span>Fonctionne sur tous les téléphones, même sans WhatsApp</li></ul></>
-          : <><h3>Avantages inclus :</h3>
-          <ul className="abp-av"><li className="sms"><span><PiChatCircleDotsFill aria-hidden="true" /></span>{smsOk ? `${nb(smsMois)} SMS de relance chaque mois` : 'Relances WhatsApp illimitées'}</li>{AVANTAGES.map(([I, t]) => <li key={t}><span><I aria-hidden="true" /></span>{t}</li>)}</ul></>}
-          {(per === 'sms' ? pk.lien : abo?.[`lien_${per}`]) ? <>
-            <section className="mp" aria-label="Mode de paiement"><h3>Mode de paiement</h3>
-              {MP.map((x) => { const on = moy === x.k; return <div key={x.k} className={`mp-o${on ? ' on' : ''}`}>
-                <button type="button" className="mp-t" aria-pressed={on} onClick={() => { setMoy(x.k); setErrP(''); }}><span className="mp-lg"><img src={x.img} alt="" /></span><span className="mp-tx"><b>{x.nom}</b><small>{x.sous}</small></span><i className="mp-rd" aria-hidden="true" /></button>
-                {on && x.mobile && <label className="mp-num"><span>Numéro {x.nom} qui va payer</span><div><em>+{paysActif().ind}</em><input type="tel" inputMode="numeric" autoComplete="tel" value={numP} onChange={(v) => { setNumP(v.target.value); setErrP(''); }} placeholder={paysActif().ex} /></div><small>Vous recevrez la demande de paiement sur ce numéro.</small></label>}
-                {on && !x.mobile && <p className="mp-carte">Visa, Mastercard : vous saisirez votre carte sur la page sécurisée.</p>}
-              </div>; })}
-            </section>
-            {errP && <p className="erreur" role="alert">{errP}</p>}
-            <div className="abp-bas"><button type="button" className="abp-cta" disabled={part} onClick={payer}>{part ? 'Ouverture du paiement…' : `Payer ${gnf(montant)}`}{!part && <PiArrowRightBold aria-hidden="true" />}</button><p className="mp-secu"><PiLockKeyFill aria-hidden="true" />Paiement sécurisé par Chariow</p><button type="button" className="abp-lien" onClick={() => aller(3)}>J'ai déjà payé</button></div>
-          </> : <>
-            <p className="abp-info"><PiInfoFill aria-hidden="true" />Le paiement en ligne n'est pas encore ouvert pour ce tarif. Écrivez à Scolaris, on vous envoie le lien de paiement.</p>
-            {abo.whatsapp && <div className="abp-bas"><a className="btn wa" href={waScolaris(abo.whatsapp, `Bonjour Scolaris, je souhaite payer : ${per === 'sms' ? plan.nom : `abonnement ${plan.nom.toLowerCase()}`} (${gnf(montant)}).`)} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Écrire à Scolaris</a></div>}
-          </>}
-        </div>
+  if (etape === 2) {
+    const lien = per === 'sms' ? pk.lien : abo?.[`lien_${per}`];
+    const choix = MP.find((x) => x.k === moy);
+    // Comme les paiements africains simples (Shafrik) : un moyen de paiement, le numéro, Continuer.
+    return <><Titre t="Abonnement" /><div className="abp ck">
+      <Haut t="Paiement" retour={() => (sous ? setSous(false) : aller(1))} />
+      <div className="ck-co">
+        <div className="ck-prod"><img src="/img/icone.png" alt="" /><div><b>{per === 'sms' ? plan.nom : `Scolaris · Plan ${plan.nom}`}</b><span>{gnf(montant)}{per === 'sms' ? '' : ` / ${plan.unite}`}</span></div></div>
+        {!lien ? <><p className="abp-info"><PiInfoFill aria-hidden="true" />Le paiement en ligne n'est pas encore ouvert pour ce tarif. Écrivez à Scolaris, on vous envoie le lien de paiement.</p>
+          {abo.whatsapp && <a className="btn wa" href={waScolaris(abo.whatsapp, `Bonjour Scolaris, je souhaite payer : ${per === 'sms' ? plan.nom : `abonnement ${plan.nom.toLowerCase()}`} (${gnf(montant)}).`)} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Écrire à Scolaris</a>}</>
+        : !sous ? <>
+          <p className="ck-lbl">Pays</p><div className="ck-pays"><span>{drapeau(paysActif().c)}</span>{paysActif().nom}</div>
+          <h2 className="ck-h">Choisissez un moyen de paiement</h2>
+          <ul className="ck-l">{MP.map((x) => <li key={x.k}><button type="button" onClick={() => { setMoy(x.k); setErrP(''); if (x.mobile) setSous(true); else payer(x.k); }} disabled={part}><span className="ck-lg"><img src={x.img} alt="" /></span><b>{x.nom}</b><PiCaretRightBold aria-hidden="true" /></button></li>)}</ul>
+          {errP && <p className="erreur" role="alert">{errP}</p>}
+          <button type="button" className="abp-lien ck-deja" onClick={() => aller(3)}>J'ai déjà payé</button>
+        </> : <>
+          <div className="ck-sel"><button type="button" className="ck-ret" onClick={() => setSous(false)} aria-label="Changer de moyen de paiement"><PiArrowLeftBold /></button><span className="ck-lg"><img src={choix?.img} alt="" /></span><div><b>{choix?.nom}</b><span>{paysActif().nom}</span></div></div>
+          <label className="ck-num"><span>Numéro de téléphone <i>*</i></span><div><em>{drapeau(paysActif().c)} +{paysActif().ind}</em><input type="tel" inputMode="numeric" autoComplete="tel" autoFocus value={numP} onChange={(v) => { setNumP(v.target.value); setErrP(''); }} placeholder={paysActif().ex} /></div></label>
+          {errP && <p className="erreur" role="alert">{errP}</p>}
+          <button type="button" className="ck-bt" disabled={part} onClick={() => payer(moy)}>{part ? 'Ouverture…' : 'Continuer'}</button>
+          <p className="mp-secu"><PiLockKeyFill aria-hidden="true" />Paiement sécurisé · {gnf(montant)}</p>
+        </>}
       </div>
-    </>
-  );
+    </div></>;
+  }
 
   if (etape === 3) return (
     <><Titre t="Abonnement" />

@@ -201,3 +201,31 @@ export function grouperClasses<T>(l: T[], niv: (c: T) => any = nomNiveau, nom: (
   for (const c of trierClasses(l, niv, nom)) { const lib = niv(c) || LIB_NIV[rangNiveau('', nom(c))] || 'Autres'; const g = r.find((x) => x[0] === lib); if (g) g[1].push(c); else r.push([lib, [c]]); }
   return r;
 }
+
+// Fiches à vérifier : même nom et prénom avec le même téléphone de parent (ou la même date de naissance) = sans doute saisi deux fois.
+// Les homonymes (deux « Mamadou Diallo » dans des familles différentes) ne sont pas signalés.
+const normNom = (s: any) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+export function fichesAVerifier(sit: any[], resp: any[], naissances: Record<string, string> = {}) {
+  const telDe = new Map<string, string>();
+  for (const r of resp) { const t = r.responsables?.telephone; if (t && !telDe.has(r.eleve_id)) telDe.set(r.eleve_id, t); }
+  const groupes = new Map<string, any[]>();
+  for (const s of sit) {
+    const nom = normNom(s.nom) + '|' + normNom(s.prenom); const t = telDe.get(s.eleve_id); const n = naissances[s.eleve_id];
+    for (const cle of [t && nom + '|t' + t, n && nom + '|n' + n].filter(Boolean) as string[]) { if (!groupes.has(cle)) groupes.set(cle, []); groupes.get(cle)!.push(s); }
+  }
+  const vus = new Set<string>(); const doublons: any[][] = [];
+  for (const l of groupes.values()) { if (l.length < 2) continue; const k = l.map((x) => x.eleve_id).sort().join(); if (vus.has(k)) continue; vus.add(k); doublons.push(l); }
+  const sansTel = sit.filter((s) => !telDe.has(s.eleve_id));
+  return { doublons, sansTel };
+}
+
+// Prévision d'encaissement au rythme des 30 derniers jours, jusqu'à la fin de l'année scolaire.
+export function prevision(pay: any[], encaisse: number, frais: number, finAnnee: string) {
+  // Horizon court (fin du mois prochain) : une prévision sur toute l'année serait trop optimiste après la rentrée.
+  const d0 = new Date(); const fm = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() + 2, 0)).toISOString().slice(0, 10); const fin = fm < finAnnee ? fm : finAnnee;
+  const j30 = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10); const a = auj();
+  const r30 = pay.filter((p) => String(p.date_paiement) > j30 && String(p.date_paiement) <= a).reduce((s, p) => s + Number(p.montant || 0), 0);
+  const jours = Math.max(0, Math.round((new Date(fin + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 864e5));
+  const proj = Math.min(frais, Math.round(encaisse + (r30 / 30) * jours));
+  return { r30, jours, fin, proj, pct: frais ? Math.round((proj / frais) * 100) : 0, manque: Math.max(0, frais - proj) };
+}

@@ -550,3 +550,8 @@ html.modale-ouverte .support{display:none}
 .abp-fnote{font-size:12px;line-height:1.45;color:var(--g);text-align:center}
 .abp-fcode{display:flex;align-items:center;gap:11px;margin-bottom:10px;padding:12px 13px;border-radius:14px;background:#FFF3DA;border:1.5px dashed #E8732C;font-size:13px;line-height:1.4;color:#5B4A1A}.abp-fcode svg{flex:none;font-size:22px;color:#E8732C}
 @media(min-width:861px){.abp-acc .abp-fond{grid-template-columns:1.3fr 1fr;gap:26px;align-items:center;padding:22px 26px}.abp-acc .abp-fond h3{font-size:24px}.abp-acc .abp-fond h3 b{display:inline}.abp-acc .af-code b{font-size:26px}.abp-acc .abp-barre s{font-size:14px}}
+.conseils h2{display:flex;align-items:center;gap:8px}.conseils h2 svg{color:#8B5CF6}.activites.cons li{padding:2px 0}.activites.cons .btn-doux{height:32px;padding:0 12px;font-size:13px}
+.verif-b{width:100%;border:0;cursor:pointer;text-align:left;font:inherit;align-items:center;margin-bottom:12px}.verif-b span{flex:1}.verif-b b{display:block}
+.groupe-d{border:1px solid var(--bord,#e6eaf2);border-radius:14px;padding:4px 10px;margin:0 0 10px}
+.tout-val{display:flex;align-items:center;gap:12px;background:#fff7e8;border:1px solid #fde3b0;border-radius:16px;padding:12px 14px;margin-bottom:12px}.tout-val div{flex:1}.tout-val b{display:block;font-size:14px}.tout-val small{color:var(--gris);font-size:12.5px}
+html.sombre .tout-val{background:#2a2213;border-color:#4a3a1a}

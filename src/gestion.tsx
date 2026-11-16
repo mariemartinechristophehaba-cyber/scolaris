@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { PiArrowLeftBold, PiCalendarBlankDuotone, PiWarningCircleFill, PiBabyDuotone, PiBackpackDuotone, PiCaretDownBold, PiBooksDuotone, PiBusDuotone, PiCoinsDuotone, PiGraduationCapDuotone, PiIdentificationBadgeDuotone, PiNotePencilDuotone, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiClockCountdownFill, PiEyeDuotone, PiFileArrowUpDuotone, PiHandCoinsDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiPencilSimpleDuotone, PiPhoneDuotone, PiPlusBold, PiReceiptDuotone, PiStudentDuotone, PiTrashDuotone, PiWhatsappLogoFill, PiCrownSimpleFill } from 'react-icons/pi';
+import { PiArrowLeftBold, PiCalendarBlankDuotone, PiWarningCircleFill, PiBabyDuotone, PiBackpackDuotone, PiCaretDownBold, PiBooksDuotone, PiBusDuotone, PiCoinsDuotone, PiGraduationCapDuotone, PiIdentificationBadgeDuotone, PiNotePencilDuotone, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiClockCountdownFill, PiEyeDuotone, PiFileArrowUpDuotone, PiHandCoinsDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiPencilSimpleDuotone, PiPhoneDuotone, PiPlusBold, PiReceiptDuotone, PiStudentDuotone, PiTrashDuotone, PiWhatsappLogoFill, PiCrownSimpleFill, PiCopyDuotone, PiPhoneSlashDuotone, PiSealWarningDuotone } from 'react-icons/pi';
 import { db } from './api';
 import { Jauge } from './charts';
-import { dateFr, erreurTel, gnf, grouperClasses, nb, rangNiveau, tel, telAff, trierClasses, dv } from './lib';
+import { fichesAVerifier, dateFr, erreurTel, gnf, grouperClasses, nb, rangNiveau, tel, telAff, trierClasses, dv } from './lib';
 import { Avatar, Champ, Erreur, Etat, Gnf, DateRoue, Lien, Modale, Montant, OptClasses, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const etat = (s: any) => (s.situation === 'a_jour' ? 'a_jour' : s.situation === 'rien_paye' && s.facture_net > 0 ? 'rien' : s.en_retard ? 'retard' : s.situation === 'partiel' ? 'partiel' : 'sans');
@@ -31,11 +31,13 @@ function FormEleve({ init, classes, fermer, fini }: any) {
 const FILTRES: [string, string][] = [['tous', 'Tous'], ['a_jour', 'À jour'], ['partiel', 'Partiel'], ['retard', 'Retard'], ['rien', 'Non payé']];
 
 export function Eleves() {
-  const { annee, can } = useApp();
-  const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [f, setF] = useState('tous'); const [p, setP] = useState(1); const [aj, setAj] = useState(() => new URLSearchParams(location.search).get('ajout') === '1');
+  const { annee, can, eid } = useApp(); const qs = new URLSearchParams(location.search);
+  const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [f, setF] = useState(() => FILTRES.some(([k]) => k === qs.get('f')) ? qs.get('f')! : 'tous'); const [verif, setVerif] = useState(qs.get('verif') === '1'); const [p, setP] = useState(1); const [aj, setAj] = useState(() => new URLSearchParams(location.search).get('ajout') === '1');
   const q = useQ(async () => {
-    const [l, classes] = await Promise.all([db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom,inscription_id`), db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=*,niveaux(nom)&order=ordre,nom`)]);
-    return { l, classes };
+    const [l, classes, resp, nais] = await Promise.all([db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&order=nom,prenom,inscription_id`), db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=*,niveaux(nom)&order=ordre,nom`),
+      db.tout(`eleve_responsables?etablissement_id=eq.${eid}&select=eleve_id,responsables(telephone)&order=eleve_id,responsable_id`).catch(() => []),
+      db.tout(`eleves?etablissement_id=eq.${eid}&date_naissance=not.is.null&select=id,date_naissance&order=id`).catch(() => [])]);
+    return { l, classes, v: fichesAVerifier(l, resp, Object.fromEntries(nais.map((x: any) => [x.id, x.date_naissance]))) };
   }, [annee.id]);
   const base = useMemo(() => {
     const t = txt.trim().toLowerCase();
@@ -50,6 +52,7 @@ export function Eleves() {
     <>
       <Titre t="Élèves">{can('directeur', 'secretaire') && <><Lien to="/importation" className="btn contour mini bureau-seul"><PiFileArrowUpDuotone />Importer</Lien><button className="btn plein mini" onClick={() => setAj(true)}><PiPlusBold />Ajouter un élève</button></>}</Titre>
       <Etat q={q}>{(d) => <>
+        {(d.v.doublons.length > 0 || d.v.sansTel.length > 0) && <button type="button" className="fr-alerte verif-b" onClick={() => setVerif(true)}><PiSealWarningDuotone aria-hidden="true" /><span><b>Fiches à vérifier</b>{[d.v.doublons.length && `${nb(d.v.doublons.length)} en double possible`, d.v.sansTel.length && `${nb(d.v.sansTel.length)} sans téléphone du parent`].filter(Boolean).join(', ')}</span><PiCaretRightBold aria-hidden="true" /></button>}
         <div className="barre-outils">
           <div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={txt} onChange={bouge(setT)} placeholder="Rechercher un élève ou un matricule" aria-label="Rechercher un élève" /></div>
           <select value={cl} onChange={bouge(setCl)} aria-label="Classe"><option value="">Toutes les classes</option><OptClasses l={d.classes} /></select>
@@ -68,9 +71,23 @@ export function Eleves() {
           </>}
         </section>
       </>}</Etat>
+      {verif && q.data && <Verification v={q.data.v} fermer={() => setVerif(false)} />}
       {aj && q.data && <FormEleve classes={q.data.classes} fermer={() => setAj(false)} fini={() => { setAj(false); q.reload(); }} />}
     </>
   );
+}
+
+function Verification({ v, fermer }: any) {
+  const [o, setO] = useState(v.doublons.length ? 'd' : 't'); const [n, setN] = useState(30);
+  const ligne = (s: any) => <li key={s.inscription_id}><Lien to={`/eleves/${s.eleve_id}`} className="ligne-e"><Avatar nom={`${s.nom} ${s.prenom}`} /><div><b>{s.nom} {s.prenom}</b><small>{s.matricule}, {s.classe}{Number(s.regle) > 0 ? `, payé ${nb(s.regle)}` : ''}</small></div><PiCaretRightBold aria-hidden="true" /></Lien></li>;
+  return <Modale titre="Fiches à vérifier" fermer={fermer}>
+    <div className="segment" role="tablist"><button role="tab" aria-selected={o === 'd'} className={o === 'd' ? 'on' : ''} onClick={() => setO('d')}><PiCopyDuotone aria-hidden="true" />En double<em>{nb(v.doublons.length)}</em></button><button role="tab" aria-selected={o === 't'} className={o === 't' ? 'on' : ''} onClick={() => setO('t')}><PiPhoneSlashDuotone aria-hidden="true" />Sans téléphone<em>{nb(v.sansTel.length)}</em></button></div>
+    {o === 'd' ? (v.doublons.length === 0 ? <Vide t="Aucun élève en double." /> : <><p className="note">Même nom, même prénom et même parent (ou même date de naissance). Ouvrez les fiches : gardez la bonne et archivez l'autre, sinon l'élève est facturé deux fois.</p>
+      {v.doublons.slice(0, n).map((g: any[], i: number) => <ul key={i} className="lignes-e groupe-d">{g.map(ligne)}</ul>)}</>)
+      : (v.sansTel.length === 0 ? <Vide t="Tous les élèves ont un téléphone de parent." /> : <><p className="note">Sans numéro, Scolaris ne peut ni relancer le parent ni lui envoyer le reçu. Ouvrez la fiche, puis Informations, Modifier.</p>
+        <ul className="lignes-e">{v.sansTel.slice(0, n).map(ligne)}</ul></>)}
+    {(o === 'd' ? v.doublons.length : v.sansTel.length) > n && <div className="plus-l"><button className="btn contour mini" onClick={() => setN(n + 30)}>Voir la suite</button></div>}
+  </Modale>;
 }
 
 export function DetailEleve({ id }: { id: string }) {

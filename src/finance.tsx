@@ -1,10 +1,11 @@
 import { AideMenu } from './abonnement';
+import { PiLightbulbDuotone, PiCopyDuotone, PiPhoneSlashDuotone, PiChartLineUpDuotone, PiChalkboardDuotone, PiSparkleFill, PiCheckCircleDuotone, PiChecksBold } from 'react-icons/pi';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
 import { db } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
-import { auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel, dv } from './lib';
+import { fichesAVerifier, prevision, auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel, dv } from './lib';
 import { EtatPaiement } from './gestion';
 import { ADecider, BlocCompta, Bonjour, TableauCaissier, TableauSecretaire } from './espaces';
 import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
@@ -19,12 +20,12 @@ export function Tableau() {
 }
 
 function TableauFinance() {
-  const { annee, can, role, zoneFiltres } = useApp();
+  const { annee, can, role, zoneFiltres, eid } = useApp();
   const fin = can(...STAFF);
   const fond = role === 'fondateur', compta = !fond && fin;
   const [classe, setCl] = useState(''); const [per, setPer] = useState('');
   const q = useQ(async () => {
-    const [tb, obj, pay, sit, st, cls, p3, ins, dep, depM] = await Promise.all([
+    const [tb, obj, pay, sit, st, cls, p3, ins, dep, depM, resp, nais] = await Promise.all([
       db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}`),
       can('directeur', 'comptable') ? db.get(`v_objectifs_resultats?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel`) : [],
       fin ? db.tout(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.valide&select=id,montant,date_paiement,classe_id&order=id`) : [],
@@ -35,8 +36,10 @@ function TableauFinance() {
       db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=3`),
       can('directeur', 'comptable', 'caissier') ? db.get(`depenses?annee_scolaire_id=eq.${annee.id}&select=id,libelle,montant,cree_le&order=cree_le.desc&limit=3`) : [],
       can('directeur') ? db.get(`depenses?annee_scolaire_id=eq.${annee.id}&statut=eq.payee&date_depense=gte.${auj().slice(0, 7)}-01&select=montant`) : [],
+      can('directeur', 'comptable') ? db.tout(`eleve_responsables?etablissement_id=eq.${eid}&select=eleve_id,responsables(telephone)&order=eleve_id,responsable_id`).catch(() => []) : [],
+      can('directeur', 'comptable') ? db.tout(`eleves?etablissement_id=eq.${eid}&date_naissance=not.is.null&select=id,date_naissance&order=id`).catch(() => []) : [],
     ]);
-    return { t: tb[0] || {}, obj, pay, sit, st, cls, p3, ins, dep, depM };
+    return { t: tb[0] || {}, obj, pay, sit, st, cls, p3, ins, dep, depM, resp, nais: Object.fromEntries(nais.map((x: any) => [x.id, x.date_naissance])) };
   }, [annee.id]);
   const mois = moisAnnee(annee);
   const filtres = zoneFiltres && fin ? createPortal(<>
@@ -108,6 +111,7 @@ function TableauFinance() {
             : <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Argent en caisse</span></div><Gnf n={d.t.tresorerie} /></div>}
         </div>
         {fond ? <ADecider retard={retard} echu={echu} sit={d.sit} cls={d.cls} /> : <BlocCompta />}
+        {can('directeur', 'comptable') && !classe && !per && <Conseils sit={d.sit} pay={d.pay} resp={d.resp} nais={d.nais} cls={d.cls} encaisse={encaisse} frais={frais} />}
         <div className="rang">
           <section className="carte c-large"><div className="tete-carte"><h2>Encaissements cumulés</h2>{objectif > 0 && <div className="legende"><span><i className="trait" />Encaissé</span><span><i className="pts" />Rythme prévu</span></div>}</div>
             {reel.length ? <Cumul labels={mois.map((m) => m.label)} reel={reel} objectif={objectif} /> : <Vide t="L'année scolaire n'a pas encore commencé." />}</section>
@@ -139,6 +143,32 @@ function TableauFinance() {
       </>}
     </>;
   }}</Etat></>;
+}
+
+// Conseils de Scolaris : ce qu'il faut faire en priorité, calculé à partir des chiffres de l'école.
+function Conseils({ sit, pay, resp, nais, cls, encaisse, frais }: any) {
+  const { annee, can } = useApp();
+  const l: any[] = [];
+  if (frais > 0 && annee.date_fin > auj()) {
+    const p = prevision(pay, encaisse, frais, annee.date_fin);
+    if (p.r30 > 0) l.push({ I: PiChartLineUpDuotone, ton: p.pct >= 90 ? 'vert' : 'bleu', t: `Prévision au ${dateFr(p.fin)} : ${gnf(p.proj)} encaissés`, s: `Soit ${p.pct} % des frais, si le rythme des 30 derniers jours continue (${gnf(p.r30)} par mois)`, to: '/rapports', b: 'Détail' });
+    else if (encaisse < frais) l.push({ I: PiChartLineUpDuotone, ton: 'rouge', t: 'Aucun paiement depuis 30 jours', s: `${gnf(frais - encaisse)} restent à encaisser. Relancez les parents`, to: '/relances', b: 'Relancer' });
+  }
+  const nomCl = Object.fromEntries(cls.map((c: any) => [c.id, c.nom])); const parCl = new Map<string, [number, number]>();
+  for (const x of sit) { if (!(Number(x.facture_net) > 0)) continue; const g = parCl.get(x.classe_id) || [0, 0]; g[0] += Number(x.facture_net); g[1] += Number(x.regle || 0); parCl.set(x.classe_id, g); }
+  const faibles = [...parCl.entries()].map(([id, [f, r]]) => ({ nom: nomCl[id] || 'Classe', p: Math.round((r / f) * 100) })).filter((c) => c.p < 25).sort((a, b) => a.p - b.p);
+  if (faibles.length) l.push({ I: PiChalkboardDuotone, ton: 'orange', t: `${faibles.length} classe${faibles.length > 1 ? 's' : ''} sous 25 % payé`, s: faibles.slice(0, 3).map((c) => `${c.nom} (${c.p} %)`).join(', ') + (faibles.length > 3 ? '…' : ''), to: '/relances', b: 'Relancer' });
+  const rien = sit.filter((x: any) => x.situation === 'rien_paye' && Number(x.facture_net) > 0);
+  if (rien.length) l.push({ I: PiLightbulbDuotone, ton: 'rouge', t: `${nb(rien.length)} élève${rien.length > 1 ? 's' : ''} n'${rien.length > 1 ? 'ont' : 'a'} encore rien payé`, s: `${gnf(rien.reduce((a: number, x: any) => a + Number(x.reste), 0))} au total. Commencez par eux`, to: '/eleves?f=rien', b: 'Voir' });
+  if (can('directeur', 'secretaire', 'comptable')) {
+    const v = fichesAVerifier(sit, resp, nais);
+    if (v.doublons.length) l.push({ I: PiCopyDuotone, ton: 'violet', t: `${nb(v.doublons.length)} élève${v.doublons.length > 1 ? 's' : ''} peut-être saisi${v.doublons.length > 1 ? 's' : ''} deux fois`, s: 'Même nom et même parent : vérifiez pour ne pas facturer deux fois', to: '/eleves?verif=1', b: 'Vérifier' });
+    if (v.sansTel.length) l.push({ I: PiPhoneSlashDuotone, ton: 'orange', t: `${nb(v.sansTel.length)} élève${v.sansTel.length > 1 ? 's' : ''} sans téléphone du parent`, s: 'Impossible de les relancer ni d’envoyer le reçu', to: '/eleves?verif=1', b: 'Compléter' });
+  }
+  return <section className="carte conseils"><div className="tete-carte"><h2><PiSparkleFill aria-hidden="true" />Conseils de Scolaris</h2></div>
+    {l.length === 0 ? <div className="action vert"><PiCheckCircleDuotone aria-hidden="true" /><div><b>Tout est en ordre</b><small>Aucune action urgente aujourd'hui.</small></div></div>
+      : <ul className="activites cons">{l.slice(0, 5).map((x, i) => <li key={i}><Tuile i={x.I} ton={x.ton} t={40} /><div><b>{x.t}</b><small>{x.s}</small></div><Lien to={x.to} className="btn-doux">{x.b}</Lien></li>)}</ul>}
+  </section>;
 }
 
 const ORDRE_M = ['especes', 'virement', 'depot', 'orange_money', 'mtn_money', 'autre'];
@@ -238,6 +268,7 @@ export function Paiements() {
           {groupes.length > 1 && <div className="niv-f" role="tablist" aria-label="Niveau">{[['', 'Tous les niveaux'], ...groupes.map(([n]) => [n, n])].map(([k, t]) => <button key={k} role="tab" aria-selected={niv === k} className={niv === k ? 'on' : ''} onClick={() => { setNiv(k); setCl(''); setMax(100); }}>{t}</button>)}</div>}
           <div className="filtres-p"><select value={cl} onChange={(x) => { setCl(x.target.value); setMax(100); }} aria-label="Classe"><option value="">{niv ? `Toutes les classes du ${niv.toLowerCase()}` : 'Toutes les classes'}</option>{(niv ? [[niv, dansNiv]] as any[] : groupes).map(([n, cs]: any) => <optgroup key={n} label={n}>{cs.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}</optgroup>)}</select>
           <div className="recherche rp"><PiMagnifyingGlassBold aria-hidden="true" /><input value={rech} onChange={(x) => { setRech(x.target.value); setMax(100); }} placeholder="Élève, n° de reçu ou référence" aria-label="Rechercher un paiement" inputMode="search" /></div></div>
+          {f === 'en_attente' && v && !r0 && l.length > 1 && <ToutValider l={l} fini={async () => { await q.reload(); majNotif(); }} />}
           <section className="carte c-table">
             {l.length === 0 ? <Vide t={r0 ? 'Aucun paiement trouvé pour cette recherche.' : f === 'en_attente' ? 'Aucun paiement à vérifier.' : 'Aucun paiement ici.'} /> : <>
               <div className="table vue-bureau"><table><thead><tr><th>Date</th><th>Élève</th><th className="dr">Montant</th><th>Moyen</th><th>Statut</th><th /></tr></thead><tbody>{l.slice(0, max).map((p: any) => <tr key={p.id}>
@@ -252,6 +283,22 @@ export function Paiements() {
       }}</Etat>
     </>
   );
+}
+
+// Valider d'un coup tous les paiements en attente affichés (après vérification). Chacun reçoit son numéro de reçu.
+function ToutValider({ l, fini }: any) {
+  const [ouv, setO] = useState(false); const [fait, setF] = useState(0); const [en, setEn] = useState(false); const [err, setErr] = useState('');
+  const total = l.reduce((s: number, p: any) => s + Number(p.montant), 0);
+  const go = async () => { setEn(true); setErr(''); let k = 0; for (const p of l) { try { await db.upd(`paiements?id=eq.${p.id}&statut=eq.en_attente`, { statut: 'valide' }); k++; setF(k); } catch (e: any) { setErr(`${p.prenom} ${p.nom} : ${e.message}`); break; } } setEn(false); await fini(); if (k === l.length) setO(false); };
+  return <>
+    <div className="tout-val"><div><b>{nb(l.length)} paiements en attente</b><small>{gnf(total)} au total</small></div><button className="btn plein mini" onClick={() => { setF(0); setO(true); }}><PiChecksBold aria-hidden="true" />Tout valider</button></div>
+    {ouv && <Modale titre="Valider tous les paiements" fermer={() => !en && setO(false)}>
+      <p className="note">Vous allez valider <b>{nb(l.length)} paiements</b> pour <b>{gnf(total)}</b>. Vérifiez d'abord que l'argent est bien arrivé (caisse, Orange Money, banque). Chaque parent pourra recevoir son reçu.</p>
+      {en || fait > 0 ? <div className="prog"><div className="barre-p verte"><i style={{ width: `${Math.round((fait / l.length) * 100)}%` }} /></div><b>{nb(fait)} / {nb(l.length)}</b></div> : null}
+      <Erreur t={err} />
+      <button className="btn plein" disabled={en} onClick={go}>{en ? 'Validation en cours…' : `Oui, valider les ${nb(l.length)}`}</button>
+    </Modale>}
+  </>;
 }
 
 const iconeDep = (l = '') => (/salaire/i.test(l) ? PiUsersThreeDuotone : /fourn/i.test(l) ? PiBooksDuotone : /loyer|bail/i.test(l) ? PiHouseLineDuotone : /[ée]lec|eau|courant/i.test(l) ? PiLightningDuotone : /transp|carbur/i.test(l) ? PiBusDuotone : PiReceiptDuotone);

@@ -13,6 +13,7 @@ import { Activite, Equipe } from './equipe';
 import { Abonnement, AideMenu, BandeauAbonnement, BoutonSupport } from './abonnement';
 import { EspaceAdmin } from './admin';
 import { choisirPays } from './lib';
+import { prechargerTout } from './precharge';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 const MENU: [string, string, any, string[]?, string?, any?, string?][] = [
@@ -74,6 +75,8 @@ function Coque({ m, annees, recharger, abo }: any) {
     const [p, v] = await Promise.all([db.tout(`paiements?etablissement_id=eq.${eid}&statut=eq.en_attente&select=id&order=id`), db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&en_retard=is.true&select=inscription_id&order=inscription_id`)]);
     return { attente: p.length, retard: v.length };
   }, [annee?.id, chemin]);
+  // Mode sans internet : toutes les pages principales sont chargées en silence quelques secondes après l'ouverture.
+  useEffect(() => { if (!annee) return; const t = setTimeout(() => prechargerTout(annee, eid, s?.user?.id || ''), 4000); return () => clearTimeout(t); }, [annee?.id]);
   const attente = abo?.situation === 'attente';
   poserLectureSeule(!!abo?.lecture_seule, attente);
   // École pas encore payée : elle visite tout, mais chaque action d'ajout mène à l'abonnement.

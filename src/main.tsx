@@ -205,4 +205,4 @@ function VersVitrine() {
 
 createRoot(document.getElementById('root')!).render(<Racine />);
 // Application utilisable sans réseau (pages gardées sur le téléphone).
-if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.protocol === 'https:') addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.protocol === 'https:') navigator.serviceWorker.register('/sw.js').catch(() => {});

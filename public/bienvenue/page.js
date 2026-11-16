@@ -70,3 +70,6 @@ document.getElementById('wshx').addEventListener('click',fermer);
 w.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){setTimeout(fermer,300)});});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fermer();});
 })();
+
+// Garde le site et l'application sur le téléphone (utilisable sans réseau).
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('/sw.js').catch(function(){});}

@@ -332,7 +332,7 @@ function blocVitrine(X) {
   const L = (X.sc.vitrine || []).filter(v => D(v.jour) > new Date(X.now - 30 * 864e5));
   const n = c => L.filter(v => v.cible === c).reduce((s, v) => s + v.n, 0);
   const it = (ic, t, v) => `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #EEF1F6"><span style="font-size:18px">${ic}</span><span style="flex:1">${t}</span><b>${F(v)}</b></div>`;
-  return `<div class="card"><b style="font-size:13.5px">🌐 Site vitrine Scolaris · 30 jours</b><p style="color:#667085;font-size:12.5px;margin:4px 0 6px">Clics sur les boutons de la page d'accueil</p>${it('📝', 'Inscrire mon école', n('inscription'))}${it('💬', 'WhatsApp', n('whatsapp'))}${it('🎯', 'Demander une démo', n('demo'))}${it('🔊', 'Vidéo avec le son', n('video'))}${it('🔑', 'Se connecter', n('connexion'))}</div>`;
+  return `<div class="card"><b style="font-size:13.5px">🌐 Site vitrine Scolaris · 30 jours</b><p style="color:#667085;font-size:12.5px;margin:4px 0 6px">Clics sur les boutons de la page d'accueil</p>${it('📝', 'Inscrire mon école', n('inscription'))}${it('📢', 'Chaîne WhatsApp', n('chaine'))}${it('💬', 'WhatsApp (écrire)', n('whatsapp'))}${it('🎯', 'Demander une démo', n('demo'))}${it('🔊', 'Vidéo avec le son', n('video'))}${it('🔑', 'Se connecter', n('connexion'))}</div>`;
 }
 function blocConseil(X) {
   const L = Object.entries(X.src).map(([k, v]) => ({ k, ...v }));

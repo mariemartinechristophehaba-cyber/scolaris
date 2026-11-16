@@ -20,3 +20,26 @@ var io=new IntersectionObserver(function(en){en.forEach(function(x){if(x.isInter
 els.forEach(function(e){io.observe(e)});
 setTimeout(function(){document.querySelectorAll('.hero .rvl').forEach(function(e){e.classList.add('vu')})},50);
 })();
+
+(function(){var v=document.getElementById('vv'),b=document.getElementById('snd'),w=document.getElementById('vd');if(!v||!b)return;
+b.addEventListener('click',function(){try{v.muted=false;v.currentTime=0;v.loop=false;v.controls=true;var p=v.play();if(p&&p.catch)p.catch(function(){});w.classList.add('on')}catch(e){}});})();
+
+(function(){
+var H=document.documentElement,reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+// titre : mots un par un
+var h1=document.querySelector('.hero h1');
+if(h1&&H.classList.contains('js')){var i=0;(function walk(n){[].slice.call(n.childNodes).forEach(function(c){if(c.nodeType===3){var f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(function(w){if(!w)return;if(/^\s+$/.test(w)){f.appendChild(document.createTextNode(w));return}var sp=document.createElement('span');sp.className='hw';sp.textContent=w;sp.style.transitionDelay=(0.08*i++)+'s';f.appendChild(sp)});n.replaceChild(f,c)}else if(c.nodeType===1&&c.tagName!=='SMALL')walk(c);else if(c.nodeType===1){var sp=document.createElement('span');sp.className='hw';sp.style.display='block';sp.style.transitionDelay=(0.08*i++ +.1)+'s';c.parentNode.insertBefore(sp,c);sp.appendChild(c)}})})(h1)}
+// barres du tableau de bord : délai en escalier
+[].forEach.call(document.querySelectorAll('.ch i,.bars i'),function(b,k){b.style.transitionDelay=(k%9*0.07)+'s'});
+[].forEach.call(document.querySelectorAll('#tb .tr'),function(r,k){r.style.transitionDelay=(k*0.06)+'s'});
+// compteurs du tableau de bord
+function compter(el){var t=el.textContent,m=t.match(/[\d]+(?:[ ,]\d+)*/);if(!m)return;var brut=m[0],dec=brut.indexOf(',')>-1?brut.split(',')[1].length:0,val=parseFloat(brut.replace(/ /g,'').replace(',','.'));var deb=null;function f(ts){if(!deb)deb=ts;var p=Math.min(1,(ts-deb)/1400),e=1-Math.pow(1-p,3),v=(val*e).toFixed(dec).replace('.',',');el.textContent=t.replace(brut,v);if(p<1)requestAnimationFrame(f)}el.textContent=t.replace(brut,(0).toFixed(dec).replace('.',','));requestAnimationFrame(f)}
+var kp=[].slice.call(document.querySelectorAll('.kp b'));
+if('IntersectionObserver' in window&&!reduce){var io=new IntersectionObserver(function(en){en.forEach(function(x){if(x.isIntersecting){kp.forEach(compter);io.disconnect()}})},{threshold:.4});var dm=document.querySelector('.dm');if(dm)io.observe(dm)}
+// menu qui se resserre, grands mots en parallaxe, ligne des étapes
+var nv=document.querySelector('.nv'),bigs=[].slice.call(document.querySelectorAll('.big')),stp=document.querySelector('.stp'),ln=document.getElementById('ln'),sps=[].slice.call(document.querySelectorAll('.sp')),tick=false;
+function maj(){tick=false;var y=window.scrollY,vh=window.innerHeight;if(nv)nv.classList.toggle('sc',y>10);
+ if(!reduce)bigs.forEach(function(b){var r=b.getBoundingClientRect();if(r.bottom>0&&r.top<vh){var d=(r.top+r.height/2-vh/2)/vh;b.style.transform='translateY('+(d*-40).toFixed(1)+'px) scale('+(1-Math.abs(d)*.06).toFixed(3)+')'}});
+ if(stp&&ln){var r=stp.getBoundingClientRect(),mid=vh*.6,h=Math.max(0,Math.min(r.height-80,mid-r.top-40));ln.style.height=h+'px';sps.forEach(function(s){var q=s.getBoundingClientRect();s.classList.toggle('ok',q.top+40<mid)})}}
+window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(maj)}},{passive:true});maj();
+})();

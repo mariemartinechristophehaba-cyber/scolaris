@@ -151,6 +151,6 @@ export function noterArrivee() {
     const src = sourceArrivee(); const j = new Date().toISOString().slice(0, 10);
     if (localStorage.getItem('scolaris_vu') === j) return;
     localStorage.setItem('scolaris_vu', j);
-    appel('/rest/v1/rpc/noter_arrivee', { method: 'POST', body: JSON.stringify({ p_source: src }) }).catch(() => {});
+    appel('/rest/v1/rpc/noter_arrivee', { method: 'POST', keepalive: true, body: JSON.stringify({ p_source: src }) }).catch(() => {});
   } catch { /* ignoré */ }
 }

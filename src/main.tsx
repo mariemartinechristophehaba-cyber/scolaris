@@ -178,7 +178,12 @@ function Racine() {
   if (c === '/inscription') return <Inscription />;
   if (c === '/mot-de-passe-oublie') return <Oublie />;
   // Visiteur non connecté : la page de présentation (site vitrine) est servie à part, dans /bienvenue/.
-  window.location.replace('/bienvenue/');
+  return <VersVitrine />;
+}
+
+// Laisse d'abord noterArrivee() compter la visite (réseau d'origine), puis ouvre le site vitrine.
+function VersVitrine() {
+  useEffect(() => { const t = setTimeout(() => location.replace('/bienvenue/'), 150); return () => clearTimeout(t); }, []);
   return null;
 }
 

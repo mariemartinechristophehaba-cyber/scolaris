@@ -55,6 +55,18 @@ var go=function(){if(!v.src){v.src=v.getAttribute('data-src');}var p=v.play();if
 var URL_='https://hezntpvvsukdlehpbqzs.supabase.co/rest/v1/rpc/noter_clic',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlem50cHZ2c3VrZGxlaHBicXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTc3OTgsImV4cCI6MjEwOTEzMzc5OH0.aAeqyLr8PY2MlGIP09cLSvJSive3YSTTkFW4zuh0Zk4';
 function clic(c){try{fetch(URL_,{method:'POST',keepalive:true,headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify({p_cible:c})}).catch(function(){})}catch(e){}}
 document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(!a)return;var h=a.getAttribute('href')||'',c=a.getAttribute('data-clic');
- if(!c){if(h.indexOf('/inscription')>-1)c='inscription';else if(h.indexOf('/connexion')>-1)c='connexion';else if(h.indexOf('wa.me')>-1)c='whatsapp';}
+ if(!c){if(h.indexOf('/inscription')>-1)c='inscription';else if(h.indexOf('/connexion')>-1)c='connexion';else if(h.indexOf('wa.me')>-1)return;}
  if(c)clic(c);},true);
+})();
+
+(function(){
+// Bouton WhatsApp : choisir entre rejoindre la chaîne et écrire à l'équipe (les boutons « démo » vont directement à la discussion).
+var w=document.getElementById('wsh');if(!w)return;
+function fermer(){w.classList.remove('on')}
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(!a||w.contains(a))return;var h=a.getAttribute('href')||'';
+ if(h.indexOf('wa.me')>-1&&a.getAttribute('data-clic')!=='demo'){e.preventDefault();w.classList.add('on');}},true);
+w.addEventListener('click',function(e){if(e.target===w)fermer();});
+document.getElementById('wshx').addEventListener('click',fermer);
+w.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){setTimeout(fermer,300)});});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')fermer();});
 })();

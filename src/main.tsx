@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
-import { auth, db, getSession, noterArrivee, poserLectureSeule, surSession } from './api';
+import { auth, db, envoyerAttente, getSession, horsLigne, lireAttente, noterArrivee, poserLectureSeule, surReseau, surSession } from './api';
+import { PiWifiSlashBold, PiCloudArrowUpBold } from 'react-icons/pi';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, Confidentialite, FamillePublic, RecuPublic } from './public';
@@ -43,6 +44,17 @@ function BarreBas({ chemin, can, role, ouvrir }: any) {
       <button type="button" onClick={ouvrir}><PiDotsNine aria-hidden="true" /><span>Menu</span></button>
     </nav>
   );
+}
+
+// Bandeau réseau : hors connexion (données de quand) ou paiements qui attendent d'être envoyés.
+function BandeauReseau() {
+  const [, maj] = useState(0);
+  useEffect(() => { const a = surReseau(() => maj((n) => n + 1)); const f = () => maj((n) => n + 1); addEventListener('online', f); addEventListener('offline', f); envoyerAttente(); return () => { a(); removeEventListener('online', f); removeEventListener('offline', f); }; }, []);
+  const h = horsLigne() || (!navigator.onLine ? { depuis: 0 } : null); const n = lireAttente().filter((x) => !x.erreur).length;
+  if (!h && !n) return null;
+  const quand = h?.depuis ? new Date(h.depuis) : null; const auj = quand && quand.toDateString() === new Date().toDateString();
+  return <div className={`bande-res${h ? '' : ' envoi'}`} role="status">{h ? <PiWifiSlashBold aria-hidden="true" /> : <PiCloudArrowUpBold aria-hidden="true" />}
+    <span>{h ? <><b>Hors connexion.</b> {quand ? `Données ${auj ? "d'aujourd'hui" : `du ${quand.toLocaleDateString('fr-FR')}`} à ${quand.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.` : ''}{n ? ` ${n} paiement${n > 1 ? 's' : ''} gardé${n > 1 ? 's' : ''} sur le téléphone.` : ' Les paiements saisis partiront au retour du réseau.'}</> : <>Envoi de {n} paiement{n > 1 ? 's' : ''} saisi{n > 1 ? 's' : ''} sans réseau…</>}</span></div>;
 }
 
 function Coque({ m, annees, recharger, abo }: any) {
@@ -120,6 +132,7 @@ function Coque({ m, annees, recharger, abo }: any) {
             <div className="zone-filtres" ref={setZF} />
             <AideMenu haut /><Lien to={can('directeur', 'comptable', 'caissier') ? '/relances' : '/paiements'} className="cloche" aria-label="Notifications"><PiBellSimpleDuotone aria-hidden="true" />{nd.attente > 0 && <i>{nd.attente > 99 ? '99+' : nd.attente}</i>}</Lien>
           </header>
+          <BandeauReseau />
           <div className="zone-bandeau" ref={setZB} />
           <main className="feuille"><BandeauAbonnement cache={chemin.startsWith('/abonnement')} accueil={chemin.startsWith('/tableau')} />{page}</main>{supportFlottant && <BoutonSupport />}
         </div>
@@ -188,3 +201,5 @@ function VersVitrine() {
 }
 
 createRoot(document.getElementById('root')!).render(<Racine />);
+// Application utilisable sans réseau (pages gardées sur le téléphone).
+if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.protocol === 'https:') addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });

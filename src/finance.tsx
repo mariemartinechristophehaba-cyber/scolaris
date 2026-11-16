@@ -1,9 +1,9 @@
 import { AideMenu } from './abonnement';
 import { PiLightbulbDuotone, PiCopyDuotone, PiPhoneSlashDuotone, PiChartLineUpDuotone, PiChalkboardDuotone, PiSparkleFill, PiCheckCircleDuotone, PiChecksBold } from 'react-icons/pi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
-import { db } from './api';
+import { db, envoyerAttente, horsLigne, lireAttente, mettreEnAttente, retirerAttente, surReseau } from './api';
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { fichesAVerifier, prevision, auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel, dv } from './lib';
 import { EtatPaiement } from './gestion';
@@ -204,8 +204,15 @@ export function NouveauPaiement() {
           x.preventDefault();
           if (!el) return e.setE('Choisissez un élève'); if (!m) return e.setE('Indiquez le montant reçu');
           e.envoyer(async () => {
-            const justificatif_chemin = fic ? await db.fichier(eid, fic) : null;
-            const [p] = await db.ins('paiements', { etablissement_id: eid, eleve_id: el, annee_scolaire_id: annee.id, montant: m, date_paiement: date, moyen_id: choix, reference: ref.trim() || null, justificatif_chemin });
+            const corps = { id: crypto.randomUUID(), etablissement_id: eid, eleve_id: el, annee_scolaire_id: annee.id, montant: m, date_paiement: date, moyen_id: choix, reference: ref.trim() || null, justificatif_chemin: null as string | null };
+            // Sans réseau : le paiement est gardé sur le téléphone et partira tout seul au retour du réseau.
+            const garder = () => { mettreEnAttente({ id: corps.id, corps, valider, eleve: `${s?.prenom || ''} ${s?.nom || ''}`.trim(), montant: m, cree: Date.now() }); naviguer('/paiements?attente=1'); };
+            if (!navigator.onLine) return garder();
+            let p: any;
+            try {
+              corps.justificatif_chemin = fic ? await db.fichier(eid, fic) : null;
+              [p] = await db.ins('paiements', corps);
+            } catch (err) { if (horsLigne() || !navigator.onLine) return garder(); throw err; }
             majNotif();
             if (valider) { await db.upd(`paiements?id=eq.${p.id}`, { statut: 'valide' }); naviguer(`/r/${p.jeton_public}`); } else naviguer('/paiements');
           });
@@ -220,6 +227,7 @@ export function NouveauPaiement() {
             <div className="champ"><span>Moyen de paiement</span><div className="moyens">{moyens.map((y: any) => <button type="button" key={y.id} aria-pressed={choix === y.id} className={choix === y.id ? 'on' : ''} onClick={() => setMoy(y.id)}><TuileMoyen type={y.type} /><span>{y.libelle}</span></button>)}</div></div>
             <Champ label="Référence de la transaction"><input value={ref} onChange={(v) => setR(v.target.value)} placeholder="Facultatif" /></Champ>
             <div className="deux"><Champ label="Date du paiement"><input type="date" value={date} max={auj()} onChange={(v) => setD(v.target.value)} required /></Champ><Champ label="Justificatif"><label className="joindre"><PiPaperclipDuotone aria-hidden="true" /><span>{fic ? fic.name : 'Joindre'}</span><input type="file" accept="image/*,application/pdf" onChange={(v) => setF(v.target.files?.[0] || null)} /></label></Champ></div>
+            {(horsLigne() || !navigator.onLine) && <p className="note hl-note">Pas de réseau : le paiement sera gardé sur ce téléphone et envoyé dès le retour de la connexion{fic ? ' (le justificatif ne peut pas être gardé, joignez-le plus tard)' : ''}.</p>}
             <Erreur t={e.erreur} />
             <button className="btn plein" disabled={e.occupe}><PiCheckBold aria-hidden="true" />{e.occupe ? 'Enregistrement…' : valider ? 'Enregistrer et valider' : 'Enregistrer le paiement'}</button>
             {!valider && <p className="note ctr">Le paiement restera en attente jusqu'à sa vérification par le directeur ou le comptable.</p>}
@@ -253,6 +261,7 @@ export function Paiements() {
     <>
       <Titre t="Paiements"><Lien to="/paiements/nouveau" className="btn plein mini"><PiPlusBold />Enregistrer</Lien></Titre>
       <Erreur t={e.erreur} />
+      <EnAttenteEnvoi fini={() => q.reload()} />
       <Etat q={q}>{(d) => {
         const att = d.l.filter((p: any) => p.statut === 'en_attente'); const val = d.l.filter((p: any) => p.statut === 'valide');
         const som = (a: any[]) => a.reduce((s, x) => s + Number(x.montant), 0);
@@ -289,6 +298,17 @@ export function Paiements() {
       }}</Etat>
     </>
   );
+}
+
+// Paiements saisis sans réseau, encore sur ce téléphone.
+function EnAttenteEnvoi({ fini }: any) {
+  const [, maj] = useState(0); const [en, setEn] = useState(false);
+  useEffect(() => surReseau(() => maj((n) => n + 1)), []);
+  const l = lireAttente(); if (!l.length) return null;
+  const go = async () => { setEn(true); const n = await envoyerAttente(); setEn(false); maj((x) => x + 1); if (n) fini(); };
+  return <section className="carte hl-file"><div className="tete-carte"><h2>Sur ce téléphone, pas encore envoyés</h2><span className="puce p-orange">{nb(l.length)}</span></div>
+    <ul className="hist">{l.map((a) => <li key={a.id}><div><b>{gnf(a.montant)}</b><small>{a.eleve}, saisi le {dateFr(new Date(a.cree).toISOString())} à {heure(new Date(a.cree).toISOString())}</small>{a.erreur && <small className="rouge">Refusé : {a.erreur}</small>}</div>{a.erreur && <button className="btn contour mini rouge" onClick={() => { if (confirm('Supprimer ce paiement non envoyé ?')) { retirerAttente(a.id); maj((x) => x + 1); } }}>Supprimer</button>}</li>)}</ul>
+    <button className="btn contour mini" disabled={en || !!horsLigne()} onClick={go}>{en ? 'Envoi…' : horsLigne() ? 'En attente du réseau' : 'Envoyer maintenant'}</button></section>;
 }
 
 // Valider d'un coup tous les paiements en attente affichés (après vérification). Chacun reçoit son numéro de reçu.

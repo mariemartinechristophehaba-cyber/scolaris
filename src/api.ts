@@ -39,20 +39,49 @@ export function message(e: any): string {
 
 async function jeton() {
   if (session && session.expires_at && session.expires_at * 1000 < Date.now() + 60000) {
-    const r = await fetch(`${SUPA}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: session.refresh_token }),
-    });
-    if (r.ok) poser(await r.json()); else poser(null);
+    let r: Response | null = null;
+    try {
+      r = await fetch(`${SUPA}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: session.refresh_token }),
+      });
+    } catch { /* hors connexion : on garde la session, elle sera renouvelée au retour du réseau */ }
+    if (r) { if (r.ok) poser(await r.json()); else if (r.status >= 400 && r.status < 500) poser(null); }
   }
   return session?.access_token || ANON;
 }
+
+// ---- Hors connexion ----
+// Chaque lecture réussie est gardée sur le téléphone. Sans réseau, l'application affiche la dernière copie.
+const CACHE_D = 'scolaris-donnees-v1';
+let hors: { depuis: number } | null = null;
+const abonnesR = new Set<() => void>();
+const signaler = (v: { depuis: number } | null) => { if (!!v !== !!hors) { hors = v; abonnesR.forEach((f) => f()); } else hors = v; };
+export const horsLigne = () => hors;
+export const surReseau = (f: () => void) => { abonnesR.add(f); return () => { abonnesR.delete(f); }; };
+const lisible = (url: string, init: RequestInit) => (!init.method || init.method === 'GET') ? url.startsWith('/rest/v1/') : url === '/rest/v1/rpc/demarrage';
+const cleCache = (url: string, init: RequestInit) => `https://cache.scolaris/${session?.user?.id || 'anon'}${url}${init.method === 'POST' ? '#' + (init.body || '') : ''}`;
+async function garder(cle: string, txt: string) { try { const c = await caches.open(CACHE_D); await c.put(cle, new Response(txt, { headers: { 'x-quand': String(Date.now()) } })); } catch { /* stockage indisponible */ } }
+async function reprendre(cle: string) { try { const c = await caches.open(CACHE_D); const r = await c.match(cle); if (!r) return null; return { txt: await r.text(), quand: Number(r.headers.get('x-quand')) || Date.now() }; } catch { return null; } }
+export async function viderCopies() { try { await caches.delete(CACHE_D); } catch { /* ignoré */ } }
 
 async function appel(url: string, init: RequestInit = {}) {
   const t = await jeton();
   const h: any = { apikey: ANON, Authorization: `Bearer ${t}`, ...(init.headers || {}) };
   if (!(init.body instanceof Blob) && init.body && !h['Content-Type']) h['Content-Type'] = 'application/json';
-  const r = await fetch(SUPA + url, { ...init, headers: h });
+  const lit = lisible(url, init); const cle = lit ? cleCache(url, init) : '';
+  let r: Response;
+  try {
+    const ac = new AbortController(); const minuteur = setTimeout(() => ac.abort(), lit ? 20000 : 45000);
+    r = await fetch(SUPA + url, { ...init, headers: h, signal: init.signal || ac.signal }).finally(() => clearTimeout(minuteur));
+  } catch (err) {
+    const copie = lit ? await reprendre(cle) : null;
+    signaler({ depuis: copie?.quand || hors?.depuis || Date.now() });
+    if (copie) return copie.txt ? JSON.parse(copie.txt) : null;
+    throw new Error(lit ? 'Pas de connexion, et cette page n’a pas encore été ouverte sur ce téléphone' : 'Connexion impossible. Vérifiez votre réseau');
+  }
+  if (hors) signaler(null);
   const txt = await r.text();
+  if (lit && r.ok) garder(cle, txt);
   let d: any = null;
   try { d = txt ? JSON.parse(txt) : null; } catch { d = txt; }
   if (!r.ok) throw new Error(message(d?.message || d?.msg || d?.error_description || d?.error || `Erreur ${r.status}`));
@@ -117,7 +146,7 @@ export const auth = {
     if (!s?.external?.google) throw new Error('La connexion avec Google n\'est pas encore activée');
     location.href = `${SUPA}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin + '/')}`;
   },
-  deconnexion: async () => { try { await appel('/auth/v1/logout', { method: 'POST' }); } catch { /* session déjà expirée */ } poser(null); },
+  deconnexion: async () => { try { await appel('/auth/v1/logout', { method: 'POST' }); } catch { /* session déjà expirée */ } poser(null); viderCopies(); viderAttente(); },
   // Retour de lien e-mail ou Google : la session arrive dans l'adresse
   retour: async () => {
     const p = new URLSearchParams(location.hash.slice(1));
@@ -153,4 +182,38 @@ export function noterArrivee() {
     localStorage.setItem('scolaris_vu', j);
     appel('/rest/v1/rpc/noter_arrivee', { method: 'POST', keepalive: true, body: JSON.stringify({ p_source: src }) }).catch(() => {});
   } catch { /* ignoré */ }
+}
+
+// ---- Paiements saisis sans réseau ----
+// Gardés sur le téléphone puis envoyés dès le retour du réseau. Chaque paiement a son identifiant fixé dès la saisie :
+// s'il a déjà été reçu (réponse perdue), le renvoi ne crée pas de doublon.
+const CLE_A = 'scolaris_attente';
+export type Attente = { id: string; corps: any; valider: boolean; eleve: string; montant: number; cree: number; erreur?: string };
+export const lireAttente = (): Attente[] => { try { return JSON.parse(localStorage.getItem(CLE_A) || '[]'); } catch { return []; } };
+const ecrireAttente = (l: Attente[]) => { try { localStorage.setItem(CLE_A, JSON.stringify(l)); } catch { /* plein */ } abonnesR.forEach((f) => f()); };
+function viderAttente() { try { localStorage.removeItem(CLE_A); } catch { /* ignoré */ } }
+export function mettreEnAttente(a: Attente) { ecrireAttente([...lireAttente(), a]); }
+export function retirerAttente(id: string) { ecrireAttente(lireAttente().filter((x) => x.id !== id)); }
+let envoiEnCours = false;
+export async function envoyerAttente(): Promise<number> {
+  if (envoiEnCours || !session?.access_token) return 0;
+  const l = lireAttente(); if (!l.length) return 0;
+  envoiEnCours = true; let n = 0;
+  try {
+    for (const a of l) {
+      try {
+        try { await db.ins('paiements', a.corps); } catch (e: any) { if (!/paiements_pkey/.test(String(e?.message))) throw e; }
+        if (a.valider) await db.upd(`paiements?id=eq.${a.id}&statut=eq.en_attente`, { statut: 'valide' });
+        retirerAttente(a.id); n++;
+      } catch (e: any) {
+        if (horsLigne()) break; // toujours pas de réseau : on réessaiera
+        ecrireAttente(lireAttente().map((x) => (x.id === a.id ? { ...x, erreur: e.message } : x)));
+      }
+    }
+  } finally { envoiEnCours = false; }
+  return n;
+}
+if (typeof window !== 'undefined') {
+  addEventListener('online', () => { envoyerAttente(); });
+  setInterval(() => { if (lireAttente().some((x) => !x.erreur)) envoyerAttente(); }, 30000);
 }

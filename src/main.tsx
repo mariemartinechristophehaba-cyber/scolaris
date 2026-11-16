@@ -177,8 +177,9 @@ function Racine() {
   if (c === '/connexion') return <Connexion />;
   if (c === '/inscription') return <Inscription />;
   if (c === '/mot-de-passe-oublie') return <Oublie />;
-  if (c !== '/') history.replaceState(null, '', '/');
-  return <Accueil />;
+  // Visiteur non connecté : la page de présentation (site vitrine) est servie à part, dans /bienvenue/.
+  window.location.replace('/bienvenue/');
+  return null;
 }
 
 createRoot(document.getElementById('root')!).render(<Racine />);

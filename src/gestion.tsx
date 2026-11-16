@@ -43,7 +43,7 @@ export function Eleves() {
   }, [q.data, txt, cl]);
   const compte = (k: string) => (k === 'tous' ? base.length : base.filter((s: any) => etat(s) === k).length);
   const filtres = f === 'tous' ? base : base.filter((s: any) => etat(s) === f);
-  const PAR = 10; const pages = Math.max(1, Math.ceil(filtres.length / PAR)); const page = Math.min(p, pages);
+  const PAR = 20; const pages = Math.max(1, Math.ceil(filtres.length / PAR)); const page = Math.min(p, pages);
   const vue = filtres.slice((page - 1) * PAR, page * PAR);
   const bouge = (fn: any) => (x: any) => { fn(x.target.value); setP(1); };
   return (
@@ -172,7 +172,7 @@ export function Classes() {
             const t = Math.round(c.taux_recouvrement); const a = c.facture_net > 0;
             return <section className="carte cl" key={c.classe_id}>
               <div className="cl-t"><div><h2>{c.nom}</h2>{d.nom[c.classe_id] && <span className="puce">{d.nom[c.classe_id]}</span>}</div>{fin && (a ? <Jauge clair petit ton={t >= 70 ? 'vert' : 'orange'} p={t}><b>{t} %</b></Jauge> : (can('directeur', 'comptable') ? <Lien to={`/frais?classe=${c.classe_id}`} className="sans-frais lien-frais">Définir les frais<PiCaretRightBold aria-hidden="true" /></Lien> : <span className="sans-frais">Frais à définir</span>))}</div>
-              {a && Number(c.taux_recouvrement) === meilleur && <span className="meilleur"><PiCrownSimpleFill aria-hidden="true" />Meilleur taux</span>}
+              {a && Number(c.taux_recouvrement) === meilleur && d.st.some((x: any) => x.facture_net > 0 && Number(x.taux_recouvrement) < meilleur) && <span className="meilleur"><PiCrownSimpleFill aria-hidden="true" />Meilleur taux</span>}
               <dl className="cl-d"><div><dt>Effectif</dt><dd>{nb(c.effectif)}</dd></div>{fin && a && <><div><dt>Facturé</dt><dd>{nb(c.facture_net)}</dd></div><div><dt>Payé</dt><dd className="vert">{nb(c.regle)}</dd></div><div><dt>Reste</dt><dd className={c.impaye_echu > 0 ? 'rouge' : ''}>{nb(c.reste)}</dd></div></>}</dl>
             </section>;
           })}</div>}

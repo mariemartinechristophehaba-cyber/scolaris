@@ -43,3 +43,17 @@ function maj(){tick=false;var y=window.scrollY,vh=window.innerHeight;if(nv)nv.cl
  if(stp&&ln){var r=stp.getBoundingClientRect(),mid=vh*.6,h=Math.max(0,Math.min(r.height-80,mid-r.top-40));ln.style.height=h+'px';sps.forEach(function(s){var q=s.getBoundingClientRect();s.classList.toggle('ok',q.top+40<mid)})}}
 window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(maj)}},{passive:true});maj();
 })();
+
+(function(){
+// vidéo : chargée seulement quand on arrive dessus (économie de 4G)
+var v=document.getElementById('vv');
+if(v){var go=function(){if(!v.src){v.src=v.getAttribute('data-src');}var p=v.play();if(p&&p.catch)p.catch(function(){});};
+ if('IntersectionObserver' in window){var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){go();}else if(v.src&&!v.paused&&v.muted){v.pause();}})},{rootMargin:'200px'});o.observe(v);}else go();
+ var sb=document.getElementById('snd');if(sb)sb.addEventListener('click',function(){if(!v.src)v.src=v.getAttribute('data-src');clic('video');},true);}
+// compteur de clics pour Pilotage (aucune donnée personnelle)
+var URL_='https://hezntpvvsukdlehpbqzs.supabase.co/rest/v1/rpc/noter_clic',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlem50cHZ2c3VrZGxlaHBicXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTc3OTgsImV4cCI6MjEwOTEzMzc5OH0.aAeqyLr8PY2MlGIP09cLSvJSive3YSTTkFW4zuh0Zk4';
+function clic(c){try{fetch(URL_,{method:'POST',keepalive:true,headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify({p_cible:c})}).catch(function(){})}catch(e){}}
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(!a)return;var h=a.getAttribute('href')||'',c=a.getAttribute('data-clic');
+ if(!c){if(h.indexOf('/inscription')>-1)c='inscription';else if(h.indexOf('/connexion')>-1)c='connexion';else if(h.indexOf('wa.me')>-1)c='whatsapp';}
+ if(c)clic(c);},true);
+})();

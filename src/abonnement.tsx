@@ -1,5 +1,6 @@
 import { PiChatCircleDotsFill } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
+import { PiShieldCheckFill, PiLockKeyFill } from 'react-icons/pi';
 import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCrownSimpleFill, PiInfoFill, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, payerAbonnement } from './api';
 import { TRANCHES, dateFr, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
@@ -104,12 +105,21 @@ export function Abonnement() {
     catch (x: any) { setErrP(x.message || 'Paiement indisponible, réessayez'); setPart(false); }
   };
   // Retour de Chariow : on attend la confirmation automatique (quelques secondes), sans rien demander.
-  if (att) return <><Titre t="Abonnement" /><div className="abp abp-fin">
-    <div className="abp-merci"><span className="abp-roue" aria-hidden="true" /></div>
-    <h1>{essais < 24 ? 'Confirmation du paiement…' : 'Paiement en cours de vérification'}</h1>
-    <p>{essais < 24 ? 'Ne fermez pas cette page : votre abonnement s’active tout seul dès que Chariow confirme le paiement (en général moins d’une minute).' : 'La confirmation prend plus de temps que prévu. Si vous avez bien payé, votre accès s’activera tout seul ; sinon, réessayez.'}</p>
-    <div className="abp-bas">{essais >= 24 && <button type="button" className="abp-cta" onClick={() => { setAtt(false); history.replaceState(null, '', '/abonnement'); }}>Revenir à l'abonnement</button>}<button type="button" className="abp-lien" onClick={() => { setAtt(false); history.replaceState(null, '', '/abonnement'); }}>Je n'ai pas payé</button></div>
-  </div></>;
+  if (att) {
+    const pq = new URLSearchParams(location.search).get('per'); const pl = PLANS[pq === 'mois' ? 'mois' : pq === 'sms' ? 'sms' : 'an']; const long = essais >= 24;
+    const quitter = () => { setAtt(false); history.replaceState(null, '', '/abonnement'); };
+    return <><Titre t="Abonnement" /><div className="abp abp-fin pa">
+      <div className="pa-anim" aria-hidden="true"><span className="pa-onde" /><span className="pa-onde d2" /><span className="pa-coeur"><PiShieldCheckFill /></span></div>
+      <h1>{long ? 'Vérification en cours' : 'Confirmation de votre paiement'}</h1>
+      <p>{long ? 'La confirmation prend plus de temps que d’habitude. Si vous avez validé le paiement, votre accès s’activera tout seul : vous pouvez fermer cette page.' : 'Validez le paiement sur votre téléphone si on vous le demande. Votre abonnement s’active automatiquement, sans rien faire de plus.'}</p>
+      <div className="abp-recap pa-recap"><span className="abp-tuile"><pl.Ic /></span><div><b>{pq === 'sms' ? pl.nom : `Plan ${pl.nom}`}</b><strong>{gnf(pl.prix)}{pq === 'sms' ? '' : ` / ${pl.unite}`}</strong></div><em className="pa-badge"><i />En cours</em></div>
+      <ol className="pa-etapes"><li className="ok"><PiCheckCircleFill aria-hidden="true" /><span><b>Paiement lancé</b><small>Page de paiement sécurisée ouverte</small></span></li>
+        <li className="cours"><span className="pa-point" aria-hidden="true" /><span><b>Confirmation de l’opérateur</b><small>Orange Money, MTN, Wave ou carte</small></span></li>
+        <li><span className="pa-vide" aria-hidden="true" /><span><b>{pq === 'sms' ? 'SMS ajoutés' : 'Abonnement activé'}</b><small>Automatiquement, dès la confirmation</small></span></li></ol>
+      <p className="pa-secu"><PiLockKeyFill aria-hidden="true" />Paiement sécurisé par Chariow. Scolaris ne voit jamais votre code secret.</p>
+      <div className="abp-bas">{long && <button type="button" className="abp-cta" onClick={quitter}>Revenir à l'abonnement</button>}<button type="button" className="abp-lien" onClick={quitter}>Je n'ai pas payé</button></div>
+    </div></>;
+  }
   if (new URLSearchParams(location.search).get('paye') === '1' && abo.situation === 'actif') return <><Titre t="Abonnement" /><div className="abp abp-fin">
     <div className="abp-merci"><svg viewBox="0 0 120 92" aria-hidden="true"><circle cx="72" cy="46" r="44" fill="#E2F7EC" /><circle cx="72" cy="46" r="31" fill="#0FA968" /><path d="M58 47l10 10 19-21" fill="none" stroke="#fff" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
     <h1>Paiement reçu, merci !</h1><p>Votre abonnement est actif jusqu'au {dateFr(abo.fin)}.</p>

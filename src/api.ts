@@ -88,6 +88,7 @@ async function appel(url: string, init: RequestInit = {}) {
   return d;
 }
 
+export const payerAbonnement = (b: any) => appel('/functions/v1/abonnement-payer', { method: 'POST', body: JSON.stringify(b) });
 export const equipeApi = (b: any) => appel('/functions/v1/equipe', { method: 'POST', body: JSON.stringify(b) });
 
 // Réduit les photos avant l'envoi : un justificatif reste lisible et prend dix fois moins de place.

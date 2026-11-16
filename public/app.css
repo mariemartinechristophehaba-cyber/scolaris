@@ -579,3 +579,4 @@ html.sombre .tout-val{background:#2a2213;border-color:#4a3a1a}
 .fa-ok{text-align:center}.fa-ok-i{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#E2F7EC;color:#0FA968;font-size:32px;margin:6px 0 10px}
 .par-dec{display:inline-block!important;margin-top:4px;padding:2px 8px;border-radius:999px;background:#F2EDFF;color:#6D28D9;font-size:11.5px!important;font-weight:600}
 .fa-pay .tuile{display:grid;place-items:center;flex:none;border-radius:10px;font-weight:800;font-size:11px;line-height:1}
+.abp-roue{display:block;width:84px;height:84px;margin:10px auto;border-radius:50%;border:7px solid #E5EEFF;border-top-color:#0B4FE8;animation:abpr 1s linear infinite}@keyframes abpr{to{transform:rotate(360deg)}}

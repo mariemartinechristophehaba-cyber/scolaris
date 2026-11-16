@@ -1,6 +1,6 @@
 import { PiChatCircleDotsFill } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
-import { PiShieldCheckFill, PiLockKeyFill } from 'react-icons/pi';
+import { PiLockKeyFill } from 'react-icons/pi';
 import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCrownSimpleFill, PiInfoFill, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, payerAbonnement } from './api';
 import { TRANCHES, dateFr, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
@@ -67,6 +67,22 @@ function CarteSms({ abo, pk, acheter }: any) {
 
 
 
+// Attente de la confirmation Chariow : même style que la création de l'école (écran bleu, anneau qui avance).
+function AttentePaiement({ plan, sms, essais, quitter }: any) {
+  const [t, setT] = useState(0);
+  useEffect(() => { const x = setInterval(() => setT((v) => v + 1), 250); return () => clearInterval(x); }, []);
+  const pct = Math.min(92, Math.round(92 * (1 - Math.exp(-t / 60)))); const C = 2 * Math.PI * 84; const long = essais >= 24;
+  const R: [string, string][] = [['Paiement lancé', 'd'], [`Confirmation de l’opérateur`, 'c'], [sms ? 'Ajout des SMS' : 'Activation de votre abonnement', '']];
+  return <div className="pa-plein"><main className="fin1" aria-live="polite"><div className="fin-c">
+    <div className="fin-r" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Confirmation du paiement"><svg viewBox="0 0 188 188"><defs><linearGradient id="pa-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff" /><stop offset="1" stopColor="#8DBBFF" /></linearGradient></defs><circle cx="94" cy="94" r="84" fill="none" stroke="rgba(255,255,255,.16)" strokeWidth="9" /><g className="fin-t"><circle cx="94" cy="94" r="84" fill="none" stroke="url(#pa-g)" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${C * Math.max(0.08, pct / 100)} ${C}`} /></g></svg><img src="/img/icone.png" alt="" /></div>
+    <h1>{long ? 'Vérification en cours' : 'Confirmation de votre paiement'}</h1>
+    <p>{long ? 'Cela prend plus de temps que d’habitude. Si vous avez validé le paiement, votre accès s’activera tout seul.' : 'Validez le paiement sur votre téléphone si on vous le demande. Tout s’active automatiquement.'}</p>
+    <div className="pa-chip"><span>{sms ? plan.nom : `Plan ${plan.nom}`}</span><b>{gnf(plan.prix)}{sms ? '' : ` / ${plan.unite}`}</b></div>
+    <ul className="fin-l2">{R.map(([l, k]) => <li key={l} className={k}><u>{k === 'd' && <PiCheckBold aria-hidden="true" />}</u>{l}</li>)}</ul>
+    <p className="pa-sec"><PiLockKeyFill aria-hidden="true" />Paiement sécurisé par Chariow</p>
+  </div><div className="fin-pb"><div><span>{long ? 'En attente de l’opérateur' : 'Vérification'}</span><span>{pct} %</span></div><s><i style={{ width: `${pct}%` }} /></s><button type="button" className="pa-non" onClick={quitter}>{long ? 'Revenir à l’abonnement' : 'Je n’ai pas payé'}</button></div></main></div>;
+}
+
 export function Abonnement() {
   const { abo, eid, recharger } = useApp(); const [per, setPer] = useState('an'); const [num, setNum] = useState(''); const [etape, setEtape] = useState(1); const [hist, setHist] = useState(false); const e = useEnvoi();
   const [part, setPart] = useState(false); const [errP, setErrP] = useState('');
@@ -106,24 +122,14 @@ export function Abonnement() {
   };
   // Retour de Chariow : on attend la confirmation automatique (quelques secondes), sans rien demander.
   if (att) {
-    const pq = new URLSearchParams(location.search).get('per'); const pl = PLANS[pq === 'mois' ? 'mois' : pq === 'sms' ? 'sms' : 'an']; const long = essais >= 24;
-    const quitter = () => { setAtt(false); history.replaceState(null, '', '/abonnement'); };
-    return <><Titre t="Abonnement" /><div className="abp abp-fin pa">
-      <div className="pa-anim" aria-hidden="true"><span className="pa-onde" /><span className="pa-onde d2" /><span className="pa-coeur"><PiShieldCheckFill /></span></div>
-      <h1>{long ? 'Vérification en cours' : 'Confirmation de votre paiement'}</h1>
-      <p>{long ? 'La confirmation prend plus de temps que d’habitude. Si vous avez validé le paiement, votre accès s’activera tout seul : vous pouvez fermer cette page.' : 'Validez le paiement sur votre téléphone si on vous le demande. Votre abonnement s’active automatiquement, sans rien faire de plus.'}</p>
-      <div className="abp-recap pa-recap"><span className="abp-tuile"><pl.Ic /></span><div><b>{pq === 'sms' ? pl.nom : `Plan ${pl.nom}`}</b><strong>{gnf(pl.prix)}{pq === 'sms' ? '' : ` / ${pl.unite}`}</strong></div><em className="pa-badge"><i />En cours</em></div>
-      <ol className="pa-etapes"><li className="ok"><PiCheckCircleFill aria-hidden="true" /><span><b>Paiement lancé</b><small>Page de paiement sécurisée ouverte</small></span></li>
-        <li className="cours"><span className="pa-point" aria-hidden="true" /><span><b>Confirmation de l’opérateur</b><small>Orange Money, MTN, Wave ou carte</small></span></li>
-        <li><span className="pa-vide" aria-hidden="true" /><span><b>{pq === 'sms' ? 'SMS ajoutés' : 'Abonnement activé'}</b><small>Automatiquement, dès la confirmation</small></span></li></ol>
-      <p className="pa-secu"><PiLockKeyFill aria-hidden="true" />Paiement sécurisé par Chariow. Scolaris ne voit jamais votre code secret.</p>
-      <div className="abp-bas">{long && <button type="button" className="abp-cta" onClick={quitter}>Revenir à l'abonnement</button>}<button type="button" className="abp-lien" onClick={quitter}>Je n'ai pas payé</button></div>
-    </div></>;
+    const pq = new URLSearchParams(location.search).get('per'); const pl = PLANS[pq === 'mois' ? 'mois' : pq === 'sms' ? 'sms' : 'an'];
+    return <AttentePaiement plan={pl} sms={pq === 'sms'} essais={essais} quitter={() => { setAtt(false); history.replaceState(null, '', '/abonnement'); }} />;
   }
-  if (new URLSearchParams(location.search).get('paye') === '1' && abo.situation === 'actif') return <><Titre t="Abonnement" /><div className="abp abp-fin">
-    <div className="abp-merci"><svg viewBox="0 0 120 92" aria-hidden="true"><circle cx="72" cy="46" r="44" fill="#E2F7EC" /><circle cx="72" cy="46" r="31" fill="#0FA968" /><path d="M58 47l10 10 19-21" fill="none" stroke="#fff" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
-    <h1>Paiement reçu, merci !</h1><p>Votre abonnement est actif jusqu'au {dateFr(abo.fin)}.</p>
-    <div className="abp-bas"><Lien to="/tableau" className="abp-cta">Retour au tableau de bord</Lien></div></div></>;
+  if (new URLSearchParams(location.search).get('paye') === '1' && abo.situation === 'actif') return <div className="pa-plein"><main className="fin1"><div className="fin-c">
+    <div className="pa-ok"><span><PiCheckBold aria-hidden="true" /></span></div>
+    <h1>Paiement reçu, merci !</h1><p>Votre abonnement Scolaris est actif jusqu'au {dateFr(abo.fin)}.</p>
+    <ul className="fin-l2"><li className="d"><u><PiCheckBold aria-hidden="true" /></u>Paiement confirmé</li><li className="d"><u><PiCheckBold aria-hidden="true" /></u>Abonnement activé</li><li className="d"><u><PiCheckBold aria-hidden="true" /></u>Reçu disponible dans l'historique</li></ul>
+  </div><div className="fin-pb"><Lien to="/tableau" className="pa-bt">Accéder à mon école<PiArrowRightBold aria-hidden="true" /></Lien></div></main></div>;
 
   if (abo.en_attente) {
     const att = abo.historique.find((p: any) => p.statut === 'en_attente'); const pl = PLANS[att?.periode === 'mois' ? 'mois' : att?.periode === 'sms' ? 'sms' : 'an'];

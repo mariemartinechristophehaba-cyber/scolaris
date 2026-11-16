@@ -2,8 +2,8 @@ import { PiChatCircleDotsFill } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
 import { PiLockKeyFill } from 'react-icons/pi';
 import { PiArrowLeftBold, PiArrowRightBold, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCrownSimpleFill, PiInfoFill, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
-import { auth, db, payerAbonnement } from './api';
-import { TRANCHES, dateFr, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
+import { auth, db, getSession, payerAbonnement } from './api';
+import { TRANCHES, dateFr, erreurTel, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
 import { Erreur, Lien, Modale, Pastille, Titre, Tuile, Vide, useApp, useEnvoi } from './ui';
 
 export const LIB_T: any = { ...Object.fromEntries(TRANCHES), moins_200: "Jusqu'à 200 élèves", '201_500': '201 à 500 élèves', '501_1000': '501 à 1 000 élèves' };
@@ -86,6 +86,10 @@ function AttentePaiement({ plan, sms, essais, quitter }: any) {
 export function Abonnement() {
   const { abo, eid, recharger } = useApp(); const [per, setPer] = useState('an'); const [num, setNum] = useState(''); const [etape, setEtape] = useState(1); const [hist, setHist] = useState(false); const e = useEnvoi();
   const [part, setPart] = useState(false); const [errP, setErrP] = useState('');
+  const gn = paysActif().c === 'GN';
+  const MP = gn ? [{ k: 'orange_money', nom: 'Orange Money', sous: 'Paiement mobile rapide', img: '/img/paiement/orange-money.png', mobile: true }, { k: 'mtn_money', nom: 'MTN Mobile Money', sous: 'Paiement mobile rapide', img: '/img/paiement/mtn-money.png', mobile: true }, { k: 'carte', nom: 'Carte bancaire', sous: 'Visa, Mastercard', img: '/img/paiement/carte-bancaire.png', mobile: false }]
+    : [{ k: 'mobile_money', nom: 'Mobile Money', sous: 'Orange, MTN, Wave, Moov…', img: '/img/paiement/orange-money.png', mobile: true }, { k: 'carte', nom: 'Carte bancaire', sous: 'Visa, Mastercard', img: '/img/paiement/carte-bancaire.png', mobile: false }];
+  const [moy, setMoy] = useState(MP[0].k); const [numP, setNumP] = useState(() => tel(getSession()?.user?.user_metadata?.telephone || ''));
   const [att, setAtt] = useState(() => new URLSearchParams(location.search).get('retour') === '1'); const [essais, setEssais] = useState(0);
   useEffect(() => { if (!att) return; const t = setTimeout(async () => { await recharger(); setEssais((n) => n + 1); }, 5000); return () => clearTimeout(t); }, [att, essais]);
   useEffect(() => { if (att && abo?.situation === 'actif' && essais > 0 && (abo.historique || []).some((p: any) => p.statut === 'valide' && Date.now() - new Date(p.traite_le || p.declare_le).getTime() < 15 * 60000)) { setAtt(false); history.replaceState(null, '', '/abonnement?paye=1'); } }, [abo, essais]);
@@ -116,8 +120,10 @@ export function Abonnement() {
   // Paiement en un geste : page Chariow déjà remplie (nom, téléphone, produit) ; la personne confirme sur son téléphone.
 
   const payer = async () => {
+    const mob = MP.find((x) => x.k === moy)?.mobile; const n = tel(numP);
+    if (mob) { if (!n) return setErrP('Indiquez le numéro qui va payer'); const er = erreurTel(numP); if (er) return setErrP(er); }
     setPart(true); setErrP('');
-    try { const r = await payerAbonnement({ etablissement_id: eid, periode: per, retour: `${location.origin}/abonnement?retour=1&per=${per}` }); try { sessionStorage.setItem('sc_paie', String(Date.now())); } catch { /* ignoré */ } location.href = r.url; }
+    try { const r = await payerAbonnement({ etablissement_id: eid, periode: per, moyen: moy, telephone: mob ? n : null, retour: `${location.origin}/abonnement?retour=1&per=${per}` }); try { sessionStorage.setItem('sc_paie', String(Date.now())); } catch { /* ignoré */ } location.href = r.url; }
     catch (x: any) { setErrP(x.message || 'Paiement indisponible, réessayez'); setPart(false); }
   };
   // Retour de Chariow : on attend la confirmation automatique (quelques secondes), sans rien demander.
@@ -160,9 +166,15 @@ export function Abonnement() {
           : <><h3>Avantages inclus :</h3>
           <ul className="abp-av"><li className="sms"><span><PiChatCircleDotsFill aria-hidden="true" /></span>{smsOk ? `${nb(smsMois)} SMS de relance chaque mois` : 'Relances WhatsApp illimitées'}</li>{AVANTAGES.map(([I, t]) => <li key={t}><span><I aria-hidden="true" /></span>{t}</li>)}</ul></>}
           {(per === 'sms' ? pk.lien : abo?.[`lien_${per}`]) ? <>
-            <p className="abp-info"><PiInfoFill aria-hidden="true" />Orange Money, MTN, Wave, Moov ou carte. Vos informations sont déjà remplies : choisissez votre moyen de paiement, confirmez sur votre téléphone, c'est fini. Votre accès s'active tout seul.</p>
+            <section className="mp" aria-label="Mode de paiement"><h3>Mode de paiement</h3>
+              {MP.map((x) => { const on = moy === x.k; return <div key={x.k} className={`mp-o${on ? ' on' : ''}`}>
+                <button type="button" className="mp-t" aria-pressed={on} onClick={() => { setMoy(x.k); setErrP(''); }}><span className="mp-lg"><img src={x.img} alt="" /></span><span className="mp-tx"><b>{x.nom}</b><small>{x.sous}</small></span><i className="mp-rd" aria-hidden="true" /></button>
+                {on && x.mobile && <label className="mp-num"><span>Numéro {x.nom} qui va payer</span><div><em>+{paysActif().ind}</em><input type="tel" inputMode="numeric" autoComplete="tel" value={numP} onChange={(v) => { setNumP(v.target.value); setErrP(''); }} placeholder={paysActif().ex} /></div><small>Vous recevrez la demande de paiement sur ce numéro.</small></label>}
+                {on && !x.mobile && <p className="mp-carte">Visa, Mastercard : vous saisirez votre carte sur la page sécurisée.</p>}
+              </div>; })}
+            </section>
             {errP && <p className="erreur" role="alert">{errP}</p>}
-            <div className="abp-bas"><button type="button" className="abp-cta" disabled={part} onClick={payer}>{part ? 'Ouverture du paiement…' : `Payer ${gnf(montant)}`}{!part && <PiArrowRightBold aria-hidden="true" />}</button><button type="button" className="abp-lien" onClick={() => aller(3)}>J'ai déjà payé</button></div>
+            <div className="abp-bas"><button type="button" className="abp-cta" disabled={part} onClick={payer}>{part ? 'Ouverture du paiement…' : `Payer ${gnf(montant)}`}{!part && <PiArrowRightBold aria-hidden="true" />}</button><p className="mp-secu"><PiLockKeyFill aria-hidden="true" />Paiement sécurisé par Chariow</p><button type="button" className="abp-lien" onClick={() => aller(3)}>J'ai déjà payé</button></div>
           </> : <>
             <p className="abp-info"><PiInfoFill aria-hidden="true" />Le paiement en ligne n'est pas encore ouvert pour ce tarif. Écrivez à Scolaris, on vous envoie le lien de paiement.</p>
             {abo.whatsapp && <div className="abp-bas"><a className="btn wa" href={waScolaris(abo.whatsapp, `Bonjour Scolaris, je souhaite payer : ${per === 'sms' ? plan.nom : `abonnement ${plan.nom.toLowerCase()}`} (${gnf(montant)}).`)} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Écrire à Scolaris</a></div>}

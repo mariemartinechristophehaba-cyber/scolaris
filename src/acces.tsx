@@ -271,16 +271,45 @@ export function NouveauMdp({ fini }: any) {
 }
 
 export function PremierEtablissement({ fini }: any) {
-  const [n, setN] = useState(''); const [el, setEl] = useState(''); const e = useEnvoi();
+  // Même exigence que l'inscription : aucune information facultative (sauf le logo).
+  const [f, setF] = useState({ pays: paysActif().c || 'GN', ecole: '', ville: '', vl: false, quartier: '', telE: '', eleves: '', classes: '' });
+  const [niv, setNiv] = useState<string[]>([]); const [et, setEt] = useState(1); const [pv, setPv] = useState(false); const [pp, setPp] = useState(false); const e = useEnvoi();
+  const c = (k: string) => ({ value: (f as any)[k], onChange: (x: any) => { setF({ ...f, [k]: x.target.value }); e.setE(''); } });
+  const nb_ = Number(f.eleves.replace(/\D/g, '')) || 0;
+  const suite = (x: any) => {
+    x.preventDefault(); e.setE('');
+    if (et === 1) {
+      if (!f.ecole.trim()) return e.setE('Indiquez le nom de l’école');
+      if (!f.ville.trim()) return e.setE('Choisissez la ville de l’école');
+      if (!f.quartier.trim()) return e.setE('Indiquez le quartier de l’école');
+      { const er = erreurTel(f.telE, true); if (!tel(f.telE)) return e.setE('Indiquez le téléphone de l’école'); if (er) return e.setE(`Téléphone de l’école : ${er}`); }
+      setEt(2); window.scrollTo(0, 0); return;
+    }
+    if (!nb_) return e.setE('Indiquez le nombre d’élèves');
+    if (!Number(f.classes)) return e.setE('Indiquez le nombre de classes');
+    if (!niv.length) return e.setE('Choisissez au moins un niveau');
+    e.envoyer(async () => { await db.rpc('creer_etablissement', { p_nom: f.ecole.trim(), p_ville: f.ville.trim(), p_telephone: tel(f.telE), p_details: { pays: f.pays, quartier: f.quartier.trim(), eleves: nb_, classes: Number(f.classes), niveaux: niv } }); fini(); });
+  };
+  if (pp) return <ChoixPays v={f.pays} fermer={() => setPp(false)} choisir={(cc: string) => { choisirPays(cc); setF({ ...f, pays: cc, ville: cc === f.pays ? f.ville : '', vl: !(VILLES_PAYS[cc] || []).length, telE: cc === f.pays ? f.telE : '' }); setPp(false); e.setE(''); }} />;
+  if (pv) return <ChoixVille v={f.ville} pays={f.pays} fermer={() => setPv(false)} choisir={(v: string) => { setF({ ...f, ville: v, vl: false }); setPv(false); e.setE(''); }} autre={() => { setF({ ...f, ville: '', vl: true }); setPv(false); }} />;
+  const T = et === 1 ? ['Votre établissement', 'Toutes les informations sont obligatoires.'] : ['Combien d’élèves ?', 'Pour préparer votre école et votre tarif.'];
   return (
-    <Cadre titre="Votre établissement" sous="Indiquez le nom de votre école pour commencer">
-      <form className="acc-form" noValidate onSubmit={(x) => { x.preventDefault(); if (!n.trim()) return e.setE('Indiquez le nom de votre établissement'); const eleves = Number(el.replace(/\D/g, '')); if (!eleves) return e.setE('Indiquez le nombre d’élèves de votre école'); e.envoyer(async () => { await db.rpc('creer_etablissement', { p_nom: n.trim(), p_details: { eleves } }); fini(); }); }}>
-        <Champ i={PiBuildingsDuotone} label="Nom de l’établissement" placeholder="École Sainte-Marie" autoComplete="organization" value={n} onChange={(x: any) => setN(x.target.value)} />
-        <Champ i={PiStudentDuotone} label="Nombre d’élèves" inputMode="numeric" placeholder="150" value={el} onChange={(x: any) => setEl(x.target.value)} />
+    <main className="ric"><form className="ric-c" noValidate onSubmit={suite}>
+      <header className="ric-he"><div className="lignes" aria-hidden="true" /><div className="ric-to">{et === 2 ? <button type="button" className="ric-bk" onClick={() => setEt(1)} aria-label="Retour"><PiCaretLeftBold /></button> : <button type="button" className="ric-bk" onClick={auth.deconnexion} aria-label="Se déconnecter"><PiCaretLeftBold /></button>}<img src="/img/icone.png" alt="" /><span><b>Scolaris</b><small>Création de votre école</small></span></div><div className="ric-ti"><h1>{T[0]}</h1><p>{T[1]}</p></div></header>
+      <div className="ric-b">
+        {et === 1 && <>
+          <button type="button" className="ric-cd ric-btn" onClick={() => setPp(true)}><span className="ric-tu pay-tu" aria-hidden="true"><Drapeau c={f.pays} l={30} /></span><span className="ric-t"><small>Pays</small><span className="ric-val">{paysDe(f.pays).nom}</span></span><PiCaretDownBold className="ric-ch" aria-hidden="true" /></button>
+          <Carte i={PiBuildingsFill} label="Nom de l’école" placeholder="Groupe scolaire La Réussite" autoComplete="organization" {...c('ecole')} />
+          {f.vl ? <Carte ton="ve" i={PiMapPinFill} label="Ville" placeholder="Écrivez votre ville" {...c('ville')} /> : <button type="button" className="ric-cd ric-btn" onClick={() => setPv(true)}><span className="ric-tu ve"><PiMapPinFill aria-hidden="true" /></span><span className="ric-t"><small>Ville</small><span className={f.ville ? 'ric-val' : 'ric-ph'}>{f.ville || 'Touchez pour choisir'}</span></span><PiCaretDownBold className="ric-ch" aria-hidden="true" /></button>}
+          <Carte ton="or" i={PiMapPinFill} label="Quartier" placeholder={QUARTIER_EX[f.pays] ? `Ex. : ${QUARTIER_EX[f.pays]}` : 'Votre quartier'} {...c('quartier')} />
+          <Carte ton="vi" i={PiPhoneFill} label="Téléphone de l’école" estTel inputMode="tel" placeholder={paysActif().ex} {...c('telE')} /></>}
+        {et === 2 && <>
+          <div className="ric-co"><label><small>Nombre d’élèves</small><span><input inputMode="numeric" placeholder="0" aria-label="Nombre d’élèves" {...c('eleves')} /><em>élèves</em></span></label><div><button type="button" onClick={() => setF({ ...f, eleves: String(Math.max(1, nb_ - 10)) })} aria-label="Enlever 10 élèves"><PiMinusBold /></button><button type="button" onClick={() => setF({ ...f, eleves: String(nb_ + 10) })} aria-label="Ajouter 10 élèves"><PiPlusBold /></button></div></div>
+          <div className="ric-ni" role="group" aria-label="Niveaux enseignés">{NIVEAUX.map(([n, I]) => <button type="button" key={n} aria-pressed={niv.includes(n)} className={niv.includes(n) ? 'on' : ''} onClick={() => { setNiv(niv.includes(n) ? niv.filter((x) => x !== n) : [...niv, n]); e.setE(''); }}><I aria-hidden="true" />{n}</button>)}</div>
+          <Carte i={PiChalkboardTeacherFill} label="Nombre de classes" inputMode="numeric" placeholder="Ex. : 8" {...c('classes')} /></>}
         <Erreur t={e.erreur} />
-        <button className="btn plein" disabled={e.occupe}>Continuer</button>
-        <button type="button" className="btn contour" onClick={auth.deconnexion}>Se déconnecter</button>
-      </form>
-    </Cadre>
+      </div>
+      <footer className="ric-ft"><button className="ric-bt" disabled={e.occupe}>{e.occupe ? 'Création…' : et === 2 ? 'Créer mon école' : 'Continuer'}<PiArrowRightBold aria-hidden="true" /></button></footer>
+    </form></main>
   );
 }

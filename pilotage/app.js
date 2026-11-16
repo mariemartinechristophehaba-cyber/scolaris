@@ -326,6 +326,14 @@ function blocReseauxTable(X) {
   if (!L.length) return `<div class="card"><div class="ct"><h3>Du réseau au paiement</h3></div><div class="vide"><div class="logos-gris">${['tiktok', 'facebook', 'whatsapp', 'youtube'].map(k => B(k, 34)).join('')}</div><b>En attente des premiers clics</b>Le suivi est actif. Chaque visite est rattachée au réseau d'où elle vient (TikTok, Facebook, WhatsApp, YouTube…), puis suivie jusqu'à l'inscription et au paiement.</div></div>`;
   return `<div class="card"><div class="ct"><h3>Du réseau au paiement</h3><span class="s">90 jours</span></div>${L.map(x => `<div class="row">${B(x.k)}<div><b>${SOURCES[x.k][0]}</b><small>${pl(x.visites, 'visite')} · ${pl(x.inscrits, 'inscrit')} · ${pl(x.payants, 'payant')}</small></div><div class="r num">${F(x.argent)}<small>GNF</small></div></div>`).join('')}</div>`;
 }
+
+function blocVitrine(X) {
+  if (S.quoi === 'fixpro') return '';
+  const L = (X.sc.vitrine || []).filter(v => D(v.jour) > new Date(X.now - 30 * 864e5));
+  const n = c => L.filter(v => v.cible === c).reduce((s, v) => s + v.n, 0);
+  const it = (ic, t, v) => `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #EEF1F6"><span style="font-size:18px">${ic}</span><span style="flex:1">${t}</span><b>${F(v)}</b></div>`;
+  return `<div class="card"><b style="font-size:13.5px">🌐 Site vitrine Scolaris · 30 jours</b><p style="color:#667085;font-size:12.5px;margin:4px 0 6px">Clics sur les boutons de la page d'accueil</p>${it('📝', 'Inscrire mon école', n('inscription'))}${it('💬', 'WhatsApp', n('whatsapp'))}${it('🎯', 'Demander une démo', n('demo'))}${it('🔊', 'Vidéo avec le son', n('video'))}${it('🔑', 'Se connecter', n('connexion'))}</div>`;
+}
 function blocConseil(X) {
   const L = Object.entries(X.src).map(([k, v]) => ({ k, ...v }));
   let t = "Dès les premiers clics sur tes liens, Pilotage te dira quel réseau t'amène des clients <b>qui paient</b>, pas seulement des vues.";
@@ -461,7 +469,7 @@ function pageArgent(X) {
   <div class="g11">${blocRepartition(X, 'formule', 'Revenu par formule')}${blocRepartition(X, 'moyen', 'Moyens de paiement')}</div>
   ${blocDerniers(X, 0, 1)}`;
 }
-function pageReseaux(X) { return `${filtres()}<div class="g11">${blocSources(X, 160)}<div class="col">${blocConseil(X)}${blocTaches(X).includes('Suivi des réseaux') ? '' : ''}</div></div>${blocReseauxTable(X)}${blocVisiteurs(X, 160)}`; }
+function pageReseaux(X) { return `${filtres()}<div class="g11">${blocSources(X, 160)}<div class="col">${blocConseil(X)}${blocVitrine(X)}${blocTaches(X).includes('Suivi des réseaux') ? '' : ''}</div></div>${blocReseauxTable(X)}${blocVisiteurs(X, 160)}`; }
 function pageActivite(X) { return `${filtres()}<div class="g11"><div class="col">${blocTaches(X)}${blocRelancer(X)}</div>${blocActivite(X)}</div>`; }
 function pageReglages(X) {
   const fx = X.fx.maj_le ? D(X.fx.maj_le) : null, C = couts(X), H = santeX(X), fo = X.sc.fondatrices;

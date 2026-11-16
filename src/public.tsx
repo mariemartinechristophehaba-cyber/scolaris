@@ -3,7 +3,7 @@ import { PiArrowLeftBold, PiCheckBold, PiPrinterDuotone, PiWhatsappLogoFill, PiX
 import { useState } from 'react';
 import { db, getSession } from './api';
 import { dateFr, gnf, nb, dv, choisirPays } from './lib';
-import { Chargement, Lien, Logo, naviguer, useQ } from './ui';
+import { Chargement, Erreur, Lien, Logo, naviguer, useQ } from './ui';
 
 const retourTexte = () => { if (history.length > 1) history.back(); else naviguer('/'); };
 function PageTexte({ titre, autre, children }: any) {
@@ -142,13 +142,55 @@ export function RecuPublic({ jeton }: { jeton: string }) {
 
 export function FamillePublic({ jeton }: { jeton: string }) {
   const q = useQ(() => db.rpc('famille_public', { p_jeton: jeton }), [jeton]);
+  const [pay, setPay] = useState<any>(null);
   if (q.charge && !q.data) return <main className="pub"><Chargement /></main>;
   const r: any = q.data; if (r) choisirPays(r.pays || 'GN');
   if (!r || !Array.isArray(r.enfants)) return <main className="pub"><section className="carte-pub"><Logo /><h1>Lien introuvable</h1></section></main>;
+  const mobile = r.orange_money || r.mtn_money;
   return (
     <main className="pub"><section className="carte-pub recu"><Logo petit /><h1>{r.ecole}</h1><p className="intro">Situation de la famille de {r.parent}</p>
       {r.enfants.map((e: any, i: number) => <div className="enfant" key={i}><b>{e.prenom} {e.nom}</b><span>{e.classe}</span>
-        <dl><dt>Frais dus</dt><dd>{gnf(e.net)}</dd><dt>Payé</dt><dd>{gnf(e.regle)}</dd><dt>Reste</dt><dd>{gnf(e.reste)}</dd>{e.echu > 0 && <><dt>En retard</dt><dd className="rouge">{gnf(e.echu)}</dd></>}</dl></div>)}
-    </section></main>
+        <dl><dt>Frais dus</dt><dd>{gnf(e.net)}</dd><dt>Payé</dt><dd>{gnf(e.regle)}</dd><dt>Reste</dt><dd>{gnf(e.reste)}</dd>{e.echu > 0 && <><dt>En retard</dt><dd className="rouge">{gnf(e.echu)}</dd></>}</dl>
+        {Number(e.declares) > 0 && <p className="fa-att">{gnf(e.declares)} envoyés, en cours de vérification par l'école</p>}
+        {e.reste > 0 && mobile && <div className="fa-pay">{r.orange_money && <button type="button" className="fa-om" onClick={() => setPay({ e, moyen: 'orange_money' })}><span className="tuile t-om">OM</span>Payer par Orange Money</button>}{r.mtn_money && <button type="button" className="fa-mtn" onClick={() => setPay({ e, moyen: 'mtn_money' })}><span className="tuile t-mtn">MoMo</span>Payer par MTN MoMo</button>}</div>}
+      </div>)}
+      {!mobile && r.enfants.some((e: any) => e.reste > 0) && <p className="intro">Pour payer, rendez-vous à l'école{r.telephone_ecole ? ` ou appelez le ${r.telephone_ecole}` : ''}.</p>}
+    </section>
+    {pay && <PayerMobile jeton={jeton} r={r} {...pay} fermer={() => setPay(null)} fini={() => { setPay(null); q.reload(); }} />}</main>
   );
+}
+
+// Le parent envoie l'argent avec son téléphone, puis recopie la référence du SMS : l'école vérifie et valide.
+function PayerMobile({ jeton, r, e, moyen, fermer, fini }: any) {
+  const om = moyen === 'orange_money'; const num = om ? r.orange_money : r.mtn_money; const nom = om ? 'Orange Money' : 'MTN MoMo';
+  const [m, setM] = useState<number>(Number(e.echu) > 0 ? Number(e.echu) : Number(e.reste)); const [ref, setRef] = useState(''); const [tel, setTel] = useState('');
+  const [etape, setEtape] = useState(1); const [err, setErr] = useState(''); const [en, setEn] = useState(false); const [copie, setCopie] = useState(false);
+  const copier = () => { try { navigator.clipboard.writeText(num); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch { /* ignoré */ } };
+  const envoyer = async () => {
+    if (ref.replace(/\s/g, '').length < 6) return setErr('Recopiez la référence reçue par SMS après le paiement');
+    setEn(true); setErr('');
+    try { await db.rpc('declarer_paiement_parent', { p_jeton: jeton, p_eleve: e.id, p_montant: m, p_moyen: moyen, p_reference: ref, p_telephone: tel || null }); setEtape(3); }
+    catch (x: any) { setErr(x.message); } finally { setEn(false); }
+  };
+  return <div className="fond fa-fond" onMouseDown={(x) => x.target === x.currentTarget && etape !== 3 && fermer()}><div className="modale fa-mod" role="dialog" aria-modal="true" aria-label={`Payer par ${nom}`}>
+    <div className="mod-t"><h2>{etape === 3 ? 'Merci !' : `Payer par ${nom}`}</h2><button className="ico" onClick={etape === 3 ? fini : fermer} aria-label="Fermer"><PiXBold /></button></div>
+    {etape === 1 && <>
+      <p className="fa-s">Pour {e.prenom} {e.nom} ({e.classe})</p>
+      <label className="fa-m"><span>Montant à envoyer</span><div><input inputMode="numeric" value={m ? nb(m) : ''} onChange={(x) => setM(Number(x.target.value.replace(/\D/g, '')) || 0)} aria-label="Montant" /><b>{dv()}</b></div></label>
+      <div className="fa-vite">{Number(e.echu) > 0 && Number(e.echu) !== Number(e.reste) && <button type="button" className={m === Number(e.echu) ? 'on' : ''} onClick={() => setM(Number(e.echu))}>En retard<b>{nb(e.echu)}</b></button>}<button type="button" className={m === Number(e.reste) ? 'on' : ''} onClick={() => setM(Number(e.reste))}>Tout le reste<b>{nb(e.reste)}</b></button></div>
+      <ol className="fa-et"><li>Envoyez <b>{gnf(m)}</b> par {nom} au numéro de l'école :<div className="fa-num"><b>{num}</b><button type="button" onClick={copier}>{copie ? <><PiCheckBold />Copié</> : 'Copier'}</button></div></li>
+        <li>Gardez le <b>SMS de confirmation</b> : il contient la référence de la transaction.</li></ol>
+      {om && <a className="btn fa-ouvrir" href="tel:%23144%23">Ouvrir Orange Money (#144#)</a>}
+      <button type="button" className="btn plein" disabled={m < 1000} onClick={() => setEtape(2)}>J'ai envoyé l'argent</button>
+    </>}
+    {etape === 2 && <>
+      <p className="fa-s">Recopiez la référence du SMS reçu après l'envoi de {gnf(m)}.</p>
+      <label className="champ"><span>Référence de la transaction *</span><input value={ref} onChange={(x) => setRef(x.target.value)} placeholder="Ex. PP231116.1430.A12345" autoCapitalize="characters" autoFocus /></label>
+      <label className="champ"><span>Numéro qui a payé</span><input value={tel} onChange={(x) => setTel(x.target.value)} inputMode="tel" placeholder="Ex. 621 23 45 67" /></label>
+      <Erreur t={err} />
+      <button type="button" className="btn plein" disabled={en} onClick={envoyer}>{en ? 'Envoi…' : 'Envoyer à l\'école'}</button>
+      <button type="button" className="btn lien" onClick={() => setEtape(1)}>Retour</button>
+    </>}
+    {etape === 3 && <div className="fa-ok"><span className="fa-ok-i"><PiCheckBold /></span><p><b>{gnf(m)}</b> déclarés pour {e.prenom}.</p><p className="fa-s">L'école vérifie la transaction puis valide le paiement. Vous pourrez revoir cette page à tout moment avec le même lien.</p><button type="button" className="btn plein" onClick={fini}>Terminé</button></div>}
+  </div></div>;
 }

@@ -1,4 +1,4 @@
-import { PiBuildingsFill, PiCalendarBlankFill, PiCaretRightBold, PiStudentFill, PiTargetBold, PiUserCircleFill } from 'react-icons/pi';
+import { PiDeviceMobileFill, PiBuildingsFill, PiCalendarBlankFill, PiCaretRightBold, PiStudentFill, PiTargetBold, PiUserCircleFill } from 'react-icons/pi';
 import { Haut } from './abonnement';
 import { Bascule, Passage } from './passage';
 import { useMemo, useRef, useState } from 'react';
@@ -256,7 +256,7 @@ export function Parametres({ vue }: { vue?: string }) {
   const q = useQ(async () => (annee && can('directeur', 'comptable') ? db.get(`objectifs_financiers?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel&classe_id=is.null`) : []), [annee?.id]);
   const tb = useQ(async () => (annee && role === 'fondateur' ? db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}&select=eleves`) : []), [annee?.id]);
   const tarifs = useQ(async () => (role === 'fondateur' ? db.rpc('tarifs_liste', {}) : []), []);
-  const [mdp, setMdp] = useState(false); const [bas, setBas] = useState<any>(null);
+  const [mdp, setMdp] = useState(false); const [mob, setMob] = useState({ om: etab.orange_money_numero || '', mtn: etab.mtn_money_numero || '' }); const [bas, setBas] = useState<any>(null);
   const courant = q.data?.[0]; const valeur = obj ?? courant?.montant ?? 0; const d = can('directeur');
   const fait = (t: string) => { setOk(t); setTimeout(() => setOk(''), 3000); };
   const u = getSession()?.user; const nomU = `${u?.user_metadata?.prenom || ''} ${u?.user_metadata?.nom || ''}`.trim() || u?.email || '';
@@ -286,6 +286,15 @@ export function Parametres({ vue }: { vue?: string }) {
 
   if (vue === 'passage') return <Passage />;
 
+  if (vue === 'mobile' && d) return Ecran({ t: 'Paiement mobile des parents', children: <form className="par-f" onSubmit={(x) => { x.preventDefault();
+    for (const [k, l] of [['om', 'Orange Money'], ['mtn', 'MTN MoMo']]) { const v = (mob as any)[k]; if (v) { const er = erreurTel(v); if (er) return e.setE(`${l} : ${er}`); } }
+    e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, { orange_money_numero: mob.om ? tel(mob.om) : null, mtn_money_numero: mob.mtn ? tel(mob.mtn) : null }); await recharger(); fait('Numéros enregistrés'); }); }}>
+    <h2 className="par-q">Les parents paient depuis leur téléphone</h2><p className="par-s">Le lien envoyé aux parents (relances, reçus) leur propose de payer par Orange Money ou MTN MoMo vers ces numéros. Ils recopient la référence du SMS et le paiement arrive « en attente » chez vous : vérifiez-le sur votre téléphone, puis validez.</p>
+    <Champ label="Numéro Orange Money de l'école"><input inputMode="tel" placeholder="Ex. 621 34 56 78" value={mob.om} onChange={(x) => setMob({ ...mob, om: x.target.value })} /></Champ>
+    <Champ label="Numéro MTN MoMo de l'école"><input inputMode="tel" placeholder="Ex. 664 12 34 56" value={mob.mtn} onChange={(x) => setMob({ ...mob, mtn: x.target.value })} /></Champ>
+    <p className="abp-info">Laissez vide pour ne pas proposer ce moyen. Sans numéro, les parents voient seulement leur situation.</p>
+    {Msg}<div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Enregistrer</button></div></form> });
+
   if (vue === 'annee') { const act = annees.find((a: any) => a.statut === 'active'); const prep = annees.some((a: any) => a.statut === 'preparation' && act && a.date_debut > act.date_debut); return Ecran({ t: 'Année scolaire', children: <>
     <ul className="hist">{annees.map((a: any) => <li key={a.id}><div><b>{a.libelle}</b><small>{dateFr(a.date_debut)} au {dateFr(a.date_fin)}</small></div>{a.statut === 'active' ? <Pastille k="a_jour" t="Active" /> : a.statut === 'preparation' ? (d ? <span className="ligne-btn"><button className="btn plein mini" onClick={() => (act ? setBas(a) : e.envoyer(async () => { await db.rpc('activer_annee', { p_annee: a.id }); await recharger(); }))}>Activer</button><button className="btn contour mini rouge" onClick={() => { if (confirm(`Supprimer l'année ${a.libelle} en préparation ? Ses classes, frais et inscriptions seront effacés. Les élèves restent dans l'année en cours.`)) e.envoyer(async () => { await db.rpc('supprimer_annee_preparation', { p_annee: a.id }); await recharger(); }); }}>Supprimer</button></span> : <Pastille k="sans" t="En préparation" />) : <Pastille k="sans" t="Clôturée" />}</li>)}</ul>
     {d && act && !prep && <Lien to="/parametres/passage" className="pas-cta"><span><b>Passer à l'année suivante</b><small>Classes, frais et élèves recopiés en un clic. Vous indiquez seulement les redoublants et les départs.</small></span><PiCaretRightBold aria-hidden="true" /></Lien>}
@@ -308,6 +317,7 @@ export function Parametres({ vue }: { vue?: string }) {
         <Rang to="ecole" I={PiBuildingsFill} t="Mon école" s="Nom, ville, téléphone" />
         {role === 'fondateur' && <Rang to="taille" I={PiStudentFill} t="Taille de l'école" s={etab.tranche_eleves ? TRANCHES.find(([k]) => k === etab.tranche_eleves)?.[1] : 'Elle fixe votre tarif'} tag={!etab.tranche_eleves && <em className="par-tag">À choisir</em>} />}
         {annee && can('directeur', 'comptable') && <Rang to="objectif" I={PiTargetBold} t="Objectif de l'année" s={courant?.montant ? gnf(courant.montant) : 'Pas encore défini'} />}
+        {d && <Rang to="mobile" I={PiDeviceMobileFill} t="Paiement mobile des parents" s={etab.orange_money_numero || etab.mtn_money_numero ? [etab.orange_money_numero && 'Orange Money', etab.mtn_money_numero && 'MTN MoMo'].filter(Boolean).join(' et ') : 'Pas encore activé'} tag={!etab.orange_money_numero && !etab.mtn_money_numero && <em className="par-tag">À activer</em>} />}
         <Rang to="annee" I={PiCalendarBlankFill} t="Année scolaire" s={annee?.libelle || 'À créer'} tag={annee?.statut === 'active' && <em className="par-tag ok">Active</em>} />
         <Rang to="compte" I={PiUserCircleFill} t="Mon compte" s="Mot de passe, déconnexion" />
       </nav>

@@ -147,8 +147,14 @@ function TableauFinance() {
 
 // Conseils de Scolaris : ce qu'il faut faire en priorité, calculé à partir des chiffres de l'école.
 function Conseils({ sit, pay, resp, nais, cls, encaisse, frais }: any) {
-  const { annee, can } = useApp();
+  const { annee, annees, can } = useApp();
   const l: any[] = [];
+  if (can('directeur') && annee.statut === 'active') {
+    const prep = annees.find((a: any) => a.statut === 'preparation' && a.date_debut > annee.date_debut);
+    const jours = (dt: string) => Math.round((new Date(dt + 'T00:00:00').getTime() - new Date(auj() + 'T00:00:00').getTime()) / 864e5);
+    if (prep && jours(prep.date_debut) <= 7) l.push({ I: PiSparkleFill, ton: 'bleu', t: `La rentrée approche : activez l'année ${prep.libelle}`, s: 'Les dettes et avances de chaque élève y seront reportées automatiquement', to: '/parametres/annee', b: 'Activer' });
+    else if (!prep && jours(annee.date_fin) <= 60) l.push({ I: PiSparkleFill, ton: 'bleu', t: "Préparez l'année suivante", s: 'Classes, frais et élèves recopiés en un clic. Indiquez seulement les redoublants et les départs', to: '/parametres/passage', b: 'Préparer' });
+  }
   if (frais > 0 && annee.date_fin > auj()) {
     const p = prevision(pay, encaisse, frais, annee.date_fin);
     if (p.r30 > 0) l.push({ I: PiChartLineUpDuotone, ton: p.pct >= 90 ? 'vert' : 'bleu', t: `Prévision au ${dateFr(p.fin)} : ${gnf(p.proj)} encaissés`, s: `Soit ${p.pct} % des frais, si le rythme des 30 derniers jours continue (${gnf(p.r30)} par mois)`, to: '/rapports', b: 'Détail' });

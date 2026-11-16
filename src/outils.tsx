@@ -1,5 +1,6 @@
 import { PiBuildingsFill, PiCalendarBlankFill, PiCaretRightBold, PiStudentFill, PiTargetBold, PiUserCircleFill } from 'react-icons/pi';
 import { Haut } from './abonnement';
+import { Bascule, Passage } from './passage';
 import { useMemo, useRef, useState } from 'react';
 import { PiChatCircleDotsDuotone, PiClockCountdownDuotone, PiCheckCircleDuotone, PiPaperPlaneTiltFill, PiInfoFill, PiKeyDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { SUPA, auth, db, getSession, message } from './api';
@@ -255,7 +256,7 @@ export function Parametres({ vue }: { vue?: string }) {
   const q = useQ(async () => (annee && can('directeur', 'comptable') ? db.get(`objectifs_financiers?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel&classe_id=is.null`) : []), [annee?.id]);
   const tb = useQ(async () => (annee && role === 'fondateur' ? db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}&select=eleves`) : []), [annee?.id]);
   const tarifs = useQ(async () => (role === 'fondateur' ? db.rpc('tarifs_liste', {}) : []), []);
-  const [mdp, setMdp] = useState(false);
+  const [mdp, setMdp] = useState(false); const [bas, setBas] = useState<any>(null);
   const courant = q.data?.[0]; const valeur = obj ?? courant?.montant ?? 0; const d = can('directeur');
   const fait = (t: string) => { setOk(t); setTimeout(() => setOk(''), 3000); };
   const u = getSession()?.user; const nomU = `${u?.user_metadata?.prenom || ''} ${u?.user_metadata?.nom || ''}`.trim() || u?.email || '';
@@ -283,12 +284,16 @@ export function Parametres({ vue }: { vue?: string }) {
   if (vue === 'objectif' && annee && can('directeur', 'comptable')) return Ecran({ t: "Objectif de l'année", children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); if (!valeur) return e.setE('Indiquez un montant'); e.envoyer(async () => { if (courant) await db.upd(`objectifs_financiers?id=eq.${courant.id}`, { montant: valeur }); else await db.ins('objectifs_financiers', { etablissement_id: eid, annee_scolaire_id: annee.id, periode: 'annuel', montant: valeur }); await q.reload(); fait('Objectif enregistré'); }); }}>
     <h2 className="par-q">Combien voulez-vous encaisser cette année ?</h2><p className="par-s">Année scolaire {annee.libelle}</p><Montant value={valeur} onChange={setO} label="Objectif de l'année" /><p className="abp-info">L'accueil vous montrera si l'école est en avance ou en retard sur cet objectif.</p>{Msg}{d && <div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Enregistrer</button></div>}</form> });
 
-  if (vue === 'annee') return Ecran({ t: 'Année scolaire', children: <>
-    <ul className="hist">{annees.map((a: any) => <li key={a.id}><div><b>{a.libelle}</b><small>{dateFr(a.date_debut)} au {dateFr(a.date_fin)}</small></div>{a.statut === 'active' ? <Pastille k="a_jour" t="Active" /> : a.statut === 'preparation' ? (d ? <button className="btn contour mini" onClick={() => e.envoyer(async () => { await db.rpc('activer_annee', { p_annee: a.id }); await recharger(); })}>Activer</button> : <Pastille k="sans" t="En préparation" />) : <Pastille k="sans" t="Clôturée" />}</li>)}</ul>
-    {d && <form className="par-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.ins('annees_scolaires', { ...na, etablissement_id: eid }); setNa({ libelle: '', date_debut: '', date_fin: '' }); await recharger(); }); }}><p className="par-s">À remplir seulement à l'approche de la prochaine rentrée.</p>
+  if (vue === 'passage') return <Passage />;
+
+  if (vue === 'annee') { const act = annees.find((a: any) => a.statut === 'active'); const prep = annees.some((a: any) => a.statut === 'preparation' && act && a.date_debut > act.date_debut); return Ecran({ t: 'Année scolaire', children: <>
+    <ul className="hist">{annees.map((a: any) => <li key={a.id}><div><b>{a.libelle}</b><small>{dateFr(a.date_debut)} au {dateFr(a.date_fin)}</small></div>{a.statut === 'active' ? <Pastille k="a_jour" t="Active" /> : a.statut === 'preparation' ? (d ? <span className="ligne-btn"><button className="btn plein mini" onClick={() => (act ? setBas(a) : e.envoyer(async () => { await db.rpc('activer_annee', { p_annee: a.id }); await recharger(); }))}>Activer</button><button className="btn contour mini rouge" onClick={() => { if (confirm(`Supprimer l'année ${a.libelle} en préparation ? Ses classes, frais et inscriptions seront effacés. Les élèves restent dans l'année en cours.`)) e.envoyer(async () => { await db.rpc('supprimer_annee_preparation', { p_annee: a.id }); await recharger(); }); }}>Supprimer</button></span> : <Pastille k="sans" t="En préparation" />) : <Pastille k="sans" t="Clôturée" />}</li>)}</ul>
+    {d && act && !prep && <Lien to="/parametres/passage" className="pas-cta"><span><b>Passer à l'année suivante</b><small>Classes, frais et élèves recopiés en un clic. Vous indiquez seulement les redoublants et les départs.</small></span><PiCaretRightBold aria-hidden="true" /></Lien>}
+    {bas && <Bascule a={bas} ancienne={act} fermer={() => setBas(null)} fini={async () => { setBas(null); await recharger(); }} />}
+    {d && <form className="par-f" onSubmit={(x) => { x.preventDefault(); e.envoyer(async () => { await db.ins('annees_scolaires', { ...na, etablissement_id: eid }); setNa({ libelle: '', date_debut: '', date_fin: '' }); await recharger(); }); }}><p className="par-s">Ou créer une année vide (sans recopier les classes ni les élèves).</p>
       <Champ label="Nouvelle année"><input placeholder="2027-2028" value={na.libelle} onChange={(x) => setNa({ ...na, libelle: x.target.value })} required /></Champ>
       <div className="deux"><Champ label="Début"><input type="date" value={na.date_debut} onChange={(x) => setNa({ ...na, date_debut: x.target.value })} required /></Champ><Champ label="Fin"><input type="date" value={na.date_fin} onChange={(x) => setNa({ ...na, date_fin: x.target.value })} required /></Champ></div>
-      {Msg}<div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Ajouter l'année</button></div></form>}</> });
+      {Msg}<div className="abp-bas"><button className="abp-cta" disabled={e.occupe}>Ajouter l'année</button></div></form>}{!d && Msg}</> }); }
 
   if (vue === 'compte') return <>{Ecran({ t: 'Mon compte', children: <>
     <div className="compte-l"><Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span></div>{Msg}

@@ -75,10 +75,11 @@ function B(k, z) {
     case 'linkedin': return txt('#0A66C2', 'in');
     case 'twitter': return txt('#000', 'X');
     case 'especes': return box('#ECFDF3', `<svg viewBox="0 0 24 24" width="${ic}" height="${ic}" fill="none" stroke="#067647" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>`);
+    case 'affiche': return txt('#F59E0B', 'QR');
     default: return box('#F2F4F7', `<svg viewBox="0 0 24 24" width="${ic}" height="${ic}" fill="none" stroke="#667085" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>`);
   }
 }
-const SOURCES = { tiktok: ['TikTok', '#111'], facebook: ['Facebook', '#0866FF'], whatsapp: ['WhatsApp', '#25D366'], youtube: ['YouTube', '#FF0000'], instagram: ['Instagram', '#DD2A7B'], google: ['Google', '#4285F4'], linkedin: ['LinkedIn', '#0A66C2'], twitter: ['X (Twitter)', '#444'], direct: ['Direct', '#98A2B3'], autre: ['Autre', '#C0C7D4'] };
+const SOURCES = { tiktok: ['TikTok', '#111'], facebook: ['Facebook', '#0866FF'], whatsapp: ['WhatsApp', '#25D366'], youtube: ['YouTube', '#FF0000'], instagram: ['Instagram', '#DD2A7B'], google: ['Google', '#4285F4'], linkedin: ['LinkedIn', '#0A66C2'], twitter: ['X (Twitter)', '#444'], affiche: ['Affiches', '#F59E0B'], direct: ['Direct', '#98A2B3'], autre: ['Autre', '#C0C7D4'] };
 function moyen(m) {
   m = String(m || '').toLowerCase();
   if (m.includes('orange')) return ['orange', 'Orange Money'];

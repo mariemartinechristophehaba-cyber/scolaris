@@ -1,6 +1,6 @@
 import { PiChatCircleDotsFill } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
-import { PiLockKeyFill } from 'react-icons/pi';
+import { PiLockKeyFill, PiSparkleFill, PiXBold } from 'react-icons/pi';
 import { PiCaretRightBold, PiArrowLeftBold, PiArrowRightBold, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCrownSimpleFill, PiInfoFill, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, getSession, payerAbonnement } from './api';
 import { TRANCHES, dateFr, drapeau, erreurTel, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
@@ -10,7 +10,7 @@ export const LIB_T: any = { ...Object.fromEntries(TRANCHES), moins_200: "Jusqu'�
 export const SIT: any = { attente: ['retard', 'En attente de paiement'], essai: ['partiel', 'Essai gratuit'], actif: ['a_jour', 'Actif'], grace: ['retard', 'Terminé'], expire: ['rien', 'Expiré'], suspendu: ['rien', 'Suspendu'] };
 export const MOYENS: [string, string][] = [['chariow', 'Paiement en ligne'], ['orange_money', 'Orange Money'], ['mtn_money', 'MTN Money'], ['especes', 'Espèces'], ['virement', 'Virement']];
 export const LIB_M: any = Object.fromEntries(MOYENS);
-export const LIB_P: any = { mois: '1 mois', an: '1 an', sms: 'Pack SMS' };
+export const LIB_P: any = { mois: '1 mois', '3mois': '3 mois', '6mois': '6 mois', an: '1 an', sms: 'Pack SMS' };
 export const ST_P: any = { en_attente: ['retard', 'À vérifier'], valide: ['a_jour', 'Validé'], rejete: ['rien', 'Rejeté'] };
 // WhatsApp Scolaris : numéro guinéen sur 9 chiffres, ou numéro étranger déjà avec son indicatif.
 export const waScolaris = (n: string, t = '') => `https://wa.me/${String(n).length === 9 ? '224' + n : n}${t ? `?text=${encodeURIComponent(t)}` : ''}`;
@@ -85,7 +85,7 @@ function AttentePaiement({ plan, sms, essais, quitter }: any) {
 
 export function Abonnement() {
   const { abo, eid, recharger } = useApp(); const [per, setPer] = useState('an'); const [num, setNum] = useState(''); const [etape, setEtape] = useState(1); const [hist, setHist] = useState(false); const e = useEnvoi();
-  const [part, setPart] = useState(false); const [errP, setErrP] = useState('');
+  const [part, setPart] = useState(false); const [det, setDet] = useState(false); const [errP, setErrP] = useState('');
   const [att, setAtt] = useState(() => new URLSearchParams(location.search).get('retour') === '1'); const [essais, setEssais] = useState(0);
   useEffect(() => { if (!att) return; const t = setTimeout(async () => { await recharger(); setEssais((n) => n + 1); }, 5000); return () => clearTimeout(t); }, [att, essais]);
   useEffect(() => { if (att && abo?.situation === 'actif' && essais > 0 && (abo.historique || []).some((p: any) => p.statut === 'valide' && Date.now() - new Date(p.traite_le || p.declare_le).getTime() < 15 * 60000)) { setAtt(false); history.replaceState(null, '', '/abonnement?paye=1'); } }, [abo, essais]);
@@ -99,6 +99,8 @@ export function Abonnement() {
     an: { nom: 'Annuel', unite: 'an', Ic: Gemme, sous: remise ? 'Le plus avantageux' : "Pour toute l'année", prix: a, normal: F?.prix_an_normal, points: [...pointF, smsOk ? `${nb(smsMois)} SMS offerts chaque mois, 12 mois` : 'Relances WhatsApp illimitées', cadeau, "Un seul paiement dans l'année", 'Toutes les fonctions de Scolaris'] },
     mois: { nom: 'Mensuel', unite: 'mois', Ic: Couronne, sous: 'Sans engagement', prix: m, normal: F?.prix_mois_normal, points: [...pointF, smsOk ? `${nb(smsMois)} SMS inclus chaque mois` : 'Relances WhatsApp illimitées', 'Vous payez chaque mois', 'Vous arrêtez quand vous voulez', 'Toutes les fonctions de Scolaris'] },
   };
+  PLANS['3mois'] = { nom: '3 mois', unite: '3 mois', Ic: Couronne, sous: 'Pour un trimestre', prix: abo.prix_3mois, normal: F?.prix_3mois_normal, points: [] };
+  PLANS['6mois'] = { nom: '6 mois', unite: '6 mois', Ic: Couronne, sous: 'Pour un semestre', prix: abo.prix_6mois, normal: F?.prix_6mois_normal, points: [] };
   const pk = abo.pack_sms || { quantite: 500, prix: 100000, lien: null };
   PLANS.sms = { nom: `Pack ${nb(pk.quantite)} SMS`, unite: 'pack', Ic: Bulle, sous: 'SMS en plus pour les relances', prix: pk.prix, points: [] };
   const plan = PLANS[per]; const montant = plan.prix;
@@ -124,7 +126,7 @@ export function Abonnement() {
 
   // Retour de Chariow : on attend la confirmation automatique (quelques secondes), sans rien demander.
   if (att) {
-    const pq = new URLSearchParams(location.search).get('per'); const pl = PLANS[pq === 'mois' ? 'mois' : pq === 'sms' ? 'sms' : 'an'];
+    const pq = new URLSearchParams(location.search).get('per'); const pl = PLANS[PLANS[pq || ''] ? pq : 'an'];
     return <AttentePaiement plan={pl} sms={pq === 'sms'} essais={essais} quitter={() => { setAtt(false); history.replaceState(null, '', '/abonnement'); }} />;
   }
   if (new URLSearchParams(location.search).get('paye') === '1' && abo.situation === 'actif') return <div className="pa-plein"><main className="fin1"><div className="fin-c">
@@ -134,7 +136,7 @@ export function Abonnement() {
   </div><div className="fin-pb"><Lien to="/tableau" className="pa-bt">Accéder à mon école<PiArrowRightBold aria-hidden="true" /></Lien></div></main></div>;
 
   if (abo.en_attente) {
-    const att = abo.historique.find((p: any) => p.statut === 'en_attente'); const pl = PLANS[att?.periode === 'mois' ? 'mois' : att?.periode === 'sms' ? 'sms' : 'an'];
+    const att = abo.historique.find((p: any) => p.statut === 'en_attente'); const pl = PLANS[PLANS[att?.periode] ? att.periode : 'an'];
     return (
       <><Titre t="Abonnement" />
         <div className="abp abp-fin">
@@ -172,25 +174,42 @@ export function Abonnement() {
     </>
   );
 
+  // Page « Choisissez votre formule » (même présentation que Shafrik) : durée en onglets, une carte pour la formule de l'école.
+  const DUREES: [string, string, number][] = [['mois', '1 mois', 0], ['3mois', '3 mois', 10], ['6mois', '6 mois', 20], ['an', '1 an', 33]];
+  const d0 = per === 'sms' || !PLANS[per]?.prix ? 'an' : per; const P = PLANS[d0]; const dev = symbole(paysActif().dev);
+  const nbMois = d0 === 'mois' ? 1 : d0 === '3mois' ? 3 : d0 === '6mois' ? 6 : 12;
+  const arr = (x: number) => { const s = x >= 100000 ? 1000 : x >= 10000 ? 100 : 10; return Math.round(x / s) * s; };
+  const parJour = P.prix ? arr(P.prix / (nbMois * 30.4)) : 0; const parMois = P.prix ? arr(P.prix / nbMois) : 0;
+  const remiseP = P.normal && P.normal > P.prix ? Math.round((1 - P.prix / P.normal) * 100) : 0;
+  const tr = LIB_T[abo.tranche] || 'Votre école';
   return (
     <><Titre t="Abonnement" />
-      <div className="abp abp-acc">
-        <section className="abp-hero">
-          <header className="abp-haut"><Lien to="/tableau" className="abp-ret" aria-label="Retour"><PiArrowLeftBold aria-hidden="true" /></Lien><h1>Abonnement</h1></header>
-          <span className="abp-cou"><Couronne blanc /></span>
-          <h2>{abo.situation === 'attente' ? 'Activez votre école' : 'Gérez votre école sans impayés'}</h2>
-          <p>{etat}</p>
-        </section>
-        <div className="abp-co abp-feuille">
-          {dernier?.statut === 'rejete' && <p className="abp-rejet"><PiWarningCircleFill aria-hidden="true" />Votre dernier paiement a été rejeté{dernier.motif ? ` : ${dernier.motif}` : ''}.</p>}
-          {m == null || a == null ? <div className="abp-contact"><p>Pour une école de cette taille, le tarif se fixe directement avec Scolaris.</p>{abo.whatsapp && <a className="btn wa" href={waScolaris(abo.whatsapp, 'Bonjour Scolaris, je souhaite connaître le tarif pour mon école.')} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Contacter Scolaris</a>}</div> : <>
-            <div className="abp-bascule" role="group" aria-label="Durée de l'abonnement">{['an', 'mois'].map((k) => <button type="button" key={k} aria-pressed={per === k} className={per === k ? 'on' : ''} onClick={() => setPer(k)}>{PLANS[k].nom}</button>)}</div>
-            <div className="abp-plans">{['an', 'mois'].map((k) => { const P = PLANS[k]; return <button type="button" key={k} aria-pressed={per === k} className={`abp-plan${per === k ? ' on' : ''}`} onClick={() => setPer(k)}><span className="abp-sel" aria-hidden="true">{per === k ? <PiCheckCircleFill /> : <i />}</span><span className="abp-ph"><span className="abp-tuile"><P.Ic /></span><span className="abp-pt"><b>{P.nom}</b><small>{P.sous}</small>{F && P.normal > P.prix && <span className="abp-barre"><s>{nb(P.normal)} {symbole(paysActif().dev)}</s><em>−{F.remise} %</em></span>}<strong>{nb(P.prix)} <em>{symbole(paysActif().dev)} / {P.unite}</em></strong></span></span><span className={`abp-pts${F ? ' af' : ''}`}>{P.points.map((t: string) => <span key={t}><PiCheckCircleFill aria-hidden="true" />{t}</span>)}</span></button>; })}</div>
+      <div className="fo">
+        <header className="fo-haut"><Lien to="/tableau" className="fo-x" aria-label="Fermer"><PiXBold aria-hidden="true" /></Lien><h1>Choisissez votre formule</h1></header>
+        {dernier?.statut === 'rejete' && <p className="abp-rejet"><PiWarningCircleFill aria-hidden="true" />Votre dernier paiement a été rejeté{dernier.motif ? ` : ${dernier.motif}` : ''}.</p>}
+        <p className="fo-intro">{abo.situation === 'attente' ? 'Votre école est prête. Activez-la et suivez la scolarité de chaque élève.' : `${etat}.`} Sans engagement au-delà de la durée choisie.</p>
+        {m == null || a == null ? <div className="abp-contact"><p>Pour une école de cette taille, le tarif se fixe directement avec Scolaris.</p>{abo.whatsapp && <a className="btn wa" href={waScolaris(abo.whatsapp, 'Bonjour Scolaris, je souhaite connaître le tarif pour mon école.')} target="_blank" rel="noreferrer"><PiWhatsappLogoFill aria-hidden="true" />Contacter Scolaris</a>}</div> : <>
+          <div className="fo-tabs" role="group" aria-label="Durée de l'abonnement">{DUREES.map(([k, t, r]) => <button type="button" key={k} aria-pressed={d0 === k} className={d0 === k ? 'on' : ''} onClick={() => setPer(k)}>{t}{r > 0 && <em>-{r}%</em>}</button>)}</div>
+          <section className="fo-carte">
+            <span className="fo-badge">Votre formule</span>
+            <h2>Scolaris <b>{tr}</b></h2>
+            <p className="fo-sous">Pour gérer la scolarité de votre école</p>
+            {remiseP > 0 && <p className="fo-old"><s>{nb(P.normal)} {dev}</s><em>-{remiseP}%</em></p>}
+            <p className="fo-prix">{nb(P.prix)} {dev} <small>/ {P.unite === 'an' ? '1 an' : P.unite === 'mois' ? '1 mois' : P.unite}</small></p>
+            <p className="fo-jour">soit environ {nb(parJour)} {dev} par jour</p>
+            <p className="fo-mois">{nbMois > 1 ? `payé une fois, soit ${nb(parMois)} ${dev} par mois` : 'vous payez chaque mois, arrêtez quand vous voulez'}{d0 === 'an' && <em>Meilleure valeur</em>}</p>
             {errP && <p className="erreur" role="alert">{errP}</p>}
-            <div className="abp-bas"><button type="button" className="abp-cta" disabled={part} onClick={() => { const p0 = per === 'sms' ? 'an' : per; if (per === 'sms') setPer('an'); if (abo[`lien_${p0}`]) payer(p0); else aller(2); }}>{part ? 'Ouverture du paiement…' : `Payer ${gnf(PLANS[per === 'sms' ? 'an' : per].prix)}`}{!part && <PiArrowRightBold aria-hidden="true" />}</button>
-              <p className="mp-secu"><PiLockKeyFill aria-hidden="true" />Paiement sécurisé par Chariow · Orange Money, MTN, carte</p>
-              <button type="button" className="abp-lien" onClick={() => { if (per === 'sms') setPer('an'); aller(3); }}>J'ai déjà payé</button></div>
-          </>}
+            <button type="button" className="fo-cta" disabled={part} onClick={() => { setPer(d0); if (abo[`lien_${d0}`]) payer(d0); else aller(2); }}>{part ? 'Ouverture du paiement…' : `Choisir ${P.nom === 'Annuel' ? '1 an' : P.nom === 'Mensuel' ? '1 mois' : P.nom}`}</button>
+            <div className="fo-box"><p><span><PiSparkleFill aria-hidden="true" />{smsOk ? 'SMS de relance' : 'Relances WhatsApp'}</span><b>{smsOk ? `${nb(smsMois)} / mois` : 'illimitées'}</b></p><i aria-hidden="true"><u /></i><small>{smsOk ? `≈ ${nb(smsMois)} relances de parents chaque mois` : 'Rappels aux parents depuis WhatsApp'}</small></div>
+            <button type="button" className="fo-det" onClick={() => setDet(!det)}>{det ? 'Masquer le détail' : 'Voir le détail'}</button>
+            {det && <ul className="fo-pts">{[...pointF, 'Suivi des frais de chaque élève', 'Reçus et relances des parents', 'Rapports et caisse', 'Toutes les fonctions de Scolaris'].map((t) => <li key={t}><PiCheckCircleFill aria-hidden="true" />{t}</li>)}</ul>}
+          </section>
+          {F && F.etat === 'eligible' && <div className="fo-offre">Offre de lancement : -{F.remise} % la 1re année, plus que {nb(F.restantes)} place{F.restantes > 1 ? 's' : ''}.<button type="button" onClick={() => { setPer('an'); if (abo.lien_an) payer('an'); else aller(2); }}>Profiter de l'offre</button></div>}
+          <ul className="fo-gar"><li>Paiement sécurisé, Mobile Money et carte</li><li>Sans engagement, arrêtez quand vous voulez</li><li>Support humain en français</li><li>Les données de votre école restent à vous</li></ul>
+          <p className="fo-pied">Paiement par mobile money ou carte. Activation automatique après le paiement.</p>
+          <button type="button" className="abp-lien" onClick={() => { setPer(d0); aller(3); }}>J'ai déjà payé</button>
+        </>}
+        <div className="fo-suite">
           <CarteSms abo={abo} pk={pk} acheter={() => { setPer('sms'); if (pk.lien) payer('sms'); else aller(2); }} />
           {lienHist}
           {abo.situation === 'attente' && <button type="button" className="abp-lien" onClick={auth.deconnexion}>Se déconnecter</button>}

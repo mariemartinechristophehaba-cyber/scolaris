@@ -620,3 +620,36 @@ html.sombre .mp-o{background:#171C28}html.sombre .mp-lg,html.sombre .mp-num em{b
 .ck-bt{display:block;width:100%;height:58px;margin-top:20px;border:0;border-radius:18px;background:linear-gradient(135deg,#1D5BFF,#0B3FC2);color:#fff;font:700 17px Inter,sans-serif;cursor:pointer}.ck-bt:disabled{opacity:.6}
 html.sombre .ck-prod,html.sombre .ck-num em{background:#1B2130}html.sombre .ck-l button{background:#171C28}
 .ck-lg{width:56px;height:44px;border-radius:12px;padding:6px;box-sizing:border-box}.ck-lg img{max-width:100%;max-height:100%}
+/* Abonnement : « Choisissez votre formule » (présentation reprise de Shafrik, aux couleurs de Scolaris) */
+.fo{max-width:520px;margin:0 auto;min-height:100%;background:#F2F2F4;padding-bottom:28px;font-family:var(--inter,Inter),sans-serif;color:#111}
+.fo-haut{position:relative;display:flex;align-items:center;justify-content:center;min-height:64px;padding:12px 16px;border-bottom:1px solid #E2E2E6}
+.fo-haut h1{font:500 16.5px/1.2 var(--pop);color:#111}
+.fo-x{position:absolute;left:16px;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#E2E2E6;color:#111;font-size:17px}
+.fo-intro{text-align:center;color:#6B6B76;font-size:13.5px;line-height:1.5;padding:16px 24px 14px}
+.fo-tabs{margin:0 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:3px;border-radius:12px;background:#EAEFFB;border:1px solid #DDE4F6}
+.fo-tabs button{min-height:48px;border:1px solid transparent;border-radius:10px;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:500 13.5px var(--pop);color:#555;cursor:pointer}
+.fo-tabs button.on{background:#fff;color:#111;border-color:#D4DCEF}
+.fo-tabs em,.fo-old em{font:700 11px var(--pop);font-style:normal;color:#119E4A;background:#DDF4E5;padding:1px 5px;border-radius:4px}
+.fo-carte{position:relative;margin:34px 16px 0;background:#fff;border:3px solid var(--b,#1262F5);border-radius:16px;padding:22px 16px 14px;box-shadow:0 0 0 5px #DBE6FD}
+.fo-badge{position:absolute;left:50%;top:0;transform:translate(-50%,-55%);white-space:nowrap;background:linear-gradient(90deg,#1262F5,#8DB2FB);color:#fff;font:600 15px var(--pop);padding:8px 22px;border-radius:999px;box-shadow:0 4px 12px rgba(18,98,245,.25)}
+.fo-carte h2{font:700 19px/1.25 var(--pop);color:#111}.fo-carte h2 b{color:#1262F5}
+.fo-sous{color:#6B6B76;font-size:13.5px;margin:5px 0 12px}
+.fo-old{display:flex;align-items:center;gap:7px}.fo-old s{color:#8A8A95;font-size:14px}.fo-old em{font-size:13px;padding:2px 7px}
+.fo-prix{font:700 27px/1.2 var(--pop);letter-spacing:-.3px;margin:3px 0 4px;color:#111}.fo-prix small{font:500 14px var(--pop);color:#6B6B76}
+.fo-jour{color:#1262F5;font-weight:600;font-size:13.5px;margin:2px 0 6px}
+.fo-mois{color:#6B6B76;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.fo-mois em{font-style:normal;background:#E6EEFE;color:#1262F5;font-weight:600;font-size:12.5px;padding:3px 7px;border-radius:6px}
+.fo-cta{display:block;width:100%;margin-top:14px;height:48px;border:0;border-radius:9px;background:#1262F5;color:#fff;font:500 15px var(--pop);cursor:pointer}.fo-cta:disabled{opacity:.7}
+.fo-box{margin-top:16px;background:#EFF3FD;border-radius:12px;padding:14px}
+.fo-box p{display:flex;justify-content:space-between;align-items:center;font:500 14.5px var(--pop);color:#111}.fo-box p span{display:flex;align-items:center;gap:7px}.fo-box p svg{color:#1262F5}.fo-box b{font-weight:600}
+.fo-box i{display:block;height:7px;border-radius:9px;background:#DCE4F6;margin:12px 0 9px}.fo-box i u{display:block;height:100%;width:100%;border-radius:9px;background:#1262F5}
+.fo-box small{color:#6B6B76;font-size:12.5px}
+.fo-det{display:block;margin:16px auto 6px;border:0;background:none;color:#1262F5;font:600 14.5px var(--pop);text-decoration:underline;cursor:pointer}
+.fo-pts{list-style:none;padding:6px 0 4px;display:grid;gap:8px}.fo-pts li{display:flex;gap:8px;align-items:center;font-size:13.5px}.fo-pts svg{color:#119E4A;flex:none}
+.fo-offre{margin:18px 16px 0;border:1px solid #C6D6F7;background:#EAF0FD;border-radius:12px;padding:14px 16px;font-size:14.5px;font-weight:500;line-height:1.45}
+.fo-offre button{display:block;margin-top:8px;border:0;background:none;padding:0;color:#1262F5;font:600 14.5px var(--pop);text-decoration:underline;cursor:pointer}
+.fo-gar{list-style:none;padding:16px 20px 4px}.fo-gar li{position:relative;font-size:14px;font-weight:500;padding:5px 0 5px 16px}.fo-gar li:before{content:"";position:absolute;left:0;top:12px;width:6px;height:6px;border-radius:50%;background:#1262F5}
+.fo-pied{text-align:center;color:#6B6B76;font-size:12.5px;padding:14px 24px 8px;line-height:1.5}
+.fo .abp-lien{display:block;margin:4px auto}
+.fo-suite{padding:8px 16px 0;display:grid;gap:10px}
+.fo .abp-rejet,.fo .abp-contact{margin:12px 16px 0}
+@media (min-width:900px){.fo{margin-top:12px;border-radius:18px;overflow:hidden}}

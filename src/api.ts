@@ -164,7 +164,7 @@ export const auth = {
 };
 
 // D'où vient le visiteur (lien ?src=… de chaque réseau, sinon le site d'arrivée). Rien de personnel : seulement le réseau.
-const RESEAUX: [RegExp, string][] = [[/tiktok/, 'tiktok'], [/youtube|youtu\.be/, 'youtube'], [/facebook|fb\.|fbclid/, 'facebook'], [/instagram/, 'instagram'], [/whatsapp|wa\.me/, 'whatsapp'], [/google\./, 'google'], [/linkedin|lnkd/, 'linkedin'], [/twitter|t\.co|x\.com/, 'twitter']];
+const RESEAUX: [RegExp, string][] = [[/tiktok/, 'tiktok'], [/youtube|youtu\.be/, 'youtube'], [/facebook|fb\.|fbclid/, 'facebook'], [/instagram/, 'instagram'], [/whatsapp|wa\.me/, 'whatsapp'], [/google\./, 'google'], [/linkedin|lnkd/, 'linkedin'], [/twitter|t\.co|x\.com/, 'twitter'], [/^affiche$/, 'affiche']];
 const versReseau = (t: string) => { const x = (t || '').toLowerCase(); if (!x) return ''; const r = RESEAUX.find(([re]) => re.test(x)); return r ? r[1] : 'autre'; };
 export function sourceArrivee(): string {
   try {

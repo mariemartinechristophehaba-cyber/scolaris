@@ -1,3 +1,4 @@
+try{var _s=(new URLSearchParams(location.search).get('src')||'').toLowerCase();if(/^(affiche|tiktok|facebook|whatsapp|youtube|instagram)$/.test(_s)&&!localStorage.getItem('scolaris_src'))localStorage.setItem('scolaris_src',_s)}catch(e){}
 
 const T=[["Jusqu'à 100 élèves",28000,224000],["101 à 200 élèves",36000,288000],["201 à 300 élèves",44000,352000],["301 à 400 élèves",52000,416000],["401 à 500 élèves",60000,480000],["501 à 700 élèves",72000,576000],["701 à 1 000 élèves",88000,704000]];
 const TAUX=15.72;let d='GNF',p='m';
@@ -73,3 +74,6 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fermer();});
 
 // Garde le site et l'application sur le téléphone (utilisable sans réseau).
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('/sw.js').catch(function(){});}
+// Visite comptée par réseau (une par appareil et par jour), comme dans l'application.
+try{(function(){var s=localStorage.getItem('scolaris_src');if(!s)return;var j=new Date().toISOString().slice(0,10);if(localStorage.getItem('scolaris_vu')===j)return;localStorage.setItem('scolaris_vu',j);
+var K2='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlem50cHZ2c3VrZGxlaHBicXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTc3OTgsImV4cCI6MjEwOTEzMzc5OH0.aAeqyLr8PY2MlGIP09cLSvJSive3YSTTkFW4zuh0Zk4';fetch('https://hezntpvvsukdlehpbqzs.supabase.co/rest/v1/rpc/noter_arrivee',{method:'POST',keepalive:true,headers:{'apikey':K2,'Authorization':'Bearer '+K2,'Content-Type':'application/json'},body:JSON.stringify({p_source:s})}).catch(function(){})})()}catch(e){}

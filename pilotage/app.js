@@ -165,6 +165,8 @@ function taches(X) {
   const rel = (X.fx.relancer || []);
   if (S.quoi !== 'scolaris' && rel.length) t.push({ ic: I.att, bg: '#FFFAEB', titre: `${pl(rel.length, 'abonnement FixPro expiré', 'abonnements FixPro expirés')}`, sous: `Jusqu'à ${F(rel.reduce((s, r) => s + (+r.montant || 0), 0))} GNF/mois à récupérer`, btn: 'Relancer', lien: '#activite', p: 1 });
   if (S.quoi !== 'fixpro' && X.sc.en_attente) t.push({ ic: I.att, bg: '#FFFAEB', titre: `${pl(X.sc.en_attente, 'paiement Scolaris', 'paiements Scolaris')} à valider`, sous: 'Déclarés par des écoles', btn: 'Valider', lien: LIEN.scolaris, p: 1 });
+  const smsA = (S.data && S.data.sms_a_acheter) || [];
+  if (S.quoi !== 'fixpro' && smsA.length) t.unshift({ ic: '📩', bg: '#EEF2FF', titre: `Acheter ${F(smsA.reduce((a, x) => a + x.quantite, 0))} SMS chez Nimba`, sous: `Payés par ${pl(smsA.length, 'école', 'écoles')} : ${smsA.map(x => x.ecole).slice(0, 2).join(', ')}`, btn: 'Voir', lien: '#sms', p: 1 });
   if (S.quoi !== 'fixpro' && X.sc.chariow_a_verifier) t.push({ ic: I.rouge, bg: '#FEF3F2', titre: `${pl(X.sc.chariow_a_verifier, 'vente Chariow', 'ventes Chariow')} à vérifier`, sous: 'École introuvable ou montant trop bas', btn: 'Voir', lien: LIEN.scolaris });
   if (S.quoi !== 'fixpro' && !X.pay.some(p => p.app === 'scolaris')) t.push({ ic: I.rouge, bg: '#FEF3F2', titre: 'Scolaris : 0 école payante', sous: X.ecoles.length ? `${pl(X.ecoles.length, 'école inscrite', 'écoles inscrites')}, aucune n'a encore payé` : 'Aucune vraie inscription pour l\'instant', btn: 'Voir', lien: LIEN.scolaris });
   if (S.quoi !== 'scolaris' && !X.pay.some(p => p.app === 'fixpro')) t.push({ ic: I.rouge, bg: '#FEF3F2', titre: 'FixPro : 0 technicien payant', sous: `${F(X.comptesFx)} comptes, aucun vrai paiement encore`, btn: 'Voir', lien: LIEN.fixpro });
@@ -453,9 +455,28 @@ function filtres(per) {
   const seg = (cle, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-${cle}="${v}" class="${S[cle] === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   return `<div class="filtres">${seg('quoi', [['tous', 'Les 2 apps'], ['fixpro', 'FixPro'], ['scolaris', 'Scolaris']])}${per ? seg('per', [['7', '7 j'], ['30', '30 j'], ['90', '3 mois'], ['tout', 'Tout']]) : ''}</div>`;
 }
+function blocSms() {
+  const L = (S.data && S.data.sms_a_acheter) || []; if (!L.length || S.quoi === 'fixpro') return '';
+  const per = { mois: '1 mois', '3mois': '3 mois', '6mois': '6 mois', an: '1 an', sms: 'pack SMS' };
+  return `<div class="card" id="sms"><div class="ct"><h3>📩 SMS à acheter chez Nimba</h3><span class="tag ko">${L.length}</span></div>
+  <p style="color:var(--m);font-size:14px;margin:-4px 0 10px">L'école a payé : achète ses SMS avec cet argent, puis touche « J'ai acheté ». Ses SMS partiront tout seuls.</p>
+  ${L.map(x => `<div class="task"><span class="ic" style="background:#EEF2FF">🏫</span><div><b>${esc(x.ecole)} · ${F(x.quantite)} SMS</b><small>Abonnement ${per[x.periode] || ''} · coût environ ${F(x.cout)} GNF</small></div><button class="btn p" data-act="sms-achete" data-id="${x.id}"${S.smsEnCours === x.id ? ' disabled' : ''}>${S.smsEnCours === x.id ? '…' : "J'ai acheté"}</button></div>`).join('')}
+  ${S.smsErr ? `<p style="color:#D92D20;font-size:14px;margin-top:8px">${esc(S.smsErr)}</p>` : ''}</div>`;
+}
+async function smsAchete(id) {
+  const t = await jeton(); if (!t) return;
+  S.smsEnCours = id; S.smsErr = ''; rendre();
+  try {
+    const r = await fetch(`${SB}/rest/v1/rpc/admin_sms_achete`, { method: 'POST', headers: { apikey: CLE, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_id: id }) });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || 'Erreur ' + r.status); }
+    if (S.data) S.data.sms_a_acheter = (S.data.sms_a_acheter || []).filter(x => x.id !== id);
+  } catch (e) { S.smsErr = "Impossible d'enregistrer : " + e.message; }
+  S.smsEnCours = null; rendre(); charger(true);
+}
 function pageAccueil(X) {
   return `${filtres()}${blocSanteBandeau(X, 1)}
   <div class="g-kpi">${blocHero(X, 'Revenu total encaissé', X.total, X.payA.length ? `Panier moyen ${F(X.total / X.payA.length)} GNF` : 'Aucun vrai paiement encore')}${blocKpis(X)}</div>
+  ${blocSms()}
   <div class="g21">${blocRevenus(X, 230)}${blocTaches(X, 4)}</div>
   <div class="g111">${blocVisiteurs(X, 150)}${blocSources(X, 140)}${blocApps(X)}</div>
   <div class="g11">${blocDerniers(X, 6)}<div class="col">${S.quoi !== 'fixpro' ? blocEcoles(X) : blocVilles(X)}</div></div>
@@ -682,6 +703,7 @@ document.addEventListener('click', e => {
   else if (b.dataset.act === 'frais-ajout') { S.fraisBrouillon.push({ nom: '', montant: 0, devise: 'USD' }); rendre(); }
   else if (b.dataset.act === 'frais-suppr') { S.fraisBrouillon.splice(+b.dataset.i, 1); rendre(); }
   else if (b.dataset.act === 'frais-ok') enregistrerFrais();
+  else if (b.dataset.act === 'sms-achete') smsAchete(b.dataset.id);
   else if (b.dataset.act === 'sortir') deconnexion();
   else if (b.dataset.act === 'mode') { S.mode = S.mode === 'activer' ? '' : 'activer'; S.err = ''; S.oeil = false; rendre(); }
   else if (b.dataset.act === 'oeil') { const i = document.querySelector('input[name=mdp]'); S.oeil = !S.oeil; if (i) i.type = S.oeil ? 'text' : 'password'; }
@@ -717,7 +739,7 @@ async function activer(e) {
     S.mode = ''; await auth({ email: await emailDe(ident), password: mdp }, 'password'); S.charge = false; await charger();
   } catch (er) { S.charge = false; S.err = er.message; rendre(); remettre(); }
 }
-window.addEventListener('hashchange', () => { S.page = (location.hash.slice(1) || 'accueil'); if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; } window.scrollTo(0, 0); rendre(); });
+window.addEventListener('hashchange', () => { if (location.hash === '#sms') { S.page = 'accueil'; rendre(); const c = document.getElementById('sms'); if (c) c.scrollIntoView({ behavior: 'smooth' }); return; } S.page = (location.hash.slice(1) || 'accueil'); if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; } window.scrollTo(0, 0); rendre(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.session && (!S.vu || Date.now() - S.vu > 6e4)) charger(true); });
 setInterval(() => { if (!document.hidden && S.session) charger(true); }, 5 * 6e4);
 setInterval(() => { if (!document.hidden && S.session && S.page === 'sante') pinger(); }, 20000);
@@ -727,6 +749,7 @@ setInterval(() => { if (!document.hidden && S.session && S.page === 'sante') pin
   S.session = lire('pilotage_session'); const v = lire('pilotage_vue') || {}; S.quoi = v.quoi || 'tous'; S.per = v.per || 'tout';
   S.page = location.hash.slice(1) || 'accueil';
   if (S.page === 'activer') { S.mode = 'activer'; S.page = 'accueil'; }
+  if (S.page === 'sms') S.page = 'accueil';
   const c = lire('pilotage_cache'); if (S.session && c && c.d) { S.data = c.d; S.vu = new Date(c.t); }
   rendre(); if (S.session) { charger(!!S.data); pinger(); }
 })();

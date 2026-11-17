@@ -55,7 +55,7 @@ function CarteSms({ abo, pk, acheter }: any) {
     <p className="as-info"><PiInfoFill aria-hidden="true" />Les SMS arrivent bientôt dans votre pays. En attendant, vos relances partent par WhatsApp, sans limite et sans frais.</p>
   </section>;
   return <section className="abp-sms">
-    <div className="as-h"><span className="abp-tuile"><Bulle /></span><div><b>SMS de l'école</b><small>Relances automatiques aux parents</small></div>{ok ? <em className="as-ok">Inclus</em> : <em className="as-non">Après paiement</em>}</div>
+    <div className="as-h"><span className="abp-tuile"><Bulle /></span><div><b>SMS de l'école</b><small>Relances automatiques aux parents</small></div>{ok ? <em className="as-ok">Inclus</em> : abo.sms_en_attente ? <em className="as-non">Activation en cours</em> : <em className="as-non">Après paiement</em>}</div>
     {ok ? <>
       <div className="as-mil"><div className="as-n"><strong>{nb(reste)}</strong><span>restants sur {nb(q)} ce mois-ci</span></div>
       <div className="as-b"><i style={{ width: `${pct}%`, background: pct >= 90 ? '#E5484D' : pct >= 70 ? '#F79009' : '#0FA968' }} /></div>

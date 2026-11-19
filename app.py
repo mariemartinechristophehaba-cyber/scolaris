@@ -28,6 +28,7 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=PROD,
     PERMANENT_SESSION_LIFETIME=timedelta(days=60),
+    MAX_CONTENT_LENGTH=2 * 1024 * 1024,   # envois (import CSV) : 2 Mo au plus
 )
 csrf = CSRFProtect(app)
 
@@ -315,10 +316,39 @@ def inscription():
     return render_template("inscription.html")
 
 
+
+# ---------------------------------------------------------------- limite des tentatives de connexion
+CONNEXION_MAX, CONNEXION_FENETRE = 5, 15 * 60
+
+
+def _cle_tentative(ident):
+    return "%s|%s" % ((request.headers.get("X-Forwarded-For") or request.remote_addr or "?").split(",")[0].strip(),
+                      (ident or "").strip().lower()[:80])
+
+
+def _trop_de_tentatives(ident):
+    c = conn()
+    depuis = (datetime.now() - timedelta(seconds=CONNEXION_FENETRE)).strftime("%Y-%m-%dT%H:%M:%S")
+    c.execute("DELETE FROM tentatives_connexion WHERE instant < ?", (depuis,))
+    n = c.execute("SELECT COUNT(*) AS n FROM tentatives_connexion WHERE cle = ? AND instant >= ?",
+                  (_cle_tentative(ident), depuis)).fetchone()["n"]
+    c.commit()
+    return n >= CONNEXION_MAX
+
+
+def _noter_echec(ident):
+    c = conn()
+    c.execute("INSERT INTO tentatives_connexion (cle, instant) VALUES (?, ?)", (_cle_tentative(ident), maintenant()))
+    c.commit()
+
+
 @app.route("/connexion", methods=["GET", "POST"])
 def connexion():
     if request.method == "POST":
         ident = (request.form.get("identifiant") or request.form.get("telephone") or "").strip()
+        if _trop_de_tentatives(ident):
+            flash("Trop de tentatives. Patientez 15 minutes avant de réessayer.", "erreur")
+            return render_template("connexion.html"), 429
         if "@" in ident:
             u = conn().execute("SELECT * FROM utilisateurs WHERE email = ? AND actif = 1",
                                (ident.lower(),)).fetchone()
@@ -333,6 +363,7 @@ def connexion():
             session["uid"] = u["id"]
             suite = request.args.get("suite", "")
             return redirect(suite if suite.startswith("/") and not suite.startswith("//") else url_for("tableau"))
+        _noter_echec(ident)
         flash("Identifiant ou mot de passe incorrect.", "erreur")
     return render_template("connexion.html")
 
@@ -1057,5 +1088,23 @@ def _403(_e):
                            texte="Vous n'avez pas le droit de faire cette action."), 403
 
 
+@app.after_request
+def _entetes_securite(reponse):
+    reponse.headers.setdefault("X-Content-Type-Options", "nosniff")
+    reponse.headers.setdefault("X-Frame-Options", "DENY")
+    reponse.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if PROD:
+        reponse.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    if g.get("user"):
+        reponse.headers["Cache-Control"] = "no-store"     # pages privees : jamais gardees en cache
+    return reponse
+
+
+@app.errorhandler(413)
+def _413(_e):
+    return render_template("erreur.html", titre="Fichier trop lourd",
+                           texte="Le fichier dépasse 2 Mo. Envoyez un fichier plus léger."), 413
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=not PROD)

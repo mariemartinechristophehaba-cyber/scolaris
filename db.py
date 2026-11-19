@@ -40,6 +40,8 @@ CREATE INDEX IF NOT EXISTS idx_paiements_eleve ON paiements (eleve_id);
 CREATE INDEX IF NOT EXISTS idx_classes_ecole ON classes (ecole_id);
 CREATE INDEX IF NOT EXISTS idx_echeances_classe ON echeances (classe_id);
 CREATE INDEX IF NOT EXISTS idx_rappels_ecole ON rappels (ecole_id);
+CREATE TABLE IF NOT EXISTS tentatives_connexion (cle TEXT NOT NULL, instant TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_tentatives_cle ON tentatives_connexion (cle);
 """
 
 

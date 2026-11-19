@@ -120,6 +120,25 @@ class AppTests(unittest.TestCase):
         r = self.c.post("/connexion", data={"identifiant": "620000009", "mot_de_passe": "Nouveau2026"})
         self.assertEqual(r.status_code, 302)
 
+    def test_connexion_bloquee_apres_trop_d_echecs(self):
+        self.inscrire()
+        self.c.post("/deconnexion")
+        for _ in range(5):
+            r = self.c.post("/connexion", data={"identifiant": "620000001", "mot_de_passe": "mauvais-mot-de-passe"})
+            self.assertEqual(r.status_code, 200)
+        r = self.c.post("/connexion", data={"identifiant": "620000001", "mot_de_passe": "Scolaris2026"})
+        self.assertEqual(r.status_code, 429)                      # meme le bon mot de passe est refuse
+        self.assertIn("Trop de tentatives", r.get_data(as_text=True))
+
+    def test_import_trop_lourd_refuse_et_entetes_de_securite(self):
+        self.ecole_type()
+        r = self.c.post("/eleves/import", data={"texte": "x" * (3 * 1024 * 1024)})
+        self.assertEqual(r.status_code, 413)
+        r = self.c.get("/tableau")
+        self.assertEqual(r.headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(r.headers["X-Frame-Options"], "DENY")
+        self.assertEqual(r.headers["Cache-Control"], "no-store")
+
     def test_verification_par_sms(self):
         import sms
         recus = []

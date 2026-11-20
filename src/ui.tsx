@@ -7,6 +7,14 @@ import { grouperClasses, nb, paysActif, symbole, dv } from './lib';
 export const Ctx = createContext<any>(null);
 export const useApp = () => useContext(Ctx);
 
+// Vrai sur ordinateur (même seuil que le CSS : plus de 860 px), suit le redimensionnement de la fenêtre.
+export function usePc() {
+  const mq = typeof window !== 'undefined' ? window.matchMedia('(min-width: 861px)') : null;
+  const [pc, setPc] = useState(!!mq?.matches);
+  useEffect(() => { if (!mq) return; const f = () => setPc(mq.matches); mq.addEventListener('change', f); return () => mq.removeEventListener('change', f); }, []);
+  return pc;
+}
+
 export const naviguer = (to: string) => { history.pushState(null, '', to); dispatchEvent(new PopStateEvent('popstate')); scrollTo(0, 0); };
 export function Lien({ to, children, className, ...p }: any) {
   return <a href={to} className={className} onClick={(e) => { if (e.ctrlKey || e.metaKey) return; e.preventDefault(); naviguer(to); }} {...p}>{children}</a>;

@@ -4,8 +4,8 @@ import { Bascule, Passage } from './passage';
 import { useMemo, useRef, useState } from 'react';
 import { PiChatCircleDotsDuotone, PiClockCountdownDuotone, PiCheckCircleDuotone, PiPaperPlaneTiltFill, PiInfoFill, PiKeyDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCloudArrowUpDuotone, PiDownloadSimpleBold, PiFileArrowUpDuotone, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiSignOutBold, PiUserPlusDuotone, PiWarningDuotone, PiWhatsappLogoDuotone, PiWhatsappLogoFill } from 'react-icons/pi';
 import { SUPA, auth, db, getSession, message } from './api';
-import { TRANCHES, auj, dateFr, erreurTel, gnf, grouperClasses, telAff, lireTableau, nb, tel, telechargerExcel, trancheDe, dv } from './lib';
-import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Vague, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { TRANCHES, auj, convertir, dateFr, erreurTel, gnf, paysActif, grouperClasses, telAff, lireTableau, nb, tel, telechargerExcel, trancheDe, dv } from './lib';
+import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Vague, Montant, Pastille, Titre, Tuile, Vide, naviguer, useApp, useEnvoi, usePc, useQ } from './ui';
 
 const premier = (l: any[]) => { const m = new Map<string, any>(); l.forEach((x) => { if (!m.has(x.eleve_id)) m.set(x.eleve_id, x); }); return m; };
 
@@ -252,7 +252,7 @@ export function Parametres({ vue }: { vue?: string }) {
   const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
   const [f, setF] = useState({ nom: etab.nom || '', ville: etab.ville || '', telephone: etab.telephone || '' });
   const [obj, setO] = useState<number | null>(null); const [na, setNa] = useState({ libelle: '', date_debut: '', date_fin: '' }); const [ok, setOk] = useState(''); const e = useEnvoi();
-  const [sel, setSel] = useState<string | null>(null);
+  const [sel, setSel] = useState<string | null>(null); const pc = usePc();
   const q = useQ(async () => (annee && can('directeur', 'comptable') ? db.get(`objectifs_financiers?annee_scolaire_id=eq.${annee.id}&periode=eq.annuel&classe_id=is.null`) : []), [annee?.id]);
   const tb = useQ(async () => (annee && role === 'fondateur' ? db.get(`v_tableau_bord?annee_scolaire_id=eq.${annee.id}&select=eleves`) : []), [annee?.id]);
   const tarifs = useQ(async () => (role === 'fondateur' ? db.rpc('tarifs_liste', {}) : []), []);
@@ -261,7 +261,7 @@ export function Parametres({ vue }: { vue?: string }) {
   const fait = (t: string) => { setOk(t); setTimeout(() => setOk(''), 3000); };
   const u = getSession()?.user; const nomU = `${u?.user_metadata?.prenom || ''} ${u?.user_metadata?.nom || ''}`.trim() || u?.email || '';
   const retour = () => naviguer('/parametres');
-  const Ecran = ({ t, children }: any) => <><Titre t="Paramètres" /><div className="abp"><Haut t={t} retour={retour} /><div className="abp-co par-co">{children}</div></div></>;
+  const Ecran = ({ t, children }: any) => <><Titre t="Paramètres" /><div className="abp par-ec"><Haut t={t} retour={retour} /><div className="abp-co par-co">{children}</div></div></>;
   const Msg = <><Erreur t={e.erreur} />{ok && <div className="alerte ok">{ok}</div>}</>;
 
   if (vue === 'ecole') return Ecran({ t: 'Mon école', children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); const er = erreurTel(f.telephone, true); if (er) return e.setE(`Téléphone de l'école : ${er}`); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, { ...f, telephone: tel(f.telephone) || null }); await recharger(); fait('École enregistrée'); }); }}><fieldset disabled={!d}>
@@ -273,7 +273,7 @@ export function Parametres({ vue }: { vue?: string }) {
 
   if (vue === 'taille' && role === 'fondateur') {
     const choix = sel ?? etab.tranche_eleves ?? ''; const n = Number((tb.data as any)?.[0]?.eleves || 0); const reel = trancheDe(n); const ordre = TRANCHES.map(([k]) => k);
-    const prix = (k: string) => { const t = ((tarifs.data as any[]) || []).find((x) => x.tranche === k); return t?.prix_mois ? `${gnf(t.prix_mois)} par mois` : 'Tarif à voir avec Scolaris'; };
+    const prix = (k: string) => { const t = ((tarifs.data as any[]) || []).find((x) => x.tranche === k); const v = t && convertir(t.prix_mois, paysActif().dev, t.taux); return v ? `${gnf(v)} par mois` : 'Tarif à voir avec Scolaris'; };
     return Ecran({ t: "Taille de l'école", children: <form className="par-f" onSubmit={(x) => { x.preventDefault(); if (!choix) return e.setE('Choisissez la taille de votre école'); e.envoyer(async () => { await db.upd(`etablissements?id=eq.${eid}`, { tranche_eleves: choix }); await recharger(); fait('Taille enregistrée'); }); }}>
       <h2 className="par-q">Combien d'élèves compte votre école ?</h2><p className="par-s">Votre tarif dépend de cette réponse. Élèves inscrits cette année : {nb(n)}.</p>
       <div className="par-ch" role="radiogroup" aria-label="Taille de l'école">{TRANCHES.map(([k, t]) => <button type="button" role="radio" aria-checked={choix === k} key={k} className={choix === k ? 'on' : ''} onClick={() => setSel(k)}><i aria-hidden="true" /><span><b>{t}</b><small>{prix(k)}</small></span></button>)}</div>
@@ -308,6 +308,40 @@ export function Parametres({ vue }: { vue?: string }) {
     <div className="compte-l"><Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span></div>{Msg}
     <div className="par-bt"><button className="btn contour" onClick={() => setMdp(true)}><PiKeyDuotone />Changer le mot de passe</button><button className="btn contour rouge" onClick={auth.deconnexion}><PiSignOutBold />Se déconnecter</button></div></> })}
     {mdp && <ChangerMdp fermer={() => setMdp(false)} fini={() => { setMdp(false); fait('Mot de passe changé'); }} />}</>;
+
+  // Ordinateur : la carte de l'école et du compte à gauche, les réglages en cartes à droite.
+  if (pc) {
+    const T = TRANCHES.find(([k]) => k === etab.tranche_eleves)?.[1]; const mobOk = etab.orange_money_numero || etab.mtn_money_numero;
+    const Carte = ({ to, I, t, v, s, tag }: any) => <Lien to={`/parametres/${to}`} className="pp-c"><span className="pp-ct"><span className="par-i"><I aria-hidden="true" /></span>{tag}</span><b>{t}</b><strong>{v}</strong><small>{s}</small><span className="pp-m">Modifier<PiCaretRightBold aria-hidden="true" /></span></Lien>;
+    return (
+      <>
+        <Titre t="Paramètres" />
+        <div className="pp">
+          <aside className="pp-g">
+            <section className="pp-ecole">
+              {etab.logo_chemin ? <img src={`${SUPA}/storage/v1/object/public/logos/${etab.logo_chemin}`} alt="" /> : <span className="pp-logo" aria-hidden="true"><PiBuildingsFill /></span>}
+              <h2>{etab.nom}</h2><p>{[etab.ville, etab.telephone && telAff(etab.telephone)].filter(Boolean).join(' · ') || 'Ville et téléphone à compléter'}</p>
+              <div className="pp-puces">{T && <span><PiStudentFill aria-hidden="true" />{T}</span>}{annee && <span className={annee.statut === 'active' ? 'ok' : ''}><PiCalendarBlankFill aria-hidden="true" />{annee.libelle}{annee.statut === 'active' ? ', active' : ''}</span>}</div>
+              <Lien to="/parametres/ecole" className="btn contour">Modifier l'école</Lien>
+            </section>
+            <section className="pp-moi">
+              <Avatar nom={nomU} /><div><b>{nomU}</b><small>{u?.email}</small></div><span className="puce">{ROLES[role]}</span>
+              <div className="pp-moi-b"><Lien to="/parametres/compte" className="btn contour mini"><PiKeyDuotone />Mot de passe</Lien><button type="button" className="btn contour mini rouge" onClick={auth.deconnexion}><PiSignOutBold />Se déconnecter</button></div>
+            </section>
+          </aside>
+          <section className="pp-d">
+            <h2 className="pp-h">Réglages de l'école</h2>
+            <nav className="pp-grille" aria-label="Paramètres">
+              {role === 'fondateur' && <Carte to="taille" I={PiStudentFill} t="Taille de l'école" v={T || 'À choisir'} s="Elle fixe le prix de votre abonnement." tag={!etab.tranche_eleves && <em className="par-tag">À choisir</em>} />}
+              {annee && can('directeur', 'comptable') && <Carte to="objectif" I={PiTargetBold} t="Objectif de l'année" v={courant?.montant ? gnf(courant.montant) : 'Pas encore défini'} s="L'accueil montre si l'école est en avance ou en retard." />}
+              {d && <Carte to="mobile" I={PiDeviceMobileFill} t="Paiement mobile des parents" v={mobOk ? [etab.orange_money_numero && 'Orange Money', etab.mtn_money_numero && 'MTN MoMo'].filter(Boolean).join(' et ') : 'Pas encore activé'} s="Les parents paient depuis leur téléphone." tag={!mobOk && <em className="par-tag">À activer</em>} />}
+              <Carte to="annee" I={PiCalendarBlankFill} t="Année scolaire" v={annee?.libelle || 'À créer'} s="Passer à l'année suivante ou créer une année." tag={annee?.statut === 'active' && <em className="par-tag ok">Active</em>} />
+            </nav>
+          </section>
+        </div>
+      </>
+    );
+  }
 
   const Rang = ({ to, I, t, s, tag }: any) => <Lien to={`/parametres/${to}`} className="par-l"><span className="par-i"><I aria-hidden="true" /></span><span className="par-t"><b>{t}</b><small>{s}</small></span>{tag}<PiCaretRightBold className="par-c" aria-hidden="true" /></Lien>;
   return (

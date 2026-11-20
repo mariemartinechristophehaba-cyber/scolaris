@@ -4,7 +4,7 @@ import { PiLockKeyFill, PiSparkleFill, PiXBold } from 'react-icons/pi';
 import { PiCaretRightBold, PiArrowLeftBold, PiArrowRightBold, PiBellRingingFill, PiChartBarFill, PiCheckBold, PiCheckCircleFill, PiClockCountdownFill, PiCrownSimpleFill, PiInfoFill, PiReceiptDuotone, PiReceiptFill, PiUsersThreeFill, PiWarningCircleFill, PiWhatsappLogoFill } from 'react-icons/pi';
 import { auth, db, getSession, payerAbonnement } from './api';
 import { TRANCHES, dateFr, drapeau, erreurTel, fcfa, gnf, nb, paysActif, symbole, tel } from './lib';
-import { Erreur, Lien, Modale, Pastille, Titre, Tuile, Vide, useApp, useEnvoi } from './ui';
+import { Erreur, Lien, Modale, Pastille, Titre, Tuile, Vide, useApp, useEnvoi, usePc } from './ui';
 
 export const LIB_T: any = { ...Object.fromEntries(TRANCHES), moins_200: "Jusqu'à 200 élèves", '201_500': '201 à 500 élèves', '501_1000': '501 à 1 000 élèves' };
 export const SIT: any = { attente: ['retard', 'En attente de paiement'], essai: ['partiel', 'Essai gratuit'], actif: ['a_jour', 'Actif'], grace: ['retard', 'Terminé'], expire: ['rien', 'Expiré'], suspendu: ['rien', 'Suspendu'] };
@@ -85,7 +85,7 @@ function AttentePaiement({ plan, sms, essais, quitter }: any) {
 
 export function Abonnement() {
   const { abo, eid, recharger } = useApp(); const [per, setPer] = useState('an'); const [num, setNum] = useState(''); const [etape, setEtape] = useState(1); const [hist, setHist] = useState(false); const e = useEnvoi();
-  const [part, setPart] = useState(false); const [det, setDet] = useState(false); const [errP, setErrP] = useState('');
+  const [part, setPart] = useState(false); const [det, setDet] = useState(false); const [errP, setErrP] = useState(''); const pc = usePc();
   const [att, setAtt] = useState(() => new URLSearchParams(location.search).get('retour') === '1'); const [essais, setEssais] = useState(0);
   useEffect(() => { if (!att) return; const t = setTimeout(async () => { await recharger(); setEssais((n) => n + 1); }, 5000); return () => clearTimeout(t); }, [att, essais]);
   useEffect(() => { if (att && abo?.situation === 'actif' && essais > 0 && (abo.historique || []).some((p: any) => p.statut === 'valide' && Date.now() - new Date(p.traite_le || p.declare_le).getTime() < 15 * 60000)) { setAtt(false); history.replaceState(null, '', '/abonnement?paye=1'); } }, [abo, essais]);
@@ -182,6 +182,55 @@ export function Abonnement() {
   const parJour = P.prix ? arr(P.prix / (nbMois * 30.4)) : 0; const parMois = P.prix ? arr(P.prix / nbMois) : 0;
   const remiseP = P.normal && P.normal > P.prix ? Math.round((1 - P.prix / P.normal) * 100) : 0;
   const tr = LIB_T[abo.tranche] || 'Votre école';
+  const choisir = (k: string) => { setPer(k); if (abo[`lien_${k}`]) payer(k); else aller(2); };
+
+  // Ordinateur : les quatre durées côte à côte, puis ce qui est inclus et les SMS.
+  if (pc && m != null && a != null) {
+    const cartes = DUREES.map(([k, t, r]) => {
+      const Q = PLANS[k]; const n = k === 'mois' ? 1 : k === '3mois' ? 3 : k === '6mois' ? 6 : 12;
+      return { k, t, r, Q, n, jour: Q.prix ? arr(Q.prix / (n * 30.4)) : 0, mois: Q.prix ? arr(Q.prix / n) : 0, rem: Q.normal && Q.prix && Q.normal > Q.prix ? Math.round((1 - Q.prix / Q.normal) * 100) : 0 };
+    }).filter((c) => c.Q.prix);
+    const ok = abo.situation === 'actif' || abo.situation === 'essai';
+    return (
+      <><Titre t="Abonnement" />
+        <div className="fp">
+          <header className="fp-haut">
+            <div><h1>Choisissez votre formule</h1><p>{abo.situation === 'attente' ? 'Votre école est prête. Activez-la et suivez la scolarité de chaque élève.' : 'Même formule, quatre durées : plus vous prenez long, moins vous payez.'} Sans engagement au-delà de la durée choisie.</p></div>
+            <div className={`fp-etat${ok ? ' ok' : ''}`}><span><PiClockCountdownFill aria-hidden="true" /></span><div><b>{etat}</b>{abo.fin && abo.situation !== 'attente' && <small>{abo.situation === 'actif' || abo.situation === 'essai' ? `jusqu'au ${dateFr(abo.fin)}` : 'Renouvelez pour continuer à enregistrer'}</small>}</div></div>
+          </header>
+          {dernier?.statut === 'rejete' && <p className="abp-rejet"><PiWarningCircleFill aria-hidden="true" />Votre dernier paiement a été rejeté{dernier.motif ? ` : ${dernier.motif}` : ''}.</p>}
+          <section className="fp-formule">
+            <span className="abp-tuile"><Gemme /></span>
+            <div className="fp-ft"><span className="fp-badge">Votre formule</span><h2>Scolaris <b>{tr}</b></h2><p>Pour gérer la scolarité de votre école, avec toutes les fonctions.</p></div>
+            {F && <div className="fp-off"><em>-{F.remise} %</em><div><b>Offre fondatrice</b><small>{F.etat === 'active' ? `Prix réduit jusqu'au ${dateFr(F.jusqu)}` : `La 1re année, plus que ${nb(F.restantes)} place${F.restantes > 1 ? 's' : ''}`}</small></div></div>}
+          </section>
+          {errP && <p className="erreur" role="alert">{errP}</p>}
+          <div className="fp-grille" role="list">
+            {cartes.map((c) => <article role="listitem" key={c.k} className={`fp-c${c.k === 'an' ? ' top' : ''}`}>
+              {c.k === 'an' && <span className="fp-meil">Meilleure valeur</span>}
+              <h3>{c.t}{c.r > 0 && <em>-{c.r}%</em>}</h3>
+              <p className="fp-old">{c.rem > 0 ? <><s>{nb(c.Q.normal)} {dev}</s><em>-{c.rem}%</em></> : ' '}</p>
+              <p className="fp-prix">{nb(c.Q.prix)} <small>{dev}</small></p>
+              <p className="fp-u">{c.n > 1 ? `payé une fois pour ${c.t}` : 'chaque mois, arrêtez quand vous voulez'}</p>
+              <ul><li><PiCheckBold aria-hidden="true" /><span>soit environ <b>{nb(c.jour)} {dev}</b> par jour</span></li><li><PiCheckBold aria-hidden="true" /><span>{c.n > 1 ? <>revient à <b>{nb(c.mois)} {dev}</b> par mois</> : 'Sans engagement'}</span></li><li><PiCheckBold aria-hidden="true" /><span>{smsOk ? `${nb(smsMois)} SMS de relance par mois` : 'Relances WhatsApp illimitées'}</span></li></ul>
+              <button type="button" className="fp-cta" disabled={part} onClick={() => choisir(c.k)}>{part && per === c.k ? 'Ouverture du paiement…' : `Choisir ${c.t}`}</button>
+            </article>)}
+          </div>
+          <div className="fp-bas">
+            <section className="fp-inc">
+              <h3>Inclus dans toutes les durées</h3>
+              <ul>{['Suivi des frais de chaque élève', 'Reçus et relances des parents', 'Inscriptions et réinscriptions', 'Rapports et caisse', 'Plusieurs comptes pour votre équipe', 'Toutes les fonctions de Scolaris'].map((t) => <li key={t}><PiCheckCircleFill aria-hidden="true" />{t}</li>)}</ul>
+              <ul className="fp-gar"><li><PiLockKeyFill aria-hidden="true" />Paiement sécurisé, Mobile Money et carte</li><li><PiCheckCircleFill aria-hidden="true" />Activation automatique après le paiement</li><li><PiWhatsappLogoFill aria-hidden="true" />Support humain en français</li></ul>
+              <div className="fp-liens"><button type="button" className="abp-lien" onClick={() => { setPer(d0); aller(3); }}>J'ai déjà payé</button>{lienHist}{abo.situation === 'attente' && <button type="button" className="abp-lien" onClick={auth.deconnexion}>Se déconnecter</button>}</div>
+            </section>
+            <CarteSms abo={abo} pk={pk} acheter={() => { setPer('sms'); if (pk.lien) payer('sms'); else aller(2); }} />
+          </div>
+        </div>
+        {hist && <Historique abo={abo} fermer={() => setHist(false)} />}
+      </>
+    );
+  }
+
   return (
     <><Titre t="Abonnement" />
       <div className="fo">

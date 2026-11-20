@@ -2,9 +2,17 @@ import { useEffect, useState } from 'react';
 import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiChatCircleDots, PiChatCircleDotsFill, PiShoppingCartFill, PiInfoFill, PiDatabaseDuotone, PiLightningDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
-import { PAYS, auj, dateFr, erreurTel, fcfa as gnf, nb, paysDe, telAff } from './lib';
+import { PAYS, auj, convertir, dateFr, erreurTel, nb, paysDe, telAff } from './lib';
+
+// Les abonnements sont payés et enregistrés en FCFA (Chariow). L'administration les affiche en francs guinéens,
+// avec le taux des Réglages (1 FCFA = X GNF). L'hébergement et les SMS Nimba sont déjà en GNF : gnfBrut.
+let TXG = 0;
+const enGnf = (n: any) => { const v = Number(n) || 0; return v && TXG ? (convertir(v, 'GNF', { GNF: TXG }) ?? 0) : v; };
+const gnf = (n: any) => `${nb(enGnf(n))} GNF`;
+const gnfBrut = (n: any) => `${nb(n)} GNF`;
+const Gnf = ({ n }: { n: any }) => <span className="gnf"><b>{nb(enGnf(n))}</b><small>GNF</small></span>;
 import { Drapeau } from './drapeau';
-import { Avatar, Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Gnf, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vague, Vide, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vague, Vide, useApp, useEnvoi, useQ } from './ui';
 import { LIB_M, LIB_P, LIB_T, SIT, ST_P, waUrl } from './abonnement';
 
 const ITEMS: [string, string, any, string, any][] = [['/admin', "Vue d'ensemble", PiSquaresFour, 'Accueil', PiSquaresFourFill], ['/admin/ecoles', 'Écoles', PiBuildings, 'Écoles', PiBuildingsFill], ['/admin/paiements', 'Paiements', PiMoneyWavy, 'Paiements', PiMoneyWavyFill], ['/admin/sms', 'SMS', PiChatCircleDots, 'SMS', PiChatCircleDotsFill], ['/admin/reglages', 'Réglages', PiGearSix, 'Réglages', PiGearSixFill]];
@@ -94,9 +102,9 @@ function Vue() {
   return <Etat q={q}>{(d: any) => {
     const e = d.ecoles; const reglees = Number(e.essai) + Number(e.actif); const pct = e.total ? Math.round((reglees / e.total) * 100) : 0; const pc = (n: number) => (e.total ? Math.round((n / e.total) * 100) : 0);
     const prec = Number(d.encaisse_mois_prec); const mois = Number(d.encaisse_mois); const evo = prec > 0 ? Math.round(((mois - prec) / prec) * 100) : null;
-    const data = d.series.map((s: any) => ({ label: MOIS_C[Number(s.mois.slice(5, 7)) - 1], valeur: Number(s.montant) }));
+    const data = d.series.map((s: any) => ({ label: MOIS_C[Number(s.mois.slice(5, 7)) - 1], valeur: enGnf(s.montant) }));
     const vide = data.every((x: any) => x.valeur === 0); const maxT = Math.max(...d.tranches.map((t: any) => Number(t.ecoles)), 1);
-    const apres = mois - Number(d.cout_mensuel); const mB = d.usage.base_octets / 1048576; const mF = d.usage.fichiers_octets / 1048576;
+    const apres = enGnf(mois) - Number(d.cout_mensuel); const mB = d.usage.base_octets / 1048576; const mF = d.usage.fichiers_octets / 1048576;
     const pB = (mB / d.limite_base_mo) * 100; const pF = (mF / d.limite_fichiers_mo) * 100;
     const ETATS: [string, number, any, string][] = [['Actives', e.actif, PiCheckCircleFill, 'c-vert'], ['En attente de paiement', e.attente || 0, PiCircleHalfFill, 'c-gris'], ['En essai', e.essai, PiCircleHalfFill, 'c-bleu'], ['Terminées', e.grace, PiClockCountdownFill, 'c-orange'], ['Expirées', e.expire, PiXCircleFill, 'c-rouge'], ['Suspendues', e.suspendu, PiProhibitFill, 'c-gris']];
     return <>
@@ -105,7 +113,7 @@ function Vue() {
           <div className="hero-g">
             <div className="hero-titre"><h1>Vue d'ensemble</h1></div>
             <span className="hero-lab">Encaissé ce mois</span>
-            <div className="hero-val"><b>{nb(mois)}</b><small>GNF</small></div>
+            <div className="hero-val"><b>{nb(enGnf(mois))}</b><small>GNF</small></div>
             {evo !== null && <div className="hero-etat"><span className={evo >= 0 ? 'chip-v' : 'chip-a'}>{evo >= 0 ? <PiTrendUpBold aria-hidden="true" /> : <PiArrowDownBold aria-hidden="true" />}{evo >= 0 ? '+' : ''}{evo} %</span><span className="hero-note">par rapport au mois dernier</span></div>}
           </div>
           <Jauge p={pct}><b>{pct} %</b><small>écoles en règle</small></Jauge>
@@ -147,7 +155,7 @@ function Vue() {
       <div className="rang">
         <section className="carte c-large"><h2>Écoles par tranche d'élèves</h2><ul className="adm-l">{d.tranches.map((t: any) => <li key={t.tranche}><div><span>{LIB_T[t.tranche]}</span><b>{nb(t.ecoles)} école{t.ecoles > 1 ? 's' : ''}</b></div><Barre p={(t.ecoles / maxT) * 100} /><small>{nb(t.eleves)} élèves</small></li>)}</ul></section>
         <section className="carte c-etat"><h2>Hébergement</h2>
-          <dl className="cl-d"><div><dt>Coût par mois</dt><dd>{gnf(d.cout_mensuel)}</dd></div><div><dt>Reste ce mois</dt><dd className={apres < 0 ? 'rouge' : 'vert'}>{apres < 0 ? '-' : ''}{gnf(Math.abs(apres))}</dd></div></dl>
+          <dl className="cl-d"><div><dt>Coût par mois</dt><dd>{gnfBrut(d.cout_mensuel)}</dd></div><div><dt>Reste ce mois</dt><dd className={apres < 0 ? 'rouge' : 'vert'}>{apres < 0 ? '-' : ''}{gnfBrut(Math.abs(apres))}</dd></div></dl>
           <ul className="adm-l">
             <li><div><span>Base de données</span><b>{taille(d.usage.base_octets)} sur {taille(d.limite_base_mo * 1048576)}</b></div><Barre p={pB} ton={pB >= 80 ? 'rouge' : pB >= 60 ? 'orange' : 'vert'} /></li>
             <li><div><span>Fichiers ({nb(d.usage.fichiers_nombre)})</span><b>{taille(d.usage.fichiers_octets)} sur {taille(d.limite_fichiers_mo * 1048576)}</b></div><Barre p={pF} ton={pF >= 80 ? 'rouge' : pF >= 60 ? 'orange' : 'vert'} /></li>
@@ -172,7 +180,7 @@ function Ecoles() {
         <div className="segment" role="tablist">{FILTRES.map(([k, x, g]) => <button key={k} role="tab" aria-selected={f === k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{x}<em>{nb(ecoles.filter((y) => g(y.situation)).length)}</em></button>)}</div>
         <div className="barre-outils"><div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={t} onChange={(x) => setT(x.target.value)} placeholder="Rechercher une école, un fondateur, un numéro" aria-label="Rechercher une école" /></div></div>
         <section className="carte c-table">{l.length === 0 ? <Vide t="Aucune école trouvée." /> : <>
-          <div className="table vue-bureau"><table><thead><tr><th>École</th><th className="dr">Élèves</th><th>Prix</th><th>Abonnement</th><th>Activité</th><th /></tr></thead><tbody>{l.map((x) => <tr key={x.id}><td><Lien to={`/admin/ecoles/${x.id}`}><b>{x.pays && <span className="drp" title={paysDe(x.pays).nom}><Drapeau c={x.pays} l={20} /></span>}{x.nom}</b></Lien><small className="bloc">{[x.fondateur, telAff(x.fondateur_tel), x.ville].filter(Boolean).join(', ')}</small></td><td className="dr fort">{nb(x.eleves)}</td><td>{x.prix_mois ? `${nb(x.prix_mois)} / mois` : 'À discuter'}{x.prix_perso && <small className="bloc gr">Prix spécial</small>}</td><td><Sit x={x} /><small className="bloc gr">Jusqu'au {dateFr(x.fin)}</small></td><td className="gr">{quand(x.derniere_activite)}</td><td><div className="acts-l"><Lien className="btn contour mini" to={`/admin/ecoles/${x.id}`}>Ouvrir</Lien></div></td></tr>)}</tbody></table></div>
+          <div className="table vue-bureau"><table><thead><tr><th>École</th><th className="dr">Élèves</th><th>Prix</th><th>Abonnement</th><th>Activité</th><th /></tr></thead><tbody>{l.map((x) => <tr key={x.id}><td><Lien to={`/admin/ecoles/${x.id}`}><b>{x.pays && <span className="drp" title={paysDe(x.pays).nom}><Drapeau c={x.pays} l={20} /></span>}{x.nom}</b></Lien><small className="bloc">{[x.fondateur, telAff(x.fondateur_tel), x.ville].filter(Boolean).join(', ')}</small></td><td className="dr fort">{nb(x.eleves)}</td><td>{x.prix_mois ? `${gnf(x.prix_mois)} / mois` : 'À discuter'}{x.prix_perso && <small className="bloc gr">Prix spécial</small>}</td><td><Sit x={x} /><small className="bloc gr">Jusqu'au {dateFr(x.fin)}</small></td><td className="gr">{quand(x.derniere_activite)}</td><td><div className="acts-l"><Lien className="btn contour mini" to={`/admin/ecoles/${x.id}`}>Ouvrir</Lien></div></td></tr>)}</tbody></table></div>
           <ul className="vue-tel liste-p">{l.map((x) => <li key={x.id}><Lien to={`/admin/ecoles/${x.id}`} className="lp-h"><div><b>{x.nom}</b><small>{nb(x.eleves)} élèves, jusqu'au {dateFr(x.fin)}</small></div><div className="fin"><Sit x={x} /></div></Lien></li>)}</ul>
         </>}</section>
       </>;
@@ -191,7 +199,7 @@ function PrixEcole({ x, fermer, fini }: any) {
   const [a, setA] = useState<number>(x.prix_mois || 0); const [b, setB] = useState<number>(x.prix_an || 0); const e = useEnvoi();
   const enreg = (m: number | null, an: number | null) => e.envoyer(async () => { await db.rpc('admin_prix_ecole', { p_etab: x.id, p_prix_mois: m, p_prix_an: an }); fini(); });
   return <Modale titre={`Prix de ${x.nom}`} fermer={fermer}><form onSubmit={(v) => { v.preventDefault(); if (!a || !b) return e.setE('Indiquez les deux prix'); enreg(a, b); }}>
-    <Champ label="Prix par mois"><Montant value={a} onChange={setA} /></Champ><Champ label="Prix par an"><Montant value={b} onChange={setB} /></Champ>
+    <Champ label="Prix par mois" aide={a ? `soit ${gnf(a)}` : undefined}><Montant devise="FCFA" value={a} onChange={setA} /></Champ><Champ label="Prix par an" aide={b ? `soit ${gnf(b)}` : undefined}><Montant devise="FCFA" value={b} onChange={setB} /></Champ>
     <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe}>Enregistrer</button>{x.prix_perso && <button type="button" className="btn lien" onClick={() => enreg(null, null)}>Revenir au prix de la tranche</button>}</form></Modale>;
 }
 
@@ -364,7 +372,7 @@ function Sms() {
 }
 
 function Reglages() {
-  const { tableau } = useApp(); const q = useQ(() => db.rpc('admin_reglages'), []);
+  const { tableau } = useApp(); const q = useQ(() => db.rpc('admin_reglages').then((r: any) => { TXG = Number(r?.taux?.GNF) || TXG; return r; }), []);
   return <><Titre t="Réglages" /><Etat q={q}>{(d: any) => <><Sauvegarde d={d} fini={async () => { await q.reload(); tableau.reload(); }} /><PaiementAuto d={d} fini={q.reload} /><FormReglages d={d} fini={async () => { await q.reload(); tableau.reload(); }} /></>}</Etat></>;
 }
 
@@ -375,8 +383,9 @@ export function EspaceAdmin() {
   const droit = useQ(() => db.rpc('suis_je_admin'), []);
   const estAdmin = droit.data === true;
   const tableau = useQ(() => (estAdmin ? db.rpc('admin_tableau') : Promise.resolve(null)), [estAdmin, chemin]);
+  const taux = useQ(() => (estAdmin ? db.rpc('admin_reglages').then((r: any) => { TXG = Number(r?.taux?.GNF) || 0; return TXG; }) : Promise.resolve(0)), [estAdmin]);
   if (droit.erreur && droit.data == null) return <main className="pub"><section className="carte-pub"><Logo /><Erreur t={droit.erreur} /><button className="btn plein" onClick={droit.reload}>Réessayer</button><button className="btn lien" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
-  if (droit.data == null) return <main className="pub"><Chargement /></main>;
+  if (droit.data == null || (estAdmin && taux.data == null && !taux.erreur)) return <main className="pub"><Chargement /></main>;
   if (!estAdmin) return <main className="pub"><section className="carte-pub"><Logo /><h1>Accès réservé</h1><p className="intro">Cette page n'est pas accessible avec ce compte.</p><button className="btn plein" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
   const seg = chemin.split('/').filter(Boolean);
   const page = seg[1] === 'ecoles' && seg[2] ? <Fiche id={seg[2]} key={seg[2]} /> : seg[1] === 'ecoles' ? <Ecoles /> : seg[1] === 'paiements' ? <Paiements /> : seg[1] === 'reglages' ? <Reglages /> : seg[1] === 'sms' ? <Sms /> : <Vue />;

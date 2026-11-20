@@ -742,3 +742,7 @@ button.btn-doux{border:0;cursor:pointer;font-family:inherit}.ins-l .ligne-e{gap:
 @media(min-width:861px){.abp.par-ec{max-width:760px}.par-ec .abp-haut{min-height:72px;padding:16px 24px}.par-ec .abp-haut h1{font-size:19px}.par-ec .abp-ret{left:24px}.par-ec .abp-co{padding:8px 34px 30px}.par-ec .par-ch{grid-template-columns:1fr 1fr}.par-ec .abp-bas{justify-items:end}.par-ec .abp-bas .abp-cta{width:260px}}
 @media(min-width:861px) and (max-width:1180px){.fp-grille{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:26px}.fp-bas{grid-template-columns:1fr}.pp{grid-template-columns:300px minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.fp-c,.pp-c{transition:none}.fp-c:hover,.pp-c:hover{transform:none}}
+
+/* Classes : titre qui prend la place, « Définir les frais » en bas de la carte, sur une ligne. */
+.cl-t>div:first-child{flex:1;min-width:0}.cl-t h2{overflow-wrap:anywhere}.cl-t>.jauge,.cl-t>*:last-child:not(:first-child){flex:none}
+.cl-bas{margin-top:auto}a.lien-frais.cl-bas{justify-content:center;width:100%;height:40px;white-space:nowrap}span.sans-frais.cl-bas{padding-top:2px}

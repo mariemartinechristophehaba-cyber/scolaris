@@ -188,9 +188,10 @@ export function Classes() {
           {l.length === 0 ? <section className="carte"><Vide t="Aucune classe pour cette année." /></section> : <div className="grille-cl">{l.map((c: any) => {
             const t = Math.round(c.taux_recouvrement); const a = c.facture_net > 0;
             return <section className="carte cl" key={c.classe_id}>
-              <div className="cl-t"><div><h2>{c.nom}</h2>{d.nom[c.classe_id] && <span className="puce">{d.nom[c.classe_id]}</span>}</div>{fin && (a ? <Jauge clair petit ton={t >= 70 ? 'vert' : 'orange'} p={t}><b>{t} %</b></Jauge> : (can('directeur', 'comptable') ? <Lien to={`/frais?classe=${c.classe_id}`} className="sans-frais lien-frais">Définir les frais<PiCaretRightBold aria-hidden="true" /></Lien> : <span className="sans-frais">Frais à définir</span>))}</div>
+              <div className="cl-t"><div><h2>{c.nom}</h2>{d.nom[c.classe_id] && <span className="puce">{d.nom[c.classe_id]}</span>}</div>{fin && a && <Jauge clair petit ton={t >= 70 ? 'vert' : 'orange'} p={t}><b>{t} %</b></Jauge>}</div>
               {a && Number(c.taux_recouvrement) === meilleur && d.st.some((x: any) => x.facture_net > 0 && Number(x.taux_recouvrement) < meilleur) && <span className="meilleur"><PiCrownSimpleFill aria-hidden="true" />Meilleur taux</span>}
               <dl className="cl-d"><div><dt>Effectif</dt><dd>{nb(c.effectif)}</dd></div>{fin && a && <><div><dt>Facturé</dt><dd>{nb(c.facture_net)}</dd></div><div><dt>Payé</dt><dd className="vert">{nb(c.regle)}</dd></div><div><dt>Reste</dt><dd className={c.impaye_echu > 0 ? 'rouge' : ''}>{nb(c.reste)}</dd></div></>}</dl>
+              {fin && !a && (can('directeur', 'comptable') ? <Lien to={`/frais?classe=${c.classe_id}`} className="lien-frais cl-bas">Définir les frais<PiCaretRightBold aria-hidden="true" /></Lien> : <span className="sans-frais cl-bas">Frais à définir</span>)}
             </section>;
           })}</div>}
         </>;

@@ -2,11 +2,12 @@ import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
 import { auth, db, envoyerAttente, getSession, horsLigne, lireAttente, noterArrivee, poserLectureSeule, surReseau, surSession } from './api';
-import { PiWifiSlashBold, PiCloudArrowUpBold } from 'react-icons/pi';
+import { PiWifiSlashBold, PiCloudArrowUpBold, PiUserPlus, PiUserPlusFill, PiArrowsClockwise, PiArrowsClockwiseFill } from 'react-icons/pi';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, Confidentialite, FamillePublic, RecuPublic } from './public';
 import { DetailEleve, Classes, Eleves, Frais } from './gestion';
+import { Inscriptions, Reinscriptions } from './inscriptions';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
 import { Activite, Equipe } from './equipe';
@@ -19,6 +20,8 @@ const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 const MENU: [string, string, any, string[]?, string?, any?, string?][] = [
   ['/tableau', 'Tableau de bord', PiSquaresFour, undefined, undefined, PiSquaresFourFill, 'Général'],
   ['/eleves', 'Élèves', PiStudent, undefined, undefined, PiStudentFill, 'Général'],
+  ['/inscriptions', 'Inscription', PiUserPlus, ['directeur', 'secretaire'], undefined, PiUserPlusFill, 'Général'],
+  ['/reinscriptions', 'Réinscription', PiArrowsClockwise, ['directeur', 'secretaire'], undefined, PiArrowsClockwiseFill, 'Général'],
   ['/classes', 'Classes', PiChalkboard, undefined, undefined, PiChalkboardFill, 'Général'],
   ['/frais', 'Frais scolaires', PiReceipt, ['directeur', 'comptable', 'caissier'], undefined, PiReceiptFill, 'Finances'],
   ['/paiements', 'Paiements', PiMoneyWavy, STAFF, 'attente', PiMoneyWavyFill, 'Finances'],
@@ -100,6 +103,8 @@ function Coque({ m, annees, recharger, abo }: any) {
   if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
   else if (seg[0] === 'eleves' && seg[1]) page = <DetailEleve id={seg[1]} key={seg[1]} />;
   else if (seg[0] === 'eleves') page = <Eleves />;
+  else if (seg[0] === 'inscriptions') page = <Inscriptions />;
+  else if (seg[0] === 'reinscriptions') page = <Reinscriptions />;
   else if (seg[0] === 'classes') page = <Classes />;
   else if (seg[0] === 'frais') page = <Frais />;
   else if (seg[0] === 'paiements' && seg[1] === 'nouveau') page = <NouveauPaiement />;

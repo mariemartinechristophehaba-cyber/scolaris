@@ -9,14 +9,14 @@ const etat = (s: any) => (s.situation === 'a_jour' ? 'a_jour' : s.situation === 
 export const Statut = ({ s }: { s: any }) => <Pastille k={etat(s)} />;
 const FINANCE = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
-function FormEleve({ init, classes, fermer, fini }: any) {
+export function FormEleve({ init, classes, fermer, fini, titre, type }: any) {
   const { eid, annee } = useApp();
   const [f, setF] = useState<any>(init || { prenom: '', nom: '', matricule: '', classe_id: classes[0]?.id || '', parent_nom: '', parent_telephone: '', date_naissance: '', sexe: '' });
   const e = useEnvoi();
   const c = (k: string, req = false) => ({ value: f[k] ?? '', onChange: (x: any) => setF({ ...f, [k]: x.target.value }), required: req });
   return (
-    <Modale titre={init ? 'Modifier l\'élève' : 'Ajouter un élève'} fermer={fermer}>
-      <form onSubmit={(x) => { x.preventDefault(); const er = erreurTel(f.parent_telephone); if (er) return e.setE(`Téléphone du parent : ${er}`); e.envoyer(async () => { await db.rpc('enregistrer_eleve', { p: { ...f, parent_telephone: tel(f.parent_telephone), etablissement_id: eid, annee_scolaire_id: annee.id } }); fini(); }); }}>
+    <Modale titre={titre || (init ? 'Modifier l\'élève' : 'Ajouter un élève')} fermer={fermer}>
+      <form onSubmit={(x) => { x.preventDefault(); const er = erreurTel(f.parent_telephone); if (er) return e.setE(`Téléphone du parent : ${er}`); e.envoyer(async () => { await db.rpc('enregistrer_eleve', { p: { ...f, ...(type ? { type } : {}), parent_telephone: tel(f.parent_telephone), etablissement_id: eid, annee_scolaire_id: annee.id } }); fini(); }); }}>
         <div className="deux"><Champ label="Prénom *"><input {...c('prenom', true)} /></Champ><Champ label="Nom *"><input {...c('nom', true)} /></Champ></div>
         <Champ label="Classe *"><select {...c('classe_id', true)}><option value="">Choisir…</option><OptClasses l={classes} /></select></Champ>
         <div className="deux"><Champ label="Matricule" aide="Automatique si vide"><input {...c('matricule')} /></Champ><Champ label="Date de naissance"><DateRoue value={f.date_naissance || ''} onChange={(v) => setF({ ...f, date_naissance: v })} debut={1990} defaut={new Date().getFullYear() - 10} /></Champ></div>
@@ -233,7 +233,8 @@ export function Frais() {
       <Titre t="Frais scolaires">{edit && q.data?.classes.length > 0 && <button className="btn plein mini" onClick={() => setF({ classe: sel })}><PiPlusBold />Ajouter des frais</button>}</Titre>
       <Etat q={q}>{(d) => {
         if (d.classes.length === 0) return <section className="carte"><Vide t="Créez d'abord une classe."><Lien to="/classes" className="btn contour mini">Créer une classe</Lien></Vide></section>;
-        const parEleve = (id: string) => d.tarifs.filter((x: any) => x.classe_id === id).reduce((s: number, x: any) => s + x.montant, 0);
+        const pourDe = (id: string) => d.types.find((y: any) => y.id === id)?.pour || 'tous';
+        const parEleve = (id: string) => d.tarifs.filter((x: any) => x.classe_id === id && pourDe(x.type_frais_id) !== 'anciens').reduce((s: number, x: any) => s + x.montant, 0);
         const lib = (id: string) => d.types.find((y: any) => y.id === id)?.libelle || 'Frais';
         const groupes = grouperClasses(d.classes); const c = d.classes.find((x: any) => x.id === sel) || groupes[0][1][0];
         const niv = (groupes.find(([, l]) => l.some((x: any) => x.id === c.id)) || [''])[0];
@@ -261,7 +262,7 @@ export function Frais() {
               </section>;
             })}
           </div>
-          <DetailFrais key={c.id} c={c} niv={niv} d={d} lib={lib} fin={fin} edit={edit} pe={parEleve(c.id)} retour={() => setVue('liste')} modifier={(x: any) => setF({ classe: c.id, x })} />
+          <DetailFrais key={c.id} c={c} niv={niv} d={d} lib={lib} pourDe={pourDe} fin={fin} edit={edit} pe={parEleve(c.id)} retour={() => setVue('liste')} modifier={(x: any) => setF({ classe: c.id, x })} />
         </div>;
       }}</Etat>
       {form && q.data && <FormTarif d={q.data} init={form} fermer={() => setF(null)} fini={() => { setF(null); q.reload(); }} />}
@@ -269,7 +270,7 @@ export function Frais() {
   );
 }
 
-function DetailFrais({ c, niv, d, lib, fin, edit, pe, retour, modifier }: any) {
+function DetailFrais({ c, niv, d, lib, pourDe, fin, edit, pe, retour, modifier }: any) {
   const { annee } = useApp();
   const q = useQ(async () => (fin ? db.tout(`v_echeances_soldes?classe_id=eq.${c.id}&annee_scolaire_id=eq.${annee.id}&select=type_frais_id,libelle,date_limite,net,regle,reste,eleve_id&order=id`).catch(() => []) : []), [c.id]);
   const t = d.tarifs.filter((x: any) => x.classe_id === c.id); const s2 = d.st[c.id]; const auj_ = new Date().toISOString().slice(0, 10);
@@ -277,7 +278,7 @@ function DetailFrais({ c, niv, d, lib, fin, edit, pe, retour, modifier }: any) {
   const pc = s2?.facture_net ? Math.round((s2.regle / s2.facture_net) * 100) : 0;
   return <section className="carte fr-det">
     <button type="button" className="fr-ret" onClick={retour}><PiArrowLeftBold aria-hidden="true" />Toutes les classes</button>
-    <header className="fr-dh"><div className="fr-dn">{niv && <span className="puce">{niv}</span>}<h2>{c.nom}</h2><p>{pe ? <>Chaque élève paie <b>{gnf(pe)}</b> dans l’année.</> : 'Aucun frais fixé pour cette classe.'}</p></div></header>
+    <header className="fr-dh"><div className="fr-dn">{niv && <span className="puce">{niv}</span>}<h2>{c.nom}</h2><p>{pe ? (() => { const anc = t.filter((x: any) => pourDe(x.type_frais_id) !== 'nouveaux').reduce((s: number, x: any) => s + x.montant, 0); return anc !== pe && t.some((x: any) => pourDe(x.type_frais_id) !== 'tous') ? <>Un nouvel élève paie <b>{gnf(pe)}</b>, un ancien élève <b>{gnf(anc)}</b> dans l’année.</> : <>Chaque élève paie <b>{gnf(pe)}</b> dans l’année.</>; })() : 'Aucun frais fixé pour cette classe.'}</p></div></header>
     {fin && s2 && pe > 0 && <div className="fr-st"><div><small>Élèves</small><b>{nb(s2.effectif)}</b></div><div><small>Attendu</small><b>{nb(s2.facture_net)}</b></div><div><small>Encaissé</small><b className="vert">{nb(s2.regle)}</b><em>{pc} %</em></div><div><small>Reste</small><b className={Number(s2.impaye_echu) > 0 ? 'rouge' : ''}>{nb(s2.reste)}</b>{Number(s2.impaye_echu) > 0 && <em className="rouge">{nb(s2.impaye_echu)} en retard</em>}</div></div>}
     {t.length === 0 ? <div className="fr-vide"><span className="fk-i orange"><PiReceiptDuotone aria-hidden="true" /></span><b>Fixez les frais de {c.nom}</b><p>Ajoutez la scolarité, l’inscription ou d’autres frais. L’application calculera ensuite ce que chaque élève doit et qui est en retard.</p>{edit && <button className="btn plein mini" onClick={() => modifier(null)}><PiPlusBold />Ajouter des frais</button>}</div> : <>
       <h3 className="fr-st-t">Ce que paie un élève</h3>
@@ -285,7 +286,7 @@ function DetailFrais({ c, niv, d, lib, fin, edit, pe, retour, modifier }: any) {
         const tr = [...x.tarif_tranches].sort((a: any, b: any) => a.ordre - b.ordre); const l = lib(x.type_frais_id);
         const lignes = tr.length ? tr.map((y: any, i: number) => ({ nom: nomTranche(y.libelle, i), lib: y.libelle, date: y.date_limite, m: y.montant })) : [];
         const unique = !tr.length ? suivi(x.type_frais_id, '', annee.date_debut) || suivi(x.type_frais_id, 'Paiement unique', annee.date_debut) : null;
-        return <li key={x.id}><div className="ff-h"><Tuile i={iconeFrais(l)} ton="bleu" t={42} /><div className="ff-n"><b>{l}</b><small>{tr.length ? `Payable en ${tr.length} fois` : 'En une seule fois'}</small></div><span className="ff-m"><b>{nb(x.montant)}</b><small>{dv()}</small></span>{edit && <button className="ico" aria-label={`Modifier ${l}`} onClick={() => modifier(x)}><PiPencilSimpleDuotone /></button>}</div>
+        return <li key={x.id}><div className="ff-h"><Tuile i={iconeFrais(l)} ton="bleu" t={42} /><div className="ff-n"><b>{l}</b><small>{tr.length ? `Payable en ${tr.length} fois` : 'En une seule fois'}{pourDe(x.type_frais_id) === 'nouveaux' ? ' · nouveaux élèves' : pourDe(x.type_frais_id) === 'anciens' ? ' · anciens élèves' : ''}</small></div><span className="ff-m"><b>{nb(x.montant)}</b><small>{dv()}</small></span>{edit && <button className="ico" aria-label={`Modifier ${l}`} onClick={() => modifier(x)}><PiPencilSimpleDuotone /></button>}</div>
           {unique && <p className="ff-suivi"><span className={unique.ok === unique.n ? 'ok' : ''}>{unique.ok} / {unique.n} élèves ont payé</span></p>}
           {lignes.length > 0 && <ol className="ff-tl">{lignes.map((y: any, i: number) => { const sv = suivi(x.type_frais_id, y.lib, y.date); const passe = y.date < auj_; const etat = sv && sv.ok === sv.n ? ['ok', 'Soldée'] : passe ? ['retard', 'Échue'] : ['avenir', 'À venir'];
             return <li key={i} className={etat[0]}><i aria-hidden="true" /><div><b>{y.nom}<em className={`ff-e ${etat[0]}`}>{etat[1]}</em></b><small>À payer avant le {dateFr(y.date)}{sv ? `, ${sv.ok} / ${sv.n} élèves ont payé` : ''}</small></div><span>{gnf(y.m)}</span></li>; })}</ol>}</li>;
@@ -304,7 +305,7 @@ function FormTarif({ d, init, fermer, fini }: any) {
   const maj = (i: number, k: string, v: any) => setTr(tr.map((y, j) => (j === i ? { ...y, [k]: v } : y)));
   return <Modale titre="Définir un tarif" fermer={fermer}><form onSubmit={(z) => { z.preventDefault(); if (!montant) return e.setE('Indiquez un montant'); if (tr.some((y) => /^[\d\s.,]*$/.test(y.libelle.trim()))) return e.setE('Donnez un nom à chaque tranche, par exemple « 1er trimestre » : le montant se met dans la case Montant'); if (tr.length && som !== montant) return e.setE(`La somme des tranches (${gnf(som)}) doit égaler le montant`); e.envoyer(async () => { await db.rpc('enregistrer_tarif', { p_classe: classe, p_type: type, p_montant: montant, p_tranches: tr }); fini(); }); }}>
     <div className="deux"><Champ label="Classe"><select value={classe} onChange={(v) => setC(v.target.value)} disabled={!!x}><OptClasses l={d.classes} /></select></Champ>
-      <Champ label="Type de frais"><select value={type} onChange={(v) => setT(v.target.value)} disabled={!!x}>{d.types.map((c: any) => <option key={c.id} value={c.id}>{c.libelle}</option>)}</select></Champ></div>
+      <Champ label="Type de frais"><select value={type} onChange={(v) => setT(v.target.value)} disabled={!!x}>{d.types.map((c: any) => <option key={c.id} value={c.id}>{c.libelle}{c.pour === 'nouveaux' ? ' (nouveaux élèves)' : c.pour === 'anciens' ? ' (anciens élèves)' : ''}</option>)}</select></Champ></div>
     <Champ label="Montant total *"><Montant value={montant} onChange={setM} /></Champ>
     <div className="tete-carte"><b>Tranches</b><button type="button" className="btn lien" onClick={() => setTr([...tr, { libelle: `Tranche ${tr.length + 1}`, montant: Math.max(montant - som, 0), date_limite: '' }])}><PiPlusBold /> Ajouter</button></div>
     {tr.map((y, i) => <div className="tranche2" key={i}><div className="tr2-h"><b>Tranche {i + 1}</b><button type="button" className="ico" aria-label={`Retirer la tranche ${i + 1}`} onClick={() => setTr(tr.filter((_, j) => j !== i))}><PiTrashDuotone /></button></div><label><span>Nom</span><input value={y.libelle} onChange={(v) => maj(i, 'libelle', v.target.value)} placeholder="Ex. : 1er trimestre" required /></label><label><span>Montant</span><Montant value={y.montant} onChange={(v: number) => maj(i, 'montant', v)} /></label><label><span>À payer avant le</span><input type="date" value={y.date_limite} onChange={(v) => maj(i, 'date_limite', v.target.value)} required /></label></div>)}

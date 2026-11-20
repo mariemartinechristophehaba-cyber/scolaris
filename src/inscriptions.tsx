@@ -1,11 +1,11 @@
 // Inscription (nouveaux élèves) et réinscription (anciens élèves).
 import { useMemo, useState } from 'react';
-import { PiArrowRightBold, PiArrowsClockwiseDuotone, PiCalendarCheckDuotone, PiCheckCircleFill, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiStudentDuotone, PiUserPlusDuotone } from 'react-icons/pi';
+import { PiCoinsDuotone, PiPencilSimpleBold, PiArrowRightBold, PiArrowsClockwiseDuotone, PiCalendarCheckDuotone, PiCheckCircleFill, PiMagnifyingGlassBold, PiMoneyWavyDuotone, PiStudentDuotone, PiUserPlusDuotone } from 'react-icons/pi';
 import { db } from './api';
 import { FormEleve } from './gestion';
 import { suite } from './passage';
 import { auj, dateFr, gnf, nb, trierClasses } from './lib';
-import { Avatar, Champ, Erreur, Etat, Lien, Modale, OptClasses, Titre, Tuile, naviguer, useApp, useEnvoi, useQ } from './ui';
+import { Avatar, Champ, Erreur, Etat, Lien, Modale, Montant, OptClasses, Titre, Tuile, naviguer, useApp, useEnvoi, useQ } from './ui';
 
 const nomE = (e: any) => `${e?.nom || ''} ${e?.prenom || ''}`.trim();
 const quand = (v: string) => { const j = String(v).slice(0, 10); return j === auj() ? "aujourd'hui" : dateFr(v); };
@@ -21,6 +21,43 @@ function Recherche({ v, set, ph }: any) {
 function ListeIns({ l, vide }: any) {
   if (!l.length) return <p className="note">{vide}</p>;
   return <ul className="lignes-e">{l.map((x: any) => <li key={x.id}><Lien to={`/eleves/${x.eleves.id}`} className="ligne-e"><Avatar nom={nomE(x.eleves)} /><div><b>{nomE(x.eleves)}</b><small>{x.classes?.nom || ''} · {quand(x.date_inscription || x.cree_le)}</small></div><span className="ins-mat">{x.eleves.matricule}</span></Lien></li>)}</ul>;
+}
+
+// Bouton « Montant de l'inscription / de la réinscription » et sa fenêtre.
+function MontantType({ d, pour, peut, onFini }: any) {
+  const [ouv, setOuv] = useState(false);
+  const l = d.tarifs.filter((t: any) => t.types_frais?.pour === pour); const ms = l.map((t: any) => Number(t.montant));
+  const nom = pour === 'nouveaux' ? "l'inscription" : 'la réinscription';
+  const val = !ms.length ? '' : Math.min(...ms) === Math.max(...ms) ? gnf(ms[0]) : `${nb(Math.min(...ms))} à ${gnf(Math.max(...ms))}`;
+  return <>
+    <button type="button" className={`ins-mt${ms.length ? '' : ' vide'}`} onClick={() => peut && setOuv(true)} disabled={!peut}>
+      <span className="ins-mti"><PiCoinsDuotone aria-hidden="true" /></span><span className="ins-mtt"><small>Montant de {nom}</small><b>{ms.length ? val : 'Pas encore fixé'}</b></span>
+      {peut && <span className="ins-mtb"><PiPencilSimpleBold aria-hidden="true" />{ms.length ? 'Modifier' : 'Fixer le montant'}</span>}
+    </button>
+    {ouv && <FenetreMontant d={d} pour={pour} fermer={() => setOuv(false)} fini={() => { setOuv(false); onFini(); }} />}
+  </>;
+}
+
+function FenetreMontant({ d, pour, fermer, fini }: any) {
+  const { annee } = useApp(); const e = useEnvoi();
+  const act = (id: string) => Number(d.tarifs.find((t: any) => t.classe_id === id && t.types_frais?.pour === pour)?.montant || 0);
+  const ms = d.classes.map((c: any) => act(c.id)); const diff = ms.some((m: number) => m !== ms[0]);
+  const [m, setM] = useState<number>(diff ? 0 : ms[0] || 0); const [par, setPar] = useState(diff);
+  const [pc, setPc] = useState<Record<string, number>>(Object.fromEntries(d.classes.map((c: any) => [c.id, act(c.id)])));
+  const nouv = pour === 'nouveaux';
+  const go = () => {
+    const l = d.classes.map((c: any) => ({ classe: c.id, montant: par ? pc[c.id] || 0 : m }));
+    if (!l.some((x: any) => x.montant > 0)) return e.setE('Indiquez un montant');
+    e.envoyer(async () => { await db.rpc('fixer_montant_inscription', { p_annee: annee.id, p_pour: pour, p_montants: l }); fini(); });
+  };
+  return <Modale titre={nouv ? "Montant de l'inscription" : 'Montant de la réinscription'} fermer={() => !e.occupe && fermer()}>
+    <p className="note">{nouv ? 'Payé une seule fois par chaque nouvel élève, quand il s’inscrit.' : 'Payé une seule fois par chaque ancien élève, quand il se réinscrit.'} Ce montant s'ajoute à la scolarité.</p>
+    {d.classes.length === 0 ? <p className="ins-info">Créez d'abord vos classes dans <Lien to="/classes">Classes</Lien>.</p> : <>
+      {!par && <Champ label={`Montant pour toutes les classes *`}><Montant value={m} onChange={setM} /></Champ>}
+      <label className="pas-c"><input type="checkbox" checked={par} onChange={(x) => { setPar(x.target.checked); if (x.target.checked && m) setPc(Object.fromEntries(d.classes.map((c: any) => [c.id, pc[c.id] || m]))); }} /><span><b>Le montant change selon la classe</b><small>Par exemple, plus cher au collège qu'au primaire.</small></span></label>
+      {par && <ul className="ins-pc-l">{d.classes.map((c: any) => <li key={c.id}><span>{c.nom}</span><Montant value={pc[c.id] || 0} onChange={(v: number) => setPc({ ...pc, [c.id]: v })} label={`Montant ${c.nom}`} /></li>)}</ul>}
+      <Erreur t={e.erreur} /><button className="btn plein" disabled={e.occupe} onClick={go}>{e.occupe ? 'Enregistrement…' : 'Enregistrer le montant'}</button></>}
+  </Modale>;
 }
 
 /* ---------- Inscription : les nouveaux élèves ---------- */
@@ -39,17 +76,15 @@ export function Inscriptions() {
     <Titre t="Inscription" />
     <Etat q={q}>{(d) => {
       const mois = auj().slice(0, 7); const ceMois = d.l.filter((x: any) => String(x.date_inscription || x.cree_le).startsWith(mois)).length;
-      const ins = d.tarifs.filter((t: any) => t.types_frais?.pour === 'nouveaux'); const mins = ins.length ? Math.min(...ins.map((t: any) => t.montant)) : 0; const maxs = ins.length ? Math.max(...ins.map((t: any) => t.montant)) : 0;
-      const t = txt.trim().toLowerCase(); const l = d.l.filter((x: any) => !t || `${nomE(x.eleves)} ${x.eleves.matricule} ${x.classes?.nom}`.toLowerCase().includes(t));
+            const t = txt.trim().toLowerCase(); const l = d.l.filter((x: any) => !t || `${nomE(x.eleves)} ${x.eleves.matricule} ${x.classes?.nom}`.toLowerCase().includes(t));
       return <div className="ins">
         <section className="ins-hero bleu"><span className="ins-hi"><PiUserPlusDuotone aria-hidden="true" /></span><div><h2>Nouveaux élèves</h2><p>Un enfant qui arrive pour la première fois dans votre école, année {annee.libelle}.</p></div>
           {ecrire && <button className="ins-cta" onClick={() => setAj(true)}><PiUserPlusDuotone aria-hidden="true" />Inscrire un nouvel élève</button>}</section>
         <div className="ins-k">
           <div><Tuile i={PiStudentDuotone} ton="bleu" t={36} /><span><small>Nouveaux inscrits</small><b>{nb(d.l.length)}</b></span></div>
           <div><Tuile i={PiCalendarCheckDuotone} ton="vert" t={36} /><span><small>Ce mois-ci</small><b>{nb(ceMois)}</b></span></div>
-          <div><Tuile i={PiMoneyWavyDuotone} ton="orange" t={36} /><span><small>Frais d'inscription</small><b>{ins.length ? (mins === maxs ? gnf(mins) : `${nb(mins)} à ${gnf(maxs)}`) : 'Non fixés'}</b></span></div>
         </div>
-        {!ins.length && can('directeur', 'comptable') && <p className="ins-info">Fixez le montant de l'<b>inscription</b> dans <Lien to="/frais">Frais scolaires</Lien> : il sera demandé seulement aux nouveaux élèves.</p>}
+        <MontantType d={d} pour="nouveaux" peut={can('directeur', 'comptable') && annee.statut !== 'cloturee'} onFini={q.reload} />
         <section className="carte"><div className="tete-carte"><h2>Inscrits cette année{d.l.length ? ` (${nb(d.l.length)})` : ''}</h2></div>
           {d.l.length > 5 && <div className="barre-outils"><Recherche v={txt} set={setT} ph="Rechercher un élève" /></div>}
           <ListeIns l={l.slice(0, 200)} vide={t ? 'Aucun élève trouvé.' : 'Aucun nouvel élève inscrit pour le moment.'} /></section>
@@ -90,6 +125,7 @@ export function Reinscriptions() {
       return <div className="ins">
         <section className="ins-hero vert"><span className="ins-hi"><PiArrowsClockwiseDuotone aria-hidden="true" /></span><div><h2>Anciens élèves</h2><p>{prev ? <>Les élèves de <b>{prev.libelle}</b> qui reviennent en <b>{annee.libelle}</b>.</> : <>Un enfant qui était déjà dans votre école l'année dernière.</>}</p></div>
           {ecrire && <button className="ins-cta" onClick={() => setAj(true)}><PiUserPlusDuotone aria-hidden="true" />Réinscrire un ancien élève</button>}</section>
+        <MontantType d={d} pour="anciens" peut={can('directeur', 'comptable') && annee.statut !== 'cloturee'} onFini={q.reload} />
         {prev ? <section className="carte ins-prog"><div className="ins-ph"><div><small>Réinscriptions {annee.libelle}</small><b>{nb(fait)} / {nb(total)} <em>anciens élèves</em></b></div><span className="ins-pc">{pc} %</span></div>
           <s className="fr-bar"><i style={{ width: `${pc}%` }} /></s><p>{aFaire.length ? <>Il reste <b>{nb(aFaire.length)}</b> élève{aFaire.length > 1 ? 's' : ''} de {prev.libelle} à réinscrire.</> : 'Tous les anciens élèves sont réinscrits.'}</p></section>
           : <p className="ins-info">C'est votre première année sur Scolaris. Pour un élève qui était déjà chez vous l'an dernier, appuyez sur <b>Réinscrire un ancien élève</b> : il paiera les frais de <b>réinscription</b> au lieu de l'inscription.</p>}

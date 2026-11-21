@@ -1,11 +1,12 @@
 -- Page publique du QR : on affiche la carte de la personne (avec sa photo), sans connexion.
-create or replace function app.photo_verifiable(p_nom text) returns boolean language sql stable security definer set search_path = '' as $$
+create or replace function public.photo_verifiable(p_nom text) returns boolean language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.eleves e where e.photo_chemin = p_nom) or exists (select 1 from public.enseignants p where p.photo_chemin = p_nom and p.actif);
 $$;
-grant execute on function app.photo_verifiable(text) to anon, authenticated;
+revoke all on function public.photo_verifiable(text) from public;
+grant execute on function public.photo_verifiable(text) to anon, authenticated;
 -- Le chemin d'une photo (aléatoire) n'est donné que par verifier_carte, donc à qui a scanné la carte.
 create policy "photos verification" on storage.objects for select to anon
-  using (bucket_id = 'photos' and app.photo_verifiable(name));
+  using (bucket_id = 'photos' and public.photo_verifiable(name));
 
 create or replace function public.verifier_carte(p_code text) returns json
 language sql stable security definer set search_path = public as $$

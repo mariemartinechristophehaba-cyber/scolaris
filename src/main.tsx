@@ -2,8 +2,9 @@ import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
 import { auth, db, envoyerAttente, getSession, horsLigne, lireAttente, noterArrivee, poserLectureSeule, surReseau, surSession } from './api';
-import { PiWifiSlashBold, PiCloudArrowUpBold, PiUserPlus, PiUserPlusFill, PiArrowsClockwise, PiArrowsClockwiseFill, PiChalkboardTeacher, PiChalkboardTeacherFill, PiCamera, PiCameraFill, PiTreeStructure, PiTreeStructureFill, PiIdentificationCard, PiIdentificationCardFill } from 'react-icons/pi';
+import { PiWifiSlashBold, PiCloudArrowUpBold, PiUserPlus, PiUserPlusFill, PiArrowsClockwise, PiArrowsClockwiseFill, PiChalkboardTeacher, PiChalkboardTeacherFill, PiCamera, PiCameraFill, PiTreeStructure, PiTreeStructureFill, PiIdentificationCard, PiIdentificationCardFill, PiExam, PiExamFill, PiFileText, PiFileTextFill, PiMedal, PiMedalFill, PiHandCoins, PiHandCoinsFill } from 'react-icons/pi';
 import { Cartes, Organigramme, Personnel, Photos, VerifCarte } from './personnel';
+import { Bulletins, NotesMensuelles, Paie, Satisfecits } from './pedagogie';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, Confidentialite, FamillePublic, RecuPublic } from './public';
@@ -30,10 +31,14 @@ const MENU: [string, string, any, string[]?, string?, any?, string?, boolean?][]
   ['/photos', "Photos d'identité", PiCamera, undefined, undefined, PiCameraFill, 'Personnel', true],
   ['/organigramme', 'Organigramme', PiTreeStructure, undefined, undefined, PiTreeStructureFill, 'Personnel', true],
   ['/cartes', 'Cartes scolaires', PiIdentificationCard, undefined, undefined, PiIdentificationCardFill, 'Personnel', true],
+  ['/notes', 'Notes mensuelles', PiExam, ['directeur', 'secretaire', 'enseignant'], undefined, PiExamFill, 'Pédagogie', true],
+  ['/bulletins', 'Bulletins de notes', PiFileText, ['directeur', 'secretaire', 'enseignant'], undefined, PiFileTextFill, 'Pédagogie', true],
+  ['/satisfecits', 'Satisfecits & attestations', PiMedal, ['directeur', 'secretaire', 'enseignant'], undefined, PiMedalFill, 'Pédagogie', true],
   ['/frais', 'Frais scolaires', PiReceipt, ['directeur', 'comptable', 'caissier'], undefined, PiReceiptFill, 'Finances'],
   ['/paiements', 'Paiements', PiMoneyWavy, STAFF, 'attente', PiMoneyWavyFill, 'Finances'],
   ['/depenses', 'Dépenses', PiWallet, ['directeur', 'comptable', 'caissier'], undefined, PiWalletFill, 'Finances'],
   ['/relances', 'Relances', PiBellRinging, ['directeur', 'comptable', 'caissier'], 'retard', PiBellRingingFill, 'Finances'],
+  ['/paie', 'Bulletins de paie', PiHandCoins, ['directeur', 'comptable'], undefined, PiHandCoinsFill, 'Finances', true],
   ['/rapports', 'Rapports', PiChartLineUp, ['directeur', 'comptable'], undefined, PiChartLineUpFill, 'Finances'],
   ['/importation', 'Importation', PiFileArrowUp, ['directeur', 'secretaire'], undefined, PiFileArrowUpFill, 'Administration'],
   ['/equipe', 'Équipe', PiUsersThree, ['fondateur'], undefined, PiUsersThreeFill, 'Administration'],
@@ -117,6 +122,10 @@ function Coque({ m, annees, recharger, abo }: any) {
   else if (seg[0] === 'photos') page = <Photos />;
   else if (seg[0] === 'organigramme') page = <Organigramme />;
   else if (seg[0] === 'cartes') page = <Cartes />;
+  else if (seg[0] === 'notes') page = <NotesMensuelles />;
+  else if (seg[0] === 'bulletins') page = <Bulletins />;
+  else if (seg[0] === 'satisfecits') page = <Satisfecits />;
+  else if (seg[0] === 'paie') page = <Paie />;
   else if (seg[0] === 'frais') page = <Frais />;
   else if (seg[0] === 'paiements' && seg[1] === 'nouveau') page = <NouveauPaiement />;
   else if (seg[0] === 'paiements') page = <Paiements />;

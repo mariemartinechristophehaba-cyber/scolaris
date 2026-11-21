@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PiBuildingsFill, PiCameraDuotone, PiCaretRightBold, PiCheckBold, PiIdentificationCardDuotone, PiMagnifyingGlassBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiSealCheckFill, PiWarningCircleFill, PiXCircleFill } from 'react-icons/pi';
-import { SUPA, db } from './api';
+import { SUPA, db, getSession } from './api';
 import { dateFr, erreurTel, grouperClasses, nb, tel, telAff } from './lib';
 import { qrChemin } from './qr';
 import { Bandeau, Champ, Chargement, DateRoue, Erreur, Etat, Logo, Modale, Titre, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
@@ -42,7 +42,7 @@ const CATS: [string, string][] = [['enseignant', 'Enseignant'], ['direction', 'D
 const FONCTIONS = ['Fondateur', 'Fondatrice', 'Directeur', 'Directrice', 'Directeur des études', 'Censeur', 'Comptable', 'Secrétaire', 'Surveillant', 'Enseignant', 'Enseignante', 'Gardien', 'Agent d\'entretien', 'Chauffeur'];
 const CHAMPS_FICHE = ['prenom', 'nom', 'sexe', 'fonction', 'date_naissance', 'lieu_naissance', 'telephone', 'adresse', 'contact_nom', 'contact_telephone', 'photo_chemin'];
 const completude = (p: any) => Math.round(100 * CHAMPS_FICHE.filter((k) => p[k]).length / CHAMPS_FICHE.length);
-const fonctionDe = (p: any) => p.fonction || (p.categorie === 'enseignant' ? (p.sexe === 'F' ? 'Enseignante' : 'Enseignant') : p.categorie === 'direction' ? 'Direction' : 'Personnel');
+export const fonctionDe = (p: any) => p.fonction || (p.categorie === 'enseignant' ? (p.sexe === 'F' ? 'Enseignante' : 'Enseignant') : p.categorie === 'direction' ? 'Direction' : 'Personnel');
 
 function FormPersonne({ p, fermer, fini }: any) {
   const { eid } = useApp(); const e = useEnvoi();
@@ -85,8 +85,8 @@ function FormPersonne({ p, fermer, fini }: any) {
 }
 
 // En-tête bleu propre à une page (titre + sous-titre + contenu sur téléphone)
-function Entete({ t, sous, action, children }: any) {
-  return <Bandeau><div className="tete-page tete-n"><div className="tn-t"><h1>{t}</h1>{sous && <small>{sous}</small>}</div><div className="esp" />{action}{children && <div className="tn-f">{children}</div>}</div></Bandeau>;
+export function Entete({ t, sous, action, children }: any) {
+  return <Bandeau><div className="tete-page tete-n"><div className="tn-t"><h1>{t}</h1>{sous && <small>{sous}</small>}</div><div className="esp" />{action && <div className="tn-a">{action}</div>}{children && <div className="tn-f">{children}</div>}</div></Bandeau>;
 }
 const depuis = (p: any) => p.date_entree ? new Date(p.date_entree).getFullYear() : null;
 const badgeP = (p: any) => p.categorie === 'enseignant' ? (p.classe_matiere ? <span className="puce p-vert">{p.classe_matiere}</span> : null) : <span className="puce p-bleu">{p.categorie === 'direction' ? 'Direction' : 'Administration'}</span>;
@@ -162,7 +162,7 @@ export function Personnel() {
 
 
 // ---------------------------------------------------------------- élèves de l'année, par classe
-function useEleves() {
+export function useEleves() {
   const { annee } = useApp();
   return useQ(async () => {
     const [cl, ins] = await Promise.all([
@@ -219,18 +219,22 @@ function cycle(p: any) {
   return 'Enseignants';
 }
 export function Organigramme() {
-  const { eid, etab } = useApp();
+  const { eid, etab, role } = useApp();
   const q = useQ(() => db.get(`enseignants?etablissement_id=eq.${eid}&actif=is.true&select=id,prenom,nom,sexe,fonction,categorie,classe_matiere,photo_chemin&order=ordre,nom`), [eid]);
   const l: any[] = (q.data as any) || []; const urls = usePhotos(l.map((p) => p.photo_chemin));
   const B = ({ p, g }: any) => <div className={`org-b${g ? ' g' : ''}`}><Photo url={urls[p.photo_chemin]} nom={nomP(p)} /><span><b>{nomP(p)}</b><small>{fonctionDe(p)}</small></span></div>;
-  const fond = l.filter(estFondateur), dir = l.filter(estDirecteur);
+  // Le fondateur (compte qui a créé l'école) est toujours en haut, même s'il n'est pas dans la liste du personnel.
+  const qf = useQ(() => db.rpc('equipe_liste', { p_etab: eid }).catch(() => []), [eid]);
+  const fc = ((qf.data as any) || []).find((m: any) => m.role === 'fondateur'); const md = role === 'fondateur' ? getSession()?.user?.user_metadata || {} : {};
+  const compteF = fc ? { id: 'fondateur', prenom: fc.prenom, nom: fc.nom, fonction: 'Fondateur' } : md.prenom || md.nom ? { id: 'fondateur', prenom: md.prenom, nom: md.nom, fonction: 'Fondateur' } : null;
+  const fond = l.filter(estFondateur).length ? l.filter(estFondateur) : compteF ? [compteF] : []; const dir = l.filter(estDirecteur);
   const bureau = l.filter((p) => !estFondateur(p) && !estDirecteur(p) && p.categorie !== 'enseignant');
   const ens = l.filter((p) => p.categorie === 'enseignant');
   const ORD = ['Maternelle', 'Primaire', 'Collège', 'Lycée', 'Enseignants'];
   const cycles = ORD.map((c) => [c, ens.filter((p) => cycle(p) === c)] as [string, any[]]).filter(([, x]) => x.length);
   return <>
     <Titre t="Organigramme"><button className="btn contour mini" onClick={() => print()}><PiPrinterDuotone aria-hidden="true" /><span>Imprimer</span></button></Titre>
-    <Etat q={q}>{() => l.length === 0 ? <section className="carte"><Vide t="L'organigramme se construit tout seul à partir du personnel enregistré dans « Enseignants & personnel »." /></section> :
+    <Etat q={q}>{() => l.length === 0 && !compteF ? <section className="carte"><Vide t="L'organigramme se construit tout seul à partir du personnel enregistré dans « Enseignants & personnel »." /></section> :
       <section className="carte org zone-imp">
         <div className="org-t"><LogoEcole etab={etab} taille={40} /><b>{etab.nom}</b></div>
         <div className="org">
@@ -265,7 +269,7 @@ function Carte({ x, eleve, etab, annee, url, verso }: any) {
     <i className="cs-dr" /></div>;
 }
 
-function useImpression(actif: boolean, fini: () => void) {
+export function useImpression(actif: boolean, fini: () => void) {
   useEffect(() => { if (!actif) return; document.body.classList.add('imp-cartes'); const t = setTimeout(() => { print(); fini(); }, 700); return () => { clearTimeout(t); document.body.classList.remove('imp-cartes'); }; }, [actif]);
 }
 function FeuillesCartes({ liste, eleve, etab, annee, urls }: any) {

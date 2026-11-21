@@ -2,7 +2,8 @@ import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
 import { auth, db, envoyerAttente, getSession, horsLigne, lireAttente, noterArrivee, poserLectureSeule, surReseau, surSession } from './api';
-import { PiWifiSlashBold, PiCloudArrowUpBold, PiUserPlus, PiUserPlusFill, PiArrowsClockwise, PiArrowsClockwiseFill } from 'react-icons/pi';
+import { PiWifiSlashBold, PiCloudArrowUpBold, PiUserPlus, PiUserPlusFill, PiArrowsClockwise, PiArrowsClockwiseFill, PiChalkboardTeacher, PiChalkboardTeacherFill, PiCamera, PiCameraFill, PiTreeStructure, PiTreeStructureFill, PiIdentificationCard, PiIdentificationCardFill } from 'react-icons/pi';
+import { Cartes, Organigramme, Personnel, Photos, VerifCarte } from './personnel';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, Confidentialite, FamillePublic, RecuPublic } from './public';
@@ -17,12 +18,18 @@ import { choisirPays } from './lib';
 import { prechargerTout } from './precharge';
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
-const MENU: [string, string, any, string[]?, string?, any?, string?][] = [
+// Dernier champ : nouveauté (point bleu dans le menu). Les groupes de NOUVEAUX ont le badge « Nouveau ».
+const NOUVEAUX = ['Personnel', 'Pédagogie'];
+const MENU: [string, string, any, string[]?, string?, any?, string?, boolean?][] = [
   ['/tableau', 'Tableau de bord', PiSquaresFour, undefined, undefined, PiSquaresFourFill, 'Général'],
   ['/eleves', 'Élèves', PiStudent, undefined, undefined, PiStudentFill, 'Général'],
   ['/inscriptions', 'Inscription', PiUserPlus, ['directeur', 'secretaire'], undefined, PiUserPlusFill, 'Général'],
   ['/reinscriptions', 'Réinscription', PiArrowsClockwise, ['directeur', 'secretaire'], undefined, PiArrowsClockwiseFill, 'Général'],
   ['/classes', 'Classes', PiChalkboard, undefined, undefined, PiChalkboardFill, 'Général'],
+  ['/personnel', 'Fiches du personnel', PiChalkboardTeacher, undefined, undefined, PiChalkboardTeacherFill, 'Personnel', true],
+  ['/photos', "Photos d'identité", PiCamera, undefined, undefined, PiCameraFill, 'Personnel', true],
+  ['/organigramme', 'Organigramme', PiTreeStructure, undefined, undefined, PiTreeStructureFill, 'Personnel', true],
+  ['/cartes', 'Cartes scolaires', PiIdentificationCard, undefined, undefined, PiIdentificationCardFill, 'Personnel', true],
   ['/frais', 'Frais scolaires', PiReceipt, ['directeur', 'comptable', 'caissier'], undefined, PiReceiptFill, 'Finances'],
   ['/paiements', 'Paiements', PiMoneyWavy, STAFF, 'attente', PiMoneyWavyFill, 'Finances'],
   ['/depenses', 'Dépenses', PiWallet, ['directeur', 'comptable', 'caissier'], undefined, PiWalletFill, 'Finances'],
@@ -106,6 +113,10 @@ function Coque({ m, annees, recharger, abo }: any) {
   else if (seg[0] === 'inscriptions') page = <Inscriptions />;
   else if (seg[0] === 'reinscriptions') page = <Reinscriptions />;
   else if (seg[0] === 'classes') page = <Classes />;
+  else if (seg[0] === 'personnel') page = <Personnel />;
+  else if (seg[0] === 'photos') page = <Photos />;
+  else if (seg[0] === 'organigramme') page = <Organigramme />;
+  else if (seg[0] === 'cartes') page = <Cartes />;
   else if (seg[0] === 'frais') page = <Frais />;
   else if (seg[0] === 'paiements' && seg[1] === 'nouveau') page = <NouveauPaiement />;
   else if (seg[0] === 'paiements') page = <Paiements />;
@@ -127,7 +138,7 @@ function Coque({ m, annees, recharger, abo }: any) {
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
-          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle, J, grp], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}</Lien></Fragment>; })}</nav>
+          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle, J, grp, nv], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}{NOUVEAUX.includes(grp) && <b className="nouveau">Nouveau</b>}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}{nv && !(cle && nd[cle] > 0) && <i className="pt-nv" aria-label="Nouveau" />}</Lien></Fragment>; })}</nav>
           <AideMenu /><div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">
@@ -182,11 +193,12 @@ function Racine() {
     auth.retour().then((t) => { if (t === 'recovery') setR(true); }).catch(() => {}).finally(() => setP(true));
     return () => { a(); removeEventListener('popstate', f); };
   }, []);
-  useEffect(() => { if (!getSession()?.access_token && !location.pathname.startsWith('/r/') && !location.pathname.startsWith('/f/') && !location.pathname.startsWith('/admin')) noterArrivee(); }, []);
+  useEffect(() => { if (!getSession()?.access_token && !location.pathname.startsWith('/r/') && !location.pathname.startsWith('/f/') && !location.pathname.startsWith('/v/') && !location.pathname.startsWith('/admin')) noterArrivee(); }, []);
   if (!pret) return <main className="pub"><Chargement /></main>;
   const c = location.pathname; const seg = c.split('/').filter(Boolean);
   if (seg[0] === 'r' && seg[1]) return <RecuPublic jeton={seg[1]} />;
   if (seg[0] === 'f' && seg[1]) return <FamillePublic jeton={seg[1]} />;
+  if (seg[0] === 'v' && seg[1]) return <VerifCarte code={seg[1]} />;
   if (c === '/conditions') return <Conditions />;
   if (c === '/confidentialite') return <Confidentialite />;
   const connecte = !!getSession()?.access_token;

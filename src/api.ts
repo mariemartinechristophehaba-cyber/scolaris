@@ -121,7 +121,31 @@ export const db = {
     await appel(`/storage/v1/object/justificatifs/${chemin}`, { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
     return chemin;
   },
+  // Photo d'identité : recadrée au format carte (3,5 × 4,5), réduite, rangée dans le dossier de l'école.
+  poserPhoto: async (etab: string, brut: File) => {
+    const f = await recadrerPhoto(brut);
+    const chemin = `${etab}/${crypto.randomUUID()}.jpg`;
+    await appel(`/storage/v1/object/photos/${chemin}`, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: f });
+    return chemin;
+  },
+  // Adresses temporaires des photos (privées), en un seul appel.
+  photos: async (chemins: string[]): Promise<Record<string, string>> => {
+    const l = Array.from(new Set(chemins.filter(Boolean))); if (!l.length) return {};
+    const r: any[] = await appel('/storage/v1/object/sign/photos', { method: 'POST', body: JSON.stringify({ expiresIn: 3600, paths: l }) });
+    return Object.fromEntries((r || []).filter((x) => x.signedURL).map((x) => [x.path, `${SUPA}/storage/v1${x.signedURL}`]));
+  },
 };
+
+async function recadrerPhoto(f: File): Promise<Blob> {
+  const img = await createImageBitmap(f, { imageOrientation: 'from-image' } as any);
+  const W = 420, H = 540, r = W / H; let sw = img.width, sh = img.height, sx = 0, sy = 0;
+  if (sw / sh > r) { sw = sh * r; sx = (img.width - sw) / 2; } else { sh = sw / r; sy = Math.max(0, (img.height - sh) * 0.3); }
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d')!; g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(img, sx, sy, sw, sh, 0, 0, W, H); img.close();
+  const b = await new Promise<Blob | null>((ok) => c.toBlob(ok, 'image/jpeg', 0.82));
+  if (!b) throw new Error('Photo illisible');
+  return b;
+}
 
 export const auth = {
   connexion: async (id: string, mdp: string) => {

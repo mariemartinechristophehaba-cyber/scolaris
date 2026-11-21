@@ -130,7 +130,7 @@ function Saisie({ eleves, mat, notes, mois, lm, c, fermer, fini }: any) {
   </div></Modale>;
 }
 
-const Rang = ({ r, f }: any) => <span className={`rang r${Math.min(r, 4)}`}>{rangTxt(r, f)}</span>;
+const Rang = ({ r, f }: any) => <span className={`rg r${Math.min(r, 4)}`}>{rangTxt(r, f)}</span>;
 const Init = ({ e }: any) => <span className="ini-e">{`${(e.nom || '')[0] || ''}${(e.prenom || '')[0] || ''}`.toUpperCase()}</span>;
 
 export function NotesMensuelles() {

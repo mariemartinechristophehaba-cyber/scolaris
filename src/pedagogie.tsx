@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PiCakeDuotone, PiCrownDuotone, PiNotebookDuotone, PiSunDuotone, PiTrendDownDuotone, PiTrendUpDuotone, PiChartLineUpDuotone, PiFileTextDuotone, PiMedalDuotone, PiStudentDuotone, PiTargetDuotone, PiArrowDownBold, PiArrowUpBold, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiTrashDuotone } from 'react-icons/pi';
+import { PiCakeFill, PiNotebookFill, PiTrendDownBold, PiTrendUpBold, PiWarningCircleFill, PiArrowDownBold, PiArrowUpBold, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiTrashDuotone } from 'react-icons/pi';
 import { db, getSession } from './api';
-import { Bonjour, jourLong } from './espaces';
 import { dateFr, nb } from './lib';
 import { Carte, Entete, LogoEcole, Photo, Qr, fonctionDe, logoUrl, nomP, useEleves, useImpression, usePhotos } from './personnel';
-import { Bandeau, Champ, Erreur, Etat, Lien, Modale, Tuile, Vague, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
+import { Bandeau, Champ, Erreur, Etat, Lien, Modale, Vague, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
 
 // ---------------------------------------------------------------- calculs
 const MOIS_L = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -365,11 +364,10 @@ export function Paie() {
   </>;
 }
 
-// ---------------------------------------------------------------- Tableau de bord de l'enseignant
-export function TableauEnseignant() {
-  const { eid, annee } = useApp(); const pc = usePc(); const uid = getSession()?.user?.id;
+// ---------------------------------------------------------------- Espace de l'enseignant (consultation seule)
+function useMaClasse(moisChoisi?: string) {
+  const { eid, annee } = useApp(); const uid = getSession()?.user?.id;
   const qp = useQ(async () => {
-    // La fiche du professeur : reliée à son compte, ou retrouvée par son numéro de téléphone.
     const pr = await db.get(`profils?id=eq.${uid}&select=telephone`).catch(() => []); const t = pr[0]?.telephone;
     const l = await db.get(`enseignants?etablissement_id=eq.${eid}&actif=is.true&or=(profil_id.eq.${uid}${t ? `,telephone.eq.${t}` : ''})&select=*&limit=1`);
     return l[0] || null;
@@ -379,47 +377,61 @@ export function TableauEnseignant() {
   const cq = useClasse(c?.id || ''); const cd: any = cq.data; const eleves: any[] = (c && d?.par?.[c.id]) || [];
   const liste = useMemo(() => moisListe(annee), [annee?.id]);
   const avecNotes = liste.filter((m) => (cd?.notes || []).some((n: any) => n.mois === m.cle));
-  const dernier = avecNotes[avecNotes.length - 1]; const avant = avecNotes[avecNotes.length - 2];
+  const dernier = avecNotes.find((m) => m.cle === moisChoisi) || avecNotes[avecNotes.length - 1];
+  const iD = avecNotes.indexOf(dernier as any); const avant = iD > 0 ? avecNotes[iD - 1] : undefined;
   const cl = useMemo(() => cd && dernier ? classement(eleves, cd.mat, cd.notes, dernier.cle, avant?.cle) : null, [cd, eleves.length, dernier?.cle]);
-  const evol = useMemo(() => cd ? avecNotes.map((m) => ({ m, v: classement(eleves, cd.mat, cd.notes, m.cle).moyClasse })) : [], [cd, eleves.length]);
-  const photos = usePhotos(moi?.photo_chemin ? [moi.photo_chemin] : []);
-  const [imp, setImp] = useState(false); useImpression(imp, () => setImp(false));
-  const { etab } = useApp();
-  const ans = moi?.date_entree ? Math.max(1, new Date().getFullYear() - new Date(moi.date_entree).getFullYear()) : 0;
-  const moisCour = moisListe(annee).find((m) => m.cle === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`);
-  const aFaire = moisCour && cd?.mat?.length ? eleves.length * cd.mat.length - (cd.notes || []).filter((n: any) => n.mois === moisCour.cle).length : 0;
-  const anniv = eleves.filter((e: any) => e.date_naissance && e.date_naissance.slice(5) === new Date().toISOString().slice(5, 10));
+  const moyAvant = cd && avant ? classement(eleves, cd.mat, cd.notes, avant.cle).moyClasse : null;
+  return { qp, moi, c, cd, eleves, liste, avecNotes, dernier, avant, cl, moyAvant };
+}
+const NonRelie = () => <section className="carte vide-mat"><h3>Votre fiche n'est pas encore reliée</h3><p>Demandez à la direction d'ouvrir votre fiche dans Scolaris et de toucher « Donner l'accès à Scolaris » avec votre numéro de téléphone.</p></section>;
+const Ic = ({ i: I, ton }: any) => <span className={`ic-s ${ton}`}><I aria-hidden="true" /></span>;
+
+export function TableauEnseignant() {
+  const { annee } = useApp(); const m = useMaClasse(); const { moi, c, cd, eleves, cl, dernier, avant, moyAvant, avecNotes } = m;
+  const prenom = moi?.prenom || '';
+  const moisCour = moisListe(annee).find((x) => x.cle === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`);
   const notesCour = moisCour ? (cd?.notes || []).filter((n: any) => n.mois === moisCour.cle).length : 0; const attendu = moisCour && cd?.mat?.length ? eleves.length * cd.mat.length : 0;
-  const moyAvant = cd && avant ? classement(eleves, cd.mat, cd.notes, avant.cle).moyClasse : 0;
+  const anniv = eleves.filter((e: any) => e.date_naissance && e.date_naissance.slice(5) === new Date().toISOString().slice(5, 10));
   const suivre = cl ? cl.lignes.filter((l: any) => l.moy < cl.sur / 2 || (l.prec != null && l.moy - l.prec <= -0.5)) : [];
+  const dv = cl && moyAvant != null ? cl.moyClasse - moyAvant : null;
+  const reussite = cl && cl.lignes.length ? Math.round(100 * cl.lignes.filter((l: any) => l.moy >= cl.sur / 2).length / cl.lignes.length) : null;
+  const evol = cd ? avecNotes.slice(-6).map((x) => ({ x, v: classement(eleves, cd.mat, cd.notes, x.cle).moyClasse })) : [];
   return <>
-    <Bandeau><section className="hero hero-simple"><div className="hero-haut"><div className="hero-g"><Bonjour /><div className="hero-titre"><h1>Mon espace enseignant</h1></div><span className="hero-sur">{jourLong()} · {moi ? `${fonctionDe(moi)}${moi.classe_matiere ? ` · ${moi.classe_matiere}` : ''}` : ''} · Année {annee.libelle}</span></div></div><Vague /></section></Bandeau>
-    <Etat q={qp}>{() => !moi ? <section className="carte vide-mat"><h3>Votre fiche n'est pas encore reliée</h3><p>Demandez à la direction d'ouvrir votre fiche dans Scolaris et de toucher « Donner l'accès à Scolaris » avec votre numéro de téléphone. Votre classe et vos résultats apparaîtront ici.</p></section> : <>
-      <section className="carte jour"><div className="jour-h"><Tuile i={PiSunDuotone} ton="orange" /><div><b>Aujourd'hui</b><small>{jourLong()}</small></div></div>
-        <ul className="jour-l">
-          {anniv.length > 0 && <li><Tuile i={PiCakeDuotone} ton="violet" /><span><b>Anniversaire{anniv.length > 1 ? 's' : ''} dans votre classe</b><small>{anniv.map((e: any) => `${e.prenom} ${e.nom}`).join(', ')}</small></span></li>}
-          {moisCour && <li><Tuile i={PiNotebookDuotone} ton={notesCour >= attendu && attendu > 0 ? 'vert' : 'bleu'} /><span><b>Notes de {moisCour.label.toLowerCase()}</b><small>{attendu === 0 ? 'Les matières de la classe ne sont pas encore enregistrées.' : notesCour >= attendu ? 'Toutes les notes du mois sont enregistrées.' : notesCour === 0 ? 'Pas encore de notes enregistrées ce mois-ci.' : `${Math.round(100 * notesCour / attendu)} % des notes du mois sont enregistrées.`}</small></span></li>}
-          {cl && avant && <li><Tuile i={cl.moyClasse >= moyAvant ? PiTrendUpDuotone : PiTrendDownDuotone} ton={cl.moyClasse >= moyAvant ? 'vert' : 'rouge'} /><span><b>La classe est {cl.moyClasse >= moyAvant ? 'en progrès' : 'en baisse'}</b><small>Moyenne {avant.label.toLowerCase()} {dec(moyAvant)} → {dernier.label.toLowerCase()} {dec(cl.moyClasse)}</small></span></li>}
-          {cl && cl.lignes[0] && <li><Tuile i={PiCrownDuotone} ton="orange" /><span><b>Premier{cl.lignes[0].e.sexe === 'F' ? 'e' : ''} de la classe en {dernier.label.toLowerCase()}</b><small>{cl.lignes[0].e.prenom} {cl.lignes[0].e.nom} · {dec(cl.lignes[0].moy)} / {cl.sur}</small></span></li>}
-        </ul></section>
-      <div className="kpi-p kpi-e">
-        <div><Tuile i={PiStudentDuotone} ton="bleu" /><small>Mes élèves{c ? ` · ${c.nom}` : ''}</small><b>{nb(eleves.length)}</b></div>
-        <div><Tuile i={PiChartLineUpDuotone} ton="vert" /><small>Moyenne de la classe{dernier ? ` · ${dernier.label.toLowerCase()}` : ''}</small><b>{cl ? dec(cl.moyClasse) : '—'}{cl && <em> / {cl.sur}</em>}</b></div>
-        <div><Tuile i={PiTargetDuotone} ton="orange" /><small>Élèves qui ont la moyenne</small><b>{cl && cl.lignes.length ? Math.round(100 * cl.lignes.filter((l: any) => l.moy >= cl.sur / 2).length / cl.lignes.length) : '—'}{cl && <em> %</em>}</b></div>
-        <div><Tuile i={PiMedalDuotone} ton="violet" /><small>Au service de l'école</small><b>{ans || '—'}{ans ? <em> an{ans > 1 ? 's' : ''}</em> : null}</b></div>
-      </div>
-      <div className="rang r-ordre">
-        <section className="carte c-large"><div className="tete-carte"><h2>Évolution de ma classe</h2></div>
-          {evol.length === 0 ? <p className="note">La courbe se remplit mois après mois, dès que les notes sont saisies.</p> : <div className="evol">{evol.map(({ m, v }) => <div key={m.cle}><span style={{ height: `${Math.max(6, (v / (cl?.sur || 10)) * 100)}%` }}><b>{dec(v)}</b></span><small>{m.label.slice(0, 4)}.</small></div>)}</div>}</section>
-        <section className="carte c-etat"><div className="tete-carte"><h2>Élèves à suivre{suivre.length ? ` (${nb(suivre.length)})` : ''}</h2></div>
-          {!cl ? <p className="note">Rien à signaler pour le moment.</p> : suivre.length === 0 ? <p className="note">Aucun élève en difficulté ce mois-ci. Bravo !</p> : <ul className="lignes-e">{suivre.slice(0, 5).map((l: any) => <li key={l.e.id}><div className="ligne-e"><Rang r={l.rang} f={l.e.sexe === 'F'} /><div><b>{l.e.nom} {l.e.prenom}</b><small className="m-t-rouge">{l.moy < cl.sur / 2 ? `Sous la moyenne : ${dec(l.moy)}` : `En baisse : ${dec(l.prec)} → ${dec(l.moy)}`}</small></div></div></li>)}</ul>}</section>
-      </div>
-      <div className="rang r-ordre">
-        <section className="carte c-large"><div className="tete-carte"><h2>Classement de ma classe{dernier ? ` · ${dernier.label.toLowerCase()}` : ''}</h2></div>
-          {!cl || !cl.lignes.length ? <p className="note">Le classement apparaîtra dès que les notes du mois seront saisies.</p> : <ul className="lignes-e">{cl.lignes.slice(0, 5).map((l: any) => { const mn = mention(l.moy, cl.sur); return <li key={l.e.id}><div className="ligne-e"><Rang r={l.rang} f={l.e.sexe === 'F'} /><div><b>{l.e.nom} {l.e.prenom}</b><small className={`m-t-${mn.c}`}>{mn.t}</small></div><b className="moy">{dec(l.moy)}</b></div></li>; })}</ul>}</section>
-        <section className="carte c-etat"><div className="tete-carte"><h2>Ma carte professionnelle</h2><button className="voir btn-lien" onClick={() => setImp(true)}>Imprimer</button></div><Carte x={moi} etab={etab} annee={annee} url={photos[moi.photo_chemin]} /></section>
-      </div>
-    </>}</Etat>
+    <Bandeau><section className="hero hero-simple"><div className="hero-haut"><div className="hero-g"><span className="hero-bj">Bonjour{prenom ? ` ${prenom}` : ''}</span><div className="hero-titre"><h1>Mon espace</h1></div><span className="hero-sur">{moi?.classe_matiere ? `${moi.classe_matiere} · ` : ''}Année {annee.libelle}</span></div></div><Vague /></section></Bandeau>
+    <Etat q={m.qp}>{() => !moi ? <NonRelie /> : <div className="esp-e">
+      <section className="carte res-c">
+        <div className="res-h"><div><small>Ma classe</small><b>{c?.nom || moi.classe_matiere || '—'}</b></div>{dv != null && <span className={`chip-t ${dv >= 0 ? 'ok' : 'ko'}`}>{dv >= 0 ? <PiTrendUpBold aria-hidden="true" /> : <PiTrendDownBold aria-hidden="true" />}{dv >= 0 ? '+' : '−'}{dec(Math.abs(dv))} depuis {avant?.label.toLowerCase()}</span>}</div>
+        <div className="res-k"><div><b>{nb(eleves.length)}</b><small>élèves</small></div><div><b>{cl ? dec(cl.moyClasse) : '—'}{cl && <em>/{cl.sur}</em>}</b><small>moyenne{dernier ? ` · ${dernier.label.toLowerCase()}` : ''}</small></div><div><b>{reussite ?? '—'}{reussite != null && <em>%</em>}</b><small>ont la moyenne</small></div></div>
+        {evol.length > 1 && <div className="res-g">{evol.map(({ x, v }) => <div key={x.cle}><span style={{ height: `${Math.max(8, (v / (cl?.sur || 10)) * 100)}%` }} /><small>{x.label.slice(0, 3)}</small></div>)}</div>}
+      </section>
+      {(anniv.length > 0 || (moisCour && attendu > 0 && notesCour < attendu) || suivre.length > 0) && <section className="carte info-j"><h2>Aujourd'hui</h2><ul>
+        {moisCour && attendu > 0 && notesCour < attendu && <li><Ic i={PiNotebookFill} ton="bleu" /><span>{notesCour === 0 ? `Notes de ${moisCour.label.toLowerCase()} pas encore saisies` : `Notes de ${moisCour.label.toLowerCase()} : ${Math.round(100 * notesCour / attendu)} % saisies`}</span></li>}
+        {anniv.length > 0 && <li><Ic i={PiCakeFill} ton="violet" /><span>Anniversaire : {anniv.map((e: any) => e.prenom).join(', ')}</span></li>}
+        {suivre.slice(0, 3).map((l: any) => <li key={l.e.id}><Ic i={PiWarningCircleFill} ton="rouge" /><span><b>{l.e.prenom} {l.e.nom}</b> · {l.moy < cl!.sur / 2 ? `sous la moyenne (${dec(l.moy)})` : `en baisse (${dec(l.prec)} → ${dec(l.moy)})`}</span></li>)}
+      </ul></section>}
+      <section className="carte top-c"><div className="tete-carte"><h2>Les 3 premiers{dernier ? ` · ${dernier.label.toLowerCase()}` : ''}</h2><Lien to="/ma-classe" className="voir">Toute la classe</Lien></div>
+        {!cl || !cl.lignes.length ? <p className="note">Le classement apparaîtra dès que les notes du mois seront saisies.</p> : <ul className="top-l">{cl.lignes.slice(0, 3).map((l: any) => <li key={l.e.id}><Rang r={l.rang} f={l.e.sexe === 'F'} /><span>{l.e.prenom} {l.e.nom}</span><b>{dec(l.moy)}</b></li>)}</ul>}</section>
+    </div>}</Etat>
+  </>;
+}
+
+export function MaClasse() {
+  const [mois, setMois] = useState(''); const m = useMaClasse(mois); const { moi, c, cl, dernier, avecNotes } = m; const { annee } = useApp();
+  return <>
+    <Entete t="Ma classe" sous={`${c?.nom || moi?.classe_matiere || ''} · Année ${annee.libelle}`}>{avecNotes.length > 0 && <div className="puces-mois" role="tablist">{avecNotes.map((x) => <button key={x.cle} role="tab" aria-selected={dernier?.cle === x.cle} className={dernier?.cle === x.cle ? 'on' : ''} onClick={() => setMois(x.cle)}>{x.label}</button>)}</div>}</Entete>
+    <Etat q={m.qp}>{() => !moi ? <NonRelie /> : !cl || !cl.lignes.length ? <section className="carte vide-mat"><h3>Pas encore de notes</h3><p>Le classement de votre classe apparaîtra ici dès que les notes du mois seront saisies.</p></section> : <section className="carte cl-e">
+      <div className="cl-h"><span>{nb(cl.lignes.length)} élèves classés</span><span>Moyenne de la classe <b>{dec(cl.moyClasse)}</b></span></div>
+      <ul>{cl.lignes.map((l: any) => { const mn = mention(l.moy, cl.sur); const d = l.prec != null ? l.moy - l.prec : null; return <li key={l.e.id}><Rang r={l.rang} f={l.e.sexe === 'F'} /><span className="n"><b>{l.e.prenom} {l.e.nom}</b><small className={`m-t-${mn.c}`}>{mn.t}</small></span>{d != null && <i className={d >= 0 ? 'hausse' : 'baisse'}>{d >= 0 ? '+' : '−'}{dec(Math.abs(d))}</i>}<b className="moy">{dec(l.moy)}</b></li>; })}</ul>
+    </section>}</Etat>
+  </>;
+}
+
+export function MaCarte() {
+  const { etab, annee } = useApp(); const m = useMaClasse(); const { moi } = m; const photos = usePhotos(moi?.photo_chemin ? [moi.photo_chemin] : []);
+  const [imp, setImp] = useState(false); useImpression(imp, () => setImp(false));
+  return <>
+    <Entete t="Ma carte" sous="Carte professionnelle avec QR de vérification" action={moi && <button className="btn plein" onClick={() => setImp(true)}><PiPrinterDuotone aria-hidden="true" />Imprimer</button>} />
+    <Etat q={m.qp}>{() => !moi ? <NonRelie /> : <div className="ma-carte"><Carte x={moi} etab={etab} annee={annee} url={photos[moi.photo_chemin]} /><Carte x={moi} etab={etab} annee={annee} verso /><p className="note">Quand on scanne le QR, une page officielle de l'école confirme que la carte est valide.</p></div>}</Etat>
     {imp && moi && <ZoneImp><div className="feuille-cs"><Carte x={moi} etab={etab} annee={annee} url={photos[moi.photo_chemin]} /></div><div className="feuille-cs dos"><Carte x={moi} etab={etab} annee={annee} verso /></div></ZoneImp>}
   </>;
 }

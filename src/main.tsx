@@ -2,9 +2,9 @@ import { Fragment, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
 import { auth, db, envoyerAttente, getSession, horsLigne, lireAttente, noterArrivee, poserLectureSeule, surReseau, surSession } from './api';
-import { PiWifiSlashBold, PiCloudArrowUpBold, PiUserPlus, PiUserPlusFill, PiArrowsClockwise, PiArrowsClockwiseFill, PiChalkboardTeacher, PiChalkboardTeacherFill, PiCamera, PiCameraFill, PiTreeStructure, PiTreeStructureFill, PiIdentificationCard, PiIdentificationCardFill, PiExam, PiExamFill, PiFileText, PiFileTextFill, PiMedal, PiMedalFill, PiHandCoins, PiHandCoinsFill } from 'react-icons/pi';
+import { PiWifiSlashBold, PiCloudArrowUpBold, PiUserPlus, PiUserPlusFill, PiArrowsClockwise, PiArrowsClockwiseFill, PiChalkboardTeacher, PiChalkboardTeacherFill, PiCamera, PiCameraFill, PiTreeStructure, PiTreeStructureFill, PiIdentificationCard, PiIdentificationCardFill, PiExam, PiExamFill, PiFileText, PiFileTextFill, PiMedal, PiMedalFill, PiHandCoins, PiHandCoinsFill, PiUsersThree, PiUsersThreeFill, PiIdentificationBadge, PiIdentificationBadgeFill } from 'react-icons/pi';
 import { Cartes, Organigramme, Personnel, Photos, VerifCarte } from './personnel';
-import { Bulletins, NotesMensuelles, Paie, Satisfecits } from './pedagogie';
+import { Bulletins, MaCarte, MaClasse, NotesMensuelles, Paie, Satisfecits } from './pedagogie';
 import { Chargement, Ctx, Erreur, Lien, Logo, Mot, SelAnnee, naviguer, useQ } from './ui';
 import { Accueil, Connexion, ConnexionAdmin, Finalisation, Inscription, prendreLogo, NouveauMdp, Oublie, PremierEtablissement } from './acces';
 import { Conditions, Confidentialite, FamillePublic, RecuPublic } from './public';
@@ -21,7 +21,10 @@ import { prechargerTout } from './precharge';
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 // Dernier champ : nouveauté (point bleu dans le menu). Les groupes de NOUVEAUX ont le badge « Nouveau ».
 const NOUVEAUX = ['Personnel', 'Pédagogie'];
+const ESP_ENS = ['/tableau', '/ma-classe', '/ma-carte'];
 const MENU: [string, string, any, string[]?, string?, any?, string?, boolean?][] = [
+  ['/ma-classe', 'Ma classe', PiUsersThree, ['enseignant'], undefined, PiUsersThreeFill, 'Général'],
+  ['/ma-carte', 'Ma carte', PiIdentificationBadge, ['enseignant'], undefined, PiIdentificationBadgeFill, 'Général'],
   ['/tableau', 'Tableau de bord', PiSquaresFour, undefined, undefined, PiSquaresFourFill, 'Général'],
   ['/eleves', 'Élèves', PiStudent, undefined, undefined, PiStudentFill, 'Général'],
   ['/inscriptions', 'Inscription', PiUserPlus, ['directeur', 'secretaire'], undefined, PiUserPlusFill, 'Général'],
@@ -52,7 +55,7 @@ function BarreBas({ chemin, can, role, ouvrir }: any) {
   const fin = can(...STAFF);
   const it = (to: string, t: string, I: any, J: any) => { const on = chemin.startsWith(to); const K = on ? J : I; return <Lien to={to} className={on ? 'on' : ''}><K aria-hidden="true" /><span>{t}</span></Lien>; };
   // Un enseignant ne voit que son espace.
-  if (role === 'enseignant') return <nav className="barre-bas" style={{ gridTemplateColumns: 'repeat(2,minmax(0,1fr))' }} aria-label="Navigation principale">{it('/tableau', 'Mon espace', PiSquaresFour, PiSquaresFourFill)}<button type="button" onClick={ouvrir}><PiDotsNine aria-hidden="true" /><span>Menu</span></button></nav>;
+  if (role === 'enseignant') return <nav className="barre-bas" style={{ gridTemplateColumns: 'repeat(4,minmax(0,1fr))' }} aria-label="Navigation principale">{it('/tableau', 'Accueil', PiSquaresFour, PiSquaresFourFill)}{it('/ma-classe', 'Ma classe', PiUsersThree, PiUsersThreeFill)}{it('/ma-carte', 'Ma carte', PiIdentificationBadge, PiIdentificationBadgeFill)}<button type="button" onClick={ouvrir}><PiDotsNine aria-hidden="true" /><span>Menu</span></button></nav>;
   return (
     <nav className="barre-bas" aria-label="Navigation principale">
       {it('/tableau', 'Accueil', PiSquaresFour, PiSquaresFourFill)}
@@ -114,7 +117,7 @@ function Coque({ m, annees, recharger, abo }: any) {
   // Bouton WhatsApp flottant seulement sur la liste des paramètres (téléphone) : ailleurs il cachait des montants. L'aide reste dans le menu et en bas de l'accueil.
   const supportFlottant = seg[0] === 'parametres' && !seg[1];
   let page: any = <Tableau />;
-  if (role === 'enseignant') page = seg[0] === 'parametres' && seg[1] === 'compte' ? <Parametres key="compte" vue="compte" /> : annee ? <Tableau /> : <Parametres vue="compte" />;
+  if (role === 'enseignant') page = seg[0] === 'parametres' && seg[1] === 'compte' ? <Parametres key="compte" vue="compte" /> : !annee ? <Parametres vue="compte" /> : seg[0] === 'ma-classe' ? <MaClasse /> : seg[0] === 'ma-carte' ? <MaCarte /> : <Tableau />;
   else if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
   else if (seg[0] === 'eleves' && seg[1]) page = <DetailEleve id={seg[1]} key={seg[1]} />;
   else if (seg[0] === 'eleves') page = <Eleves />;
@@ -150,7 +153,7 @@ function Coque({ m, annees, recharger, abo }: any) {
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
-          <nav aria-label="Menu">{MENU.filter((x) => role === 'enseignant' ? x[0] === '/tableau' : !x[3] || can(...x[3])).map(([to, t, I, , cle, J, grp, nv], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}{NOUVEAUX.includes(grp) && <b className="nouveau">Nouveau</b>}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{role === 'enseignant' && to === '/tableau' ? 'Mon espace' : t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}{nv && !(cle && nd[cle] > 0) && <i className="pt-nv" aria-label="Nouveau" />}</Lien></Fragment>; })}</nav>
+          <nav aria-label="Menu">{MENU.filter((x) => role === 'enseignant' ? ESP_ENS.includes(x[0]) : !ESP_ENS.slice(1).includes(x[0]) && (!x[3] || can(...x[3]))).map(([to, t, I, , cle, J, grp, nv], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}{NOUVEAUX.includes(grp) && <b className="nouveau">Nouveau</b>}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{role === 'enseignant' && to === '/tableau' ? 'Accueil' : t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}{nv && !(cle && nd[cle] > 0) && <i className="pt-nv" aria-label="Nouveau" />}</Lien></Fragment>; })}</nav>
           <AideMenu /><div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">

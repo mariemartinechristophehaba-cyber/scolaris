@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PiArrowDownBold, PiArrowUpBold, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiTrashDuotone } from 'react-icons/pi';
-import { db } from './api';
+import { PiCakeDuotone, PiCrownDuotone, PiNotebookDuotone, PiSunDuotone, PiTrendDownDuotone, PiTrendUpDuotone, PiChartLineUpDuotone, PiFileTextDuotone, PiMedalDuotone, PiStudentDuotone, PiTargetDuotone, PiArrowDownBold, PiArrowUpBold, PiCaretLeftBold, PiCaretRightBold, PiCheckBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiTrashDuotone } from 'react-icons/pi';
+import { db, getSession } from './api';
+import { Bonjour, jourLong } from './espaces';
 import { dateFr, nb } from './lib';
-import { Entete, LogoEcole, Photo, Qr, fonctionDe, logoUrl, nomP, useEleves, useImpression, usePhotos } from './personnel';
-import { Champ, Erreur, Etat, Modale, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
+import { Carte, Entete, LogoEcole, Photo, Qr, fonctionDe, logoUrl, nomP, useEleves, useImpression, usePhotos } from './personnel';
+import { Bandeau, Champ, Erreur, Etat, Lien, Modale, Tuile, Vague, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
 
 // ---------------------------------------------------------------- calculs
 const MOIS_L = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -29,16 +30,18 @@ function moisCourant(l: { cle: string }[]) {
 const estSecondaire = (nom: string) => /\b(7|8|9|10|11|12)\s*e|terminale|seconde|premi[eè]re|coll[eè]ge|lyc[eé]e/i.test(nom);
 const MAT_PRIM: [string, number][] = [['Français', 2], ['Calcul', 2], ['Sciences', 1], ['Histoire-Géographie', 1], ['Éducation civique', 1], ['Dictée', 1]];
 const MAT_SEC: [string, number][] = [['Français', 3], ['Mathématiques', 3], ['Anglais', 2], ['Physique-Chimie', 2], ['SVT', 2], ['Histoire-Géographie', 2], ['ECM', 1], ['EPS', 1]];
+// Mention selon la moyenne (barème sur 10 ou sur 20)
 export function mention(m: number, sur: number) {
   const r = m / sur;
-  if (r >= 0.85) return { t: 'Félicitations', c: 'or' };
-  if (r >= 0.75) return { t: "Tableau d'honneur", c: 'vert' };
-  if (r >= 0.65) return { t: 'Encouragements', c: 'bleu' };
+  if (r >= 0.9) return { t: 'Excellent', c: 'or' };
+  if (r >= 0.8) return { t: 'Très bien', c: 'vert' };
+  if (r >= 0.7) return { t: 'Bien', c: 'vert' };
+  if (r >= 0.6) return { t: 'Assez bien', c: 'bleu' };
   if (r >= 0.5) return { t: 'Passable', c: 'gris' };
-  return { t: 'Doit redoubler d’efforts', c: 'rouge' };
+  return { t: 'Insuffisant', c: 'rouge' };
 }
-const appreciation = (n: number, sur: number) => { const r = n / sur; return r >= 0.8 ? 'Très bien' : r >= 0.7 ? 'Bien' : r >= 0.6 ? 'Assez bien' : r >= 0.5 ? 'Passable' : 'Insuffisant'; };
-const appreciationG = (m: number, sur: number) => { const r = m / sur; return r >= 0.85 ? 'Excellent travail, très sérieux et appliqué. Continue ainsi.' : r >= 0.75 ? 'Très bon travail. Continue tes efforts.' : r >= 0.65 ? 'Bon travail. Peut encore progresser.' : r >= 0.5 ? 'Travail moyen. Doit fournir plus d’efforts.' : 'Résultats insuffisants. Il faut travailler davantage.'; };
+const appreciation = (n: number, sur: number) => mention(n, sur).t;
+const appreciationG = (m: number, sur: number) => { const r = m / sur; return r >= 0.9 ? 'Excellent travail, très sérieux et appliqué. Continue ainsi.' : r >= 0.8 ? 'Très bon travail. Continue tes efforts.' : r >= 0.7 ? 'Bon travail. Peut encore progresser.' : r >= 0.6 ? 'Travail assez bien. Doit fournir un peu plus d’efforts.' : r >= 0.5 ? 'Travail juste passable. Doit travailler davantage.' : 'Résultats insuffisants. Il faut beaucoup plus de travail.'; };
 
 // Classement d'une classe pour un mois : moyenne pondérée, rang avec ex aequo, évolution.
 export function classement(eleves: any[], matieres: any[], notes: any[], mois: string, moisPrec?: string) {
@@ -188,9 +191,9 @@ function Bulletin({ l, cl, mat, c, lm, prec, ens, url }: any) {
     <div className="bl-k"><div className="k bleu"><small>Moyenne générale</small><b>{dec(l.moy)} / {cl.sur}</b></div><div className="k or"><small>Rang</small><b>{rangTxt(l.rang, e.sexe === 'F')}{l.exaequo ? ' ex æquo' : ''} / {nb(cl.lignes.length)}</b></div><div className="k"><small>Moyenne de la classe</small><b>{dec(cl.moyClasse)}</b></div><div className="k"><small>Plus forte / plus faible</small><b>{dec(cl.max)} / {dec(cl.min)}</b></div></div>
     <div className="bl-a"><div className="appr"><b>Appréciation</b><span>{appreciationG(l.moy, cl.sur)}</span></div><div className="ment-b"><small>Mention</small><b className={`m-t-${mn.c}`}>{mn.t}</b></div></div>
     <div className="bl-3"><div><b>Évolution</b>{dv == null ? <span>Premier mois noté</span> : <><span>Mois précédent ({prec?.label.toLowerCase()}) <b>{dec(l.prec)}</b> → <b>{dec(l.moy)}</b></span><em className={dv >= 0 ? 'hausse' : 'baisse'}>{dv >= 0 ? '+' : '−'} {dec(Math.abs(dv))} point</em></>}</div>
-      <div><b>Décision</b><span>{l.moy / cl.sur >= 0.75 ? 'Inscrit(e) au tableau d’honneur du mois' : l.moy / cl.sur >= 0.5 ? 'Admis(e) à poursuivre' : 'Doit redoubler d’efforts le mois prochain'}</span></div></div>
+      <div><b>Décision</b><span>{l.moy / cl.sur >= 0.8 ? 'Inscrit(e) au tableau d’honneur du mois' : l.moy / cl.sur >= 0.5 ? 'Peut mieux faire le mois prochain' : 'Doit redoubler d’efforts le mois prochain'}</span></div></div>
     <div className="sign"><span>L'enseignant(e)</span><span>Le Directeur</span><span>Le parent / tuteur</span></div>
-    <div className="bl-p"><Qr texte={`${location.origin}/v/${e.code_carte}`} taille={56} /><span><b>Document vérifiable</b><small>Scannez le code pour vérifier que l'élève est bien inscrit à {etab.nom}.</small></span><small>Fait à {etab.ville || '……'}, le {dateFr(new Date().toISOString().slice(0, 10))}</small></div>
+    <div className="bl-p"><Qr texte={`${location.origin}/v/${e.code_carte}?doc=bulletin&p=${encodeURIComponent(lm?.date || '')}`} taille={72} /><span><b>Bulletin vérifiable</b><small>Scannez ce code avec un téléphone : la page de l'école confirme que ce bulletin et cet élève sont authentiques.</small></span><small>Fait à {etab.ville || '……'}, le {dateFr(new Date().toISOString().slice(0, 10))}</small></div>
   </div>;
 }
 
@@ -229,7 +232,7 @@ export function Bulletins() {
 // ---------------------------------------------------------------- Satisfecits & attestations
 const MODELES_E = [['satisfecit', 'Satisfecit (classique bleu et or)'], ['honneur', "Tableau d'honneur"]];
 const MODELES_P = [['merite', 'Attestation de mérite'], ['travail', 'Attestation de travail']];
-function Certificat({ type, nom, texte, rang, num, code, f }: any) {
+function Certificat({ type, nom, texte, rang, num, code, f, per }: any) {
   const { etab, annee } = useApp();
   const titre = type === 'satisfecit' ? 'SATISFECIT' : type === 'honneur' ? "TABLEAU D'HONNEUR" : type === 'merite' ? 'ATTESTATION DE MÉRITE' : 'ATTESTATION DE TRAVAIL';
   return <div className="certif"><i className="cc a" /><i className="cc b" /><i className="cc c" /><i className="cc d" />
@@ -238,7 +241,7 @@ function Certificat({ type, nom, texte, rang, num, code, f }: any) {
       <h2 className={titre.length > 14 ? 'long' : ''}>{titre}</h2><div className="cert-sep"><i /><span>★</span><i /></div>
       <p className="cert-int">{type === 'travail' ? 'Le Directeur de l’école atteste que' : `Le Directeur de l’école décerne ${type === 'merite' ? 'la présente attestation' : 'le présent ' + (type === 'honneur' ? 'tableau d’honneur' : 'satisfecit')} à`}</p>
       <p className="cert-nom">{nom}</p><p className="cert-t">{texte}</p></div>
-    <div className="cert-b"><div className="cert-qr">{code && <Qr texte={`${location.origin}/v/${code}`} taille={60} />}<small>N° {num} · vérifiable en ligne</small></div>
+    <div className="cert-b"><div className="cert-qr">{code && <span className="cert-qrb"><Qr texte={`${location.origin}/v/${code}?doc=${type}${per ? `&p=${encodeURIComponent(per)}` : ''}`} taille={120} /></span>}<small><b>Scannez pour vérifier</b>N° {num}</small></div>
       {rang ? <div className="sceau"><b>{rangTxt(rang, f)}</b><small>{type === 'merite' ? 'MÉRITE' : 'CLASSE'}</small></div> : <div />}
       <div className="cert-s"><small>Fait à {etab.ville || '……'}, le {dateFr(new Date().toISOString().slice(0, 10))}</small><i /><b>Le Directeur</b></div></div>
   </div>;
@@ -252,13 +255,13 @@ export function Satisfecits() {
   const cl = useMemo(() => cd ? classement(s.eleves, matieres, cd.notes, s.mois, s.prec?.cle) : null, [cd, s.eleves, s.mois]);
   const pers: any[] = (pq.data as any) || [];
   // Scolaris choisit tout seul : les 3 premiers, et tous ceux qui ont au moins le tableau d'honneur.
-  const candidats = useMemo(() => cl ? cl.lignes.filter((l: any) => l.rang <= 3 || l.moy / cl.sur >= 0.75) : [], [cl]);
+  const candidats = useMemo(() => cl ? cl.lignes.filter((l: any) => l.rang <= 3 || l.moy / cl.sur >= 0.7) : [], [cl]);
   useEffect(() => { const c: Record<string, boolean> = {}; for (const l of candidats) c[l.e.id] = l.rang <= 3; setCoches(c); setAp(''); }, [candidats]);
   useEffect(() => { setCoches(vue === 'pers' ? Object.fromEntries(pers.map((p) => [p.id, true])) : {}); setAp(''); }, [vue]);
   const num = (k: number) => `A-${(annee?.libelle || '').slice(0, 4)}-${String(k + 1).padStart(4, '0')}`;
   const texteE = (l: any) => `élève de la classe de ${s.c?.nom}, classé${l.e.sexe === 'F' ? 'e' : ''} ${rangTxt(l.rang, l.e.sexe === 'F')}${l.exaequo ? ' ex æquo' : ''} sur ${nb(cl!.lignes.length)} élèves au mois de ${s.lm?.date} avec une moyenne de ${dec(l.moy)} / ${cl!.sur}, pour son travail ${l.rang === 1 ? 'remarquable' : 'sérieux'} et sa conduite exemplaire.`;
   const texteP = (p: any) => modP === 'travail' ? `${p.sexe === 'F' ? 'Mme' : 'M.'} ${nomP(p)} exerce la fonction de ${fonctionDe(p).toLowerCase()}${p.classe_matiere ? ` (${p.classe_matiere})` : ''} dans notre établissement${p.date_entree ? ` depuis le ${dateFr(p.date_entree)}` : ''}. En foi de quoi la présente attestation lui est délivrée pour servir et valoir ce que de droit.` : `${fonctionDe(p)}${p.classe_matiere ? ` · ${p.classe_matiere}` : ''}, en reconnaissance de son dévouement, de son sérieux et de la qualité de son travail au service des élèves durant l’année scolaire ${annee?.libelle}.`;
-  const certE = (l: any, k: number) => <Certificat key={l.e.id} type={modele} nom={`${l.e.prenom} ${l.e.nom}`} texte={texteE(l)} rang={l.rang} f={l.e.sexe === 'F'} num={num(k)} code={l.e.code_carte} />;
+  const certE = (l: any, k: number) => <Certificat key={l.e.id} type={modele} nom={`${l.e.prenom} ${l.e.nom}`} texte={texteE(l)} rang={l.rang} f={l.e.sexe === 'F'} num={num(k)} code={l.e.code_carte} per={s.lm?.date} />;
   const certP = (p: any, k: number) => <Certificat key={p.id} type={modP} nom={nomP(p)} texte={texteP(p)} num={`P-${(annee?.libelle || '').slice(0, 4)}-${String(k + 1).padStart(4, '0')}`} code={p.code_carte} />;
   const listeE = cl ? cl.lignes.filter((l: any) => candidats.includes(l)) : [];
   const choisisE = listeE.filter((l: any) => coches[l.e.id]); const choisisP = pers.filter((p) => coches[p.id]);
@@ -359,5 +362,64 @@ export function Paie() {
     {av && d && <FormAvance pers={d.pers} mois={mois} fermer={() => setAv(false)} fini={() => { setAv(false); q.reload(); }} />}
     {sal && <FormSalaire p={sal.p} s={sal.s} fermer={() => setSal(null)} fini={() => { setSal(null); q.reload(); }} />}
     {imp && <ZoneImp>{(imp === 'un' ? [r] : payes).map((x: any) => <div key={x.p.id} className="feuille-doc"><FichePaie r={x} lm={lm} /></div>)}</ZoneImp>}
+  </>;
+}
+
+// ---------------------------------------------------------------- Tableau de bord de l'enseignant
+export function TableauEnseignant() {
+  const { eid, annee } = useApp(); const pc = usePc(); const uid = getSession()?.user?.id;
+  const qp = useQ(async () => {
+    // La fiche du professeur : reliée à son compte, ou retrouvée par son numéro de téléphone.
+    const pr = await db.get(`profils?id=eq.${uid}&select=telephone`).catch(() => []); const t = pr[0]?.telephone;
+    const l = await db.get(`enseignants?etablissement_id=eq.${eid}&actif=is.true&or=(profil_id.eq.${uid}${t ? `,telephone.eq.${t}` : ''})&select=*&limit=1`);
+    return l[0] || null;
+  }, [eid, uid]);
+  const moi: any = qp.data; const ce = useEleves(); const d: any = ce.data;
+  const c = d && moi ? d.classes.find((x: any) => x.nom.trim().toLowerCase() === String(moi.classe_matiere || '').trim().toLowerCase()) : null;
+  const cq = useClasse(c?.id || ''); const cd: any = cq.data; const eleves: any[] = (c && d?.par?.[c.id]) || [];
+  const liste = useMemo(() => moisListe(annee), [annee?.id]);
+  const avecNotes = liste.filter((m) => (cd?.notes || []).some((n: any) => n.mois === m.cle));
+  const dernier = avecNotes[avecNotes.length - 1]; const avant = avecNotes[avecNotes.length - 2];
+  const cl = useMemo(() => cd && dernier ? classement(eleves, cd.mat, cd.notes, dernier.cle, avant?.cle) : null, [cd, eleves.length, dernier?.cle]);
+  const evol = useMemo(() => cd ? avecNotes.map((m) => ({ m, v: classement(eleves, cd.mat, cd.notes, m.cle).moyClasse })) : [], [cd, eleves.length]);
+  const photos = usePhotos(moi?.photo_chemin ? [moi.photo_chemin] : []);
+  const [imp, setImp] = useState(false); useImpression(imp, () => setImp(false));
+  const { etab } = useApp();
+  const ans = moi?.date_entree ? Math.max(1, new Date().getFullYear() - new Date(moi.date_entree).getFullYear()) : 0;
+  const moisCour = moisListe(annee).find((m) => m.cle === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`);
+  const aFaire = moisCour && cd?.mat?.length ? eleves.length * cd.mat.length - (cd.notes || []).filter((n: any) => n.mois === moisCour.cle).length : 0;
+  const anniv = eleves.filter((e: any) => e.date_naissance && e.date_naissance.slice(5) === new Date().toISOString().slice(5, 10));
+  const notesCour = moisCour ? (cd?.notes || []).filter((n: any) => n.mois === moisCour.cle).length : 0; const attendu = moisCour && cd?.mat?.length ? eleves.length * cd.mat.length : 0;
+  const moyAvant = cd && avant ? classement(eleves, cd.mat, cd.notes, avant.cle).moyClasse : 0;
+  const suivre = cl ? cl.lignes.filter((l: any) => l.moy < cl.sur / 2 || (l.prec != null && l.moy - l.prec <= -0.5)) : [];
+  return <>
+    <Bandeau><section className="hero hero-simple"><div className="hero-haut"><div className="hero-g"><Bonjour /><div className="hero-titre"><h1>Mon espace enseignant</h1></div><span className="hero-sur">{jourLong()} · {moi ? `${fonctionDe(moi)}${moi.classe_matiere ? ` · ${moi.classe_matiere}` : ''}` : ''} · Année {annee.libelle}</span></div></div><Vague /></section></Bandeau>
+    <Etat q={qp}>{() => !moi ? <section className="carte vide-mat"><h3>Votre fiche n'est pas encore reliée</h3><p>Demandez à la direction d'ouvrir votre fiche dans Scolaris et de toucher « Donner l'accès à Scolaris » avec votre numéro de téléphone. Votre classe et vos résultats apparaîtront ici.</p></section> : <>
+      <section className="carte jour"><div className="jour-h"><Tuile i={PiSunDuotone} ton="orange" /><div><b>Aujourd'hui</b><small>{jourLong()}</small></div></div>
+        <ul className="jour-l">
+          {anniv.length > 0 && <li><Tuile i={PiCakeDuotone} ton="violet" /><span><b>Anniversaire{anniv.length > 1 ? 's' : ''} dans votre classe</b><small>{anniv.map((e: any) => `${e.prenom} ${e.nom}`).join(', ')}</small></span></li>}
+          {moisCour && <li><Tuile i={PiNotebookDuotone} ton={notesCour >= attendu && attendu > 0 ? 'vert' : 'bleu'} /><span><b>Notes de {moisCour.label.toLowerCase()}</b><small>{attendu === 0 ? 'Les matières de la classe ne sont pas encore enregistrées.' : notesCour >= attendu ? 'Toutes les notes du mois sont enregistrées.' : notesCour === 0 ? 'Pas encore de notes enregistrées ce mois-ci.' : `${Math.round(100 * notesCour / attendu)} % des notes du mois sont enregistrées.`}</small></span></li>}
+          {cl && avant && <li><Tuile i={cl.moyClasse >= moyAvant ? PiTrendUpDuotone : PiTrendDownDuotone} ton={cl.moyClasse >= moyAvant ? 'vert' : 'rouge'} /><span><b>La classe est {cl.moyClasse >= moyAvant ? 'en progrès' : 'en baisse'}</b><small>Moyenne {avant.label.toLowerCase()} {dec(moyAvant)} → {dernier.label.toLowerCase()} {dec(cl.moyClasse)}</small></span></li>}
+          {cl && cl.lignes[0] && <li><Tuile i={PiCrownDuotone} ton="orange" /><span><b>Premier{cl.lignes[0].e.sexe === 'F' ? 'e' : ''} de la classe en {dernier.label.toLowerCase()}</b><small>{cl.lignes[0].e.prenom} {cl.lignes[0].e.nom} · {dec(cl.lignes[0].moy)} / {cl.sur}</small></span></li>}
+        </ul></section>
+      <div className="kpi-p kpi-e">
+        <div><Tuile i={PiStudentDuotone} ton="bleu" /><small>Mes élèves{c ? ` · ${c.nom}` : ''}</small><b>{nb(eleves.length)}</b></div>
+        <div><Tuile i={PiChartLineUpDuotone} ton="vert" /><small>Moyenne de la classe{dernier ? ` · ${dernier.label.toLowerCase()}` : ''}</small><b>{cl ? dec(cl.moyClasse) : '—'}{cl && <em> / {cl.sur}</em>}</b></div>
+        <div><Tuile i={PiTargetDuotone} ton="orange" /><small>Élèves qui ont la moyenne</small><b>{cl && cl.lignes.length ? Math.round(100 * cl.lignes.filter((l: any) => l.moy >= cl.sur / 2).length / cl.lignes.length) : '—'}{cl && <em> %</em>}</b></div>
+        <div><Tuile i={PiMedalDuotone} ton="violet" /><small>Au service de l'école</small><b>{ans || '—'}{ans ? <em> an{ans > 1 ? 's' : ''}</em> : null}</b></div>
+      </div>
+      <div className="rang r-ordre">
+        <section className="carte c-large"><div className="tete-carte"><h2>Évolution de ma classe</h2></div>
+          {evol.length === 0 ? <p className="note">La courbe se remplit mois après mois, dès que les notes sont saisies.</p> : <div className="evol">{evol.map(({ m, v }) => <div key={m.cle}><span style={{ height: `${Math.max(6, (v / (cl?.sur || 10)) * 100)}%` }}><b>{dec(v)}</b></span><small>{m.label.slice(0, 4)}.</small></div>)}</div>}</section>
+        <section className="carte c-etat"><div className="tete-carte"><h2>Élèves à suivre{suivre.length ? ` (${nb(suivre.length)})` : ''}</h2></div>
+          {!cl ? <p className="note">Rien à signaler pour le moment.</p> : suivre.length === 0 ? <p className="note">Aucun élève en difficulté ce mois-ci. Bravo !</p> : <ul className="lignes-e">{suivre.slice(0, 5).map((l: any) => <li key={l.e.id}><div className="ligne-e"><Rang r={l.rang} f={l.e.sexe === 'F'} /><div><b>{l.e.nom} {l.e.prenom}</b><small className="m-t-rouge">{l.moy < cl.sur / 2 ? `Sous la moyenne : ${dec(l.moy)}` : `En baisse : ${dec(l.prec)} → ${dec(l.moy)}`}</small></div></div></li>)}</ul>}</section>
+      </div>
+      <div className="rang r-ordre">
+        <section className="carte c-large"><div className="tete-carte"><h2>Classement de ma classe{dernier ? ` · ${dernier.label.toLowerCase()}` : ''}</h2></div>
+          {!cl || !cl.lignes.length ? <p className="note">Le classement apparaîtra dès que les notes du mois seront saisies.</p> : <ul className="lignes-e">{cl.lignes.slice(0, 5).map((l: any) => { const mn = mention(l.moy, cl.sur); return <li key={l.e.id}><div className="ligne-e"><Rang r={l.rang} f={l.e.sexe === 'F'} /><div><b>{l.e.nom} {l.e.prenom}</b><small className={`m-t-${mn.c}`}>{mn.t}</small></div><b className="moy">{dec(l.moy)}</b></div></li>; })}</ul>}</section>
+        <section className="carte c-etat"><div className="tete-carte"><h2>Ma carte professionnelle</h2><button className="voir btn-lien" onClick={() => setImp(true)}>Imprimer</button></div><Carte x={moi} etab={etab} annee={annee} url={photos[moi.photo_chemin]} /></section>
+      </div>
+    </>}</Etat>
+    {imp && moi && <ZoneImp><div className="feuille-cs"><Carte x={moi} etab={etab} annee={annee} url={photos[moi.photo_chemin]} /></div><div className="feuille-cs dos"><Carte x={moi} etab={etab} annee={annee} verso /></div></ZoneImp>}
   </>;
 }

@@ -8,13 +8,13 @@ export const prenomUtil = () => { const md = getSession()?.user?.user_metadata |
 export const Bonjour = () => { const p = prenomUtil(); return <span className="hero-bj">Bonjour{p ? ` ${p}` : ''}</span>; };
 const quand = (v: string) => { const j = String(v).slice(0, 10); if (j === auj()) return "aujourd'hui"; const h = new Date(Date.now() - 86400000).toISOString().slice(0, 10); return j === h ? 'hier' : dateFr(v); };
 const LIB_MOYEN: any = { especes: 'Espèces', orange_money: 'Orange Money', mtn_money: 'MTN Mobile Money', virement: 'Virement', depot: 'Dépôt bancaire', autre: 'Autre' };
-const jourLong = () => { const s = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }); return s.charAt(0).toUpperCase() + s.slice(1); };
+export const jourLong = () => { const s = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }); return s.charAt(0).toUpperCase() + s.slice(1); };
 
 export function GrosBouton({ to, t, s, I = PiMoneyWavyDuotone }: any) {
   return <Lien to={to} className="gros-btn"><span className="gb-i"><I aria-hidden="true" /></span><span className="gb-t"><b>{t}</b>{s && <small>{s}</small>}</span><PiCaretRightBold className="gb-f" aria-hidden="true" /></Lien>;
 }
 
-const Ligne = ({ nom, s, droite, to, bouton }: any) => {
+export const Ligne = ({ nom, s, droite, to, bouton }: any) => {
   const corps = <><Avatar nom={nom} /><div><b>{nom}</b><small>{s}</small></div>{droite}{bouton && <span className="btn-doux">{bouton}</span>}</>;
   return <li>{to ? <Lien to={to} className="ligne-e">{corps}</Lien> : <div className="ligne-e">{corps}</div>}</li>;
 };

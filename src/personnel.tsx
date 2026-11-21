@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PiBuildingsFill, PiCameraDuotone, PiCaretRightBold, PiCheckBold, PiIdentificationCardDuotone, PiMagnifyingGlassBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiSealCheckFill, PiWarningCircleFill, PiXCircleFill } from 'react-icons/pi';
-import { SUPA, db, getSession } from './api';
+import { PiBuildings, PiBriefcase, PiGraduationCap, PiIdentificationCard, PiTrophy, PiBriefcaseDuotone, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCalendarDuotone, PiChalkboardDuotone, PiChalkboardTeacherDuotone, PiChartLineUpDuotone, PiHandsClappingDuotone, PiHashDuotone, PiMapPinDuotone, PiMedalDuotone, PiMedalFill, PiNotebookDuotone, PiPhoneDuotone, PiPhoneFill, PiSealCheckDuotone, PiShieldCheckDuotone, PiTargetDuotone, PiUsersThreeDuotone, PiWhatsappLogoFill, PiBuildingsFill, PiCameraDuotone, PiCaretRightBold, PiCheckBold, PiIdentificationCardDuotone, PiMagnifyingGlassBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiSealCheckFill, PiWarningCircleFill, PiXCircleFill } from 'react-icons/pi';
+import { SUPA, db, equipeApi, getSession } from './api';
+import { Identifiants } from './equipe';
 import { dateFr, erreurTel, grouperClasses, nb, tel, telAff } from './lib';
 import { qrChemin } from './qr';
-import { Bandeau, Champ, Chargement, DateRoue, Erreur, Etat, Logo, Modale, Titre, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
+import { Bandeau, Champ, Chargement, DateRoue, Erreur, Etat, Logo, Modale, Titre, Tuile, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
 
 // ---------------------------------------------------------------- petits éléments communs
 export const nomP = (p: any) => `${p?.prenom || ''} ${p?.nom || ''}`.trim();
@@ -94,7 +95,8 @@ const sousP = (p: any) => p.categorie === 'enseignant' ? `${fonctionDe(p)}${p.cl
 const age = (d: string) => { const n = new Date(d), a = new Date(); let x = a.getFullYear() - n.getFullYear(); if (a < new Date(a.getFullYear(), n.getMonth(), n.getDate())) x--; return x; };
 
 function Fiche({ p, url, modifier, retirer, carte }: any) {
-  const { can } = useApp(); const [onglet, setO] = useState('fiche'); const pc = completude(p); const an = depuis(p);
+  const { can, role, eid } = useApp(); const ea = useEnvoi(); const [ident, setIdent] = useState<any>(null);
+  const donnerAcces = () => { if (!p.telephone) return ea.setE('Ajoutez d’abord son numéro de téléphone dans sa fiche.'); ea.envoyer(async () => { const r = await equipeApi({ action: 'ajouter', etablissement_id: eid, prenom: p.prenom, nom: p.nom, telephone: p.telephone, email: '', role: 'enseignant' }); setIdent({ ...r, email: '', nom: nomP(p), titre: 'Accès créé' }); }); }; const [onglet, setO] = useState('fiche'); const pc = completude(p); const an = depuis(p);
   const L = (k: string, v: any) => v ? <><dt>{k}</dt><dd>{v}</dd></> : null;
   return <div className="fiche-p">
     <div className="fiche-h"><Photo url={url} nom={nomP(p)} className="g" /><div><h2>{nomP(p)}</h2><span>{sousP(p)}</span>{an && <em>En poste depuis {an}</em>}</div></div>
@@ -109,6 +111,8 @@ function Fiche({ p, url, modifier, retirer, carte }: any) {
       {onglet === 'poste' && <><h3>Poste</h3><dl className="fiche-d">{L('Fonction', fonctionDe(p))}{L('Catégorie', CATS.find((c) => c[0] === p.categorie)?.[1])}{L(p.categorie === 'enseignant' ? 'Classe ou matière' : 'Service', p.classe_matiere)}{L('Dans l\'école depuis', p.date_entree ? dateFr(p.date_entree) : '')}{L('Statut', p.actif ? 'En poste' : 'Ancien')}</dl>
         {can('directeur', 'secretaire') && <button className="btn contour mini rouge" onClick={retirer}>{p.actif ? 'Retirer du personnel' : 'Réactiver'}</button>}</>}
       {onglet === 'docs' && <><h3>Documents</h3><p className="note">La carte professionnelle est prête, avec la photo et le QR de vérification.</p><button className="btn plein mini" onClick={carte}><PiIdentificationCardDuotone aria-hidden="true" />Voir et imprimer la carte</button></>}
+      {p.categorie === 'enseignant' && role === 'fondateur' && p.actif && <div className="acces-p"><b>Espace enseignant</b><small>{p.telephone ? `Avec son téléphone ${telAff(p.telephone)}, ${p.prenom} se connecte et voit son tableau de bord : sa classe, ses élèves, ses résultats et sa carte.` : 'Ajoutez son téléphone pour lui donner un accès.'}</small><Erreur t={ea.erreur} /><button className="btn plein mini" disabled={ea.occupe} onClick={donnerAcces}>{ea.occupe ? 'Création…' : 'Donner l’accès à Scolaris'}</button></div>}
+      {ident && <Identifiants r={ident} fermer={() => setIdent(null)} />}
       <div className="fiche-a"><button className="btn contour" onClick={carte}>Carte</button>{can('directeur', 'secretaire') && <button className="btn contour" onClick={modifier}><PiPencilSimpleDuotone aria-hidden="true" />Modifier</button>}</div>
     </div>
   </div>;
@@ -248,13 +252,13 @@ export function Organigramme() {
 }
 
 // ---------------------------------------------------------------- Cartes scolaires
-function Carte({ x, eleve, etab, annee, url, verso }: any) {
+export function Carte({ x, eleve, etab, annee, url, verso, pub }: any) {
   const nom = nomP(x); const fin = annee?.date_fin ? dateFr(annee.date_fin) : '';
   const resp = eleve ? ((x.eleve_responsables || []).find((r: any) => r.principal) || (x.eleve_responsables || [])[0])?.responsables : null;
   const contact = eleve ? (resp ? `${nomP(resp)}${resp.telephone ? ' · ' + telAff(resp.telephone) : ''}` : '') : (x.contact_nom ? `${x.contact_nom}${x.contact_telephone ? ' · ' + telAff(x.contact_telephone) : ''}` : '');
   const champs: [string, string][] = eleve
     ? [['Nom', (x.nom || '').toUpperCase()], ['Prénom', x.prenom], ['Classe', x.classe], ['Né(e) le', x.date_naissance ? dateFr(x.date_naissance) : ''], ['Matricule', x.matricule || '']]
-    : [['Nom', (x.nom || '').toUpperCase()], ['Prénom', x.prenom], ['Fonction', fonctionDe(x)], [x.categorie === 'enseignant' ? 'Classe' : 'Service', x.classe_matiere || ''], ['Téléphone', x.telephone ? telAff(x.telephone) : '']];
+    : [['Nom', (x.nom || '').toUpperCase()], ['Prénom', x.prenom], ['Fonction', fonctionDe(x)], [x.categorie === 'enseignant' ? 'Classe' : 'Service', x.classe_matiere || ''], ...(pub ? [] : [['Téléphone', x.telephone ? telAff(x.telephone) : ''] as [string, string]])];
   if (verso) return <div className={`carte-sc verso${eleve ? '' : ' pers'}`}>
     <div className="cs-v"><div className="cs-qr"><Qr texte={lienVerif(x.code_carte)} taille={112} /><small>Scannez pour vérifier que la carte est valide</small></div>
       <div className="cs-vi"><div className="cs-ec"><LogoEcole etab={etab} taille={24} /><b>{String(etab.nom || '').toUpperCase()}</b></div><small>{[etab.adresse || etab.quartier, etab.ville].filter(Boolean).join(', ')}{etab.telephone ? ` · ${telAff(etab.telephone)}` : ''}</small>
@@ -265,7 +269,7 @@ function Carte({ x, eleve, etab, annee, url, verso }: any) {
   return <div className={`carte-sc${eleve ? '' : ' pers'}`}>
     <div className="cs-h"><LogoEcole etab={etab} taille={40} /><div><b>{String(etab.nom || '').toUpperCase()}</b><small>{eleve ? "CARTE D'IDENTITÉ SCOLAIRE" : 'CARTE PROFESSIONNELLE'}</small></div><em>{annee?.libelle}</em></div>
     <div className="cs-c"><Photo url={url} nom={nom} className="cs-ph" /><dl>{champs.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v || '—'}</dd></div>)}</dl></div>
-    <span className="cs-val">{fin && <>Valable jusqu'au <b>{fin}</b></>}</span><span className="cs-q"><Qr texte={lienVerif(x.code_carte)} taille={50} /></span>
+    <span className="cs-val">{fin && <>Valable jusqu'au <b>{fin}</b></>}</span>{!pub && <span className="cs-q"><Qr texte={lienVerif(x.code_carte)} taille={50} /></span>}
     <i className="cs-dr" /></div>;
 }
 
@@ -319,18 +323,50 @@ export function Cartes() {
 
 
 // ---------------------------------------------------------------- page publique : vérification d'une carte (QR)
+const telIntl = (x: string) => { const n = String(x || '').replace(/\D/g, ''); return n.length === 9 ? `224${n}` : n; };
+const DOCS: Record<string, string> = { satisfecit: 'Satisfecit', honneur: "Tableau d'honneur", merite: 'Attestation de mérite', travail: 'Attestation de travail', bulletin: 'Bulletin de notes' };
 export function VerifCarte({ code }: { code: string }) {
-  const q = useQ(async () => ({ d: await db.rpc('verifier_carte', { p_code: code }) }), [code]);
-  return <main className="pub"><section className="carte-pub verif">
-    <Etat q={q}>{({ d }: any) => !d ? <><span className="verif-i rouge"><PiXCircleFill aria-hidden="true" /></span><h1>Carte inconnue</h1><p className="intro">Ce code ne correspond à aucune carte délivrée avec Scolaris. Elle peut être fausse.</p></> : <>
-      <div className="verif-ec">{d.logo ? <img src={`${SUPA}/storage/v1/object/public/logos/${d.logo}`} alt="" /> : <PiBuildingsFill aria-hidden="true" />}<b>{d.ecole}</b>{d.ville && <small>{d.ville}</small>}</div>
-      {d.valide ? <PiSealCheckFill className="verif-i vert" aria-hidden="true" /> : <span className="verif-i rouge"><PiXCircleFill aria-hidden="true" /></span>}
-      <h1>{d.valide ? 'Carte valide' : 'Carte non valide'}</h1>
-      <dl className="verif-d"><div><dt>Nom</dt><dd>{`${d.prenom} ${String(d.nom || '').toUpperCase()}`}</dd></div>
-        {d.type === 'eleve' ? <><div><dt>Classe</dt><dd>{d.classe || '—'}</dd></div>{d.annee && <div><dt>Année scolaire</dt><dd>{d.annee}</dd></div>}{d.matricule && <div><dt>Matricule</dt><dd>{d.matricule}</dd></div>}</> : <><div><dt>Fonction</dt><dd>{d.fonction}</dd></div>{d.classe && <div><dt>Classe / service</dt><dd>{d.classe}</dd></div>}</>}</dl>
-      {!d.valide && <p className="intro">{d.type === 'eleve' ? "Cet élève n'est plus inscrit dans cette école." : "Cette personne ne fait plus partie du personnel de l'école."}</p>}
-    </>}</Etat>
-    <div className="verif-p"><Logo petit /><small>Vérification sécurisée par Scolaris</small></div>
-  </section></main>;
+  const p = new URLSearchParams(location.search); const doc = DOCS[p.get('doc') || ''] || ''; const per = p.get('p') || '';
+  const [onglet, setO] = useState('carte');
+  const q = useQ(async () => { const d: any = await db.rpc('verifier_carte', { p_code: code }); let url = ''; if (d?.photo) { const r = await db.photos([d.photo]).catch(() => ({} as any)); url = r[d.photo] || ''; } return { d, url }; }, [code]);
+  const maint = new Date(); const quand = `${maint.toLocaleDateString('fr-FR')} à ${maint.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  const R = (I: any, ton: string, k: string, v: any) => v ? <div className="vp-l"><Tuile i={I} ton={ton} /><span><small>{k}</small><b>{v}</b></span></div> : null;
+  return <main className="vp"><Etat q={q}>{({ d, url }: any) => {
+    if (!d) return <><header className="vp-h"><Logo petit /><div><b>Scolaris</b><small>Vérification officielle</small></div></header><section className="vp-c"><div className="vp-hero ko"><span className="vp-ic"><PiXCircleFill aria-hidden="true" /></span><h1>Carte inconnue</h1><p>Ce code ne correspond à aucune carte délivrée par une école. Elle peut être fausse.</p></div></section></>;
+    const eleve = d.type === 'eleve'; const nom = `${d.prenom} ${String(d.nom || '').toUpperCase()}`;
+    const ans = d.depuis ? Math.max(1, maint.getFullYear() - new Date(d.depuis).getFullYear()) : 0;
+    const tw = d.travaux; const moisT = tw?.mois ? new Date(tw.mois + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '';
+    const O: [string, string, any][] = [['carte', 'Carte', PiIdentificationCard], ['profil', eleve ? 'Scolarité' : 'Poste', eleve ? PiGraduationCap : PiBriefcase], ...(eleve ? [] : [['travaux', 'Réalisations', PiTrophy] as [string, string, any]]), ['ecole', 'École', PiBuildings]];
+    return <>
+      <header className="vp-h"><LogoEcole etab={{ logo_chemin: d.logo }} taille={40} /><div><b>{d.ecole}</b><small>Vérification officielle</small></div></header>
+      <section className="vp-c">
+        <div className="vp-hero"><Photo url={url} nom={nom} className="vp-ph" /><div className="vp-id"><h1>{nom}</h1><span>{eleve ? `Élève${d.classe ? ` · ${d.classe}` : ''}` : `${d.fonction}${d.classe ? ` · ${d.classe}` : ''}`}</span>
+          <em className={d.valide ? 'ok' : 'ko'}>{d.valide ? <PiSealCheckFill aria-hidden="true" /> : <PiXCircleFill aria-hidden="true" />}{doc ? (d.valide ? 'Document authentique' : 'Document non valide') : d.valide ? 'Carte valide' : 'Carte non valide'}</em></div>
+          <small className="vp-q">Vérifié le {quand}</small></div>
+        {!d.valide && <div className="vp-alerte">{eleve ? "Cet élève n'est plus inscrit dans cette école." : "Cette personne ne fait plus partie du personnel de l'école."}</div>}
+        {doc && <div className="vp-doc"><Tuile i={PiMedalDuotone} ton="orange" /><span><small>Document vérifié</small><b>{doc}{per ? ` · ${per}` : ''}</b><em>Délivré par {d.ecole} à {nom}</em></span></div>}
+        {onglet === 'carte' && <><h2 className="vp-t">Carte {eleve ? "d'identité scolaire" : 'professionnelle'}</h2>
+          <Carte x={{ ...d, code_carte: code, classe_matiere: d.classe }} eleve={eleve} etab={{ nom: d.ecole, logo_chemin: d.logo, ville: d.ville, quartier: d.quartier, adresse: d.adresse, telephone: d.telephone }} annee={{ libelle: d.annee, date_fin: d.fin }} url={url} pub />
+          <div className="vp-liste">{R(PiHashDuotone, 'bleu', 'Numéro de carte', code.toUpperCase())}{R(PiCalendarCheckDuotone, 'vert', 'Valable jusqu’au', d.fin ? dateFr(d.fin) : '')}{R(PiBuildingsDuotone, 'violet', 'Délivrée par', d.ecole)}</div></>}
+        {onglet === 'profil' && <><h2 className="vp-t">{eleve ? 'Scolarité' : 'Poste occupé'}</h2><div className="vp-liste">{eleve ? <>
+          {R(PiChalkboardDuotone, 'bleu', 'Classe', d.classe || 'Non inscrit cette année')}{R(PiCalendarDuotone, 'violet', 'Année scolaire', d.annee)}{R(PiHashDuotone, 'orange', 'Matricule', d.matricule)}{R(PiCalendarCheckDuotone, 'vert', 'Inscrit(e) depuis', d.inscrit_le ? dateFr(d.inscrit_le) : '')}{R(PiSealCheckDuotone, d.valide ? 'vert' : 'rouge', 'Situation', d.valide ? 'Inscrit(e) cette année' : 'Non inscrit(e) cette année')}</>
+          : <>{R(PiBriefcaseDuotone, 'bleu', 'Fonction', d.fonction)}{R(PiChalkboardTeacherDuotone, 'violet', d.categorie === 'enseignant' ? 'Classe ou matière' : 'Service', d.classe)}{R(PiCalendarCheckDuotone, 'vert', "Dans l'école depuis", d.depuis ? `${new Date(d.depuis).getFullYear()} · ${ans} an${ans > 1 ? 's' : ''}` : '')}{R(PiCalendarDuotone, 'orange', 'Année scolaire', d.annee)}{R(PiSealCheckDuotone, d.valide ? 'vert' : 'rouge', 'Situation', d.valide ? 'En poste' : "A quitté l'école")}</>}</div></>}
+        {onglet === 'travaux' && <><h2 className="vp-t">Réalisations</h2>
+          {ans > 0 && <div className="vp-anc"><PiMedalFill aria-hidden="true" /><div><b>{ans} an{ans > 1 ? 's' : ''}</b><span>au service de {d.ecole}</span></div></div>}
+          {tw ? <div className="vp-kpi">
+            <div><Tuile i={PiUsersThreeDuotone} ton="bleu" /><b>{tw.eleves}</b><small>élèves encadrés en {tw.classe}</small></div>
+            {tw.moyenne != null && <div><Tuile i={PiChartLineUpDuotone} ton="vert" /><b>{String(tw.moyenne).replace('.', ',')}<em> / {tw.sur}</em></b><small>moyenne de la classe · {moisT}</small><i className="vp-j"><i style={{ width: `${Math.min(100, (tw.moyenne / tw.sur) * 100)}%` }} /></i></div>}
+            {tw.reussite != null && <div><Tuile i={PiTargetDuotone} ton="orange" /><b>{tw.reussite}<em> %</em></b><small>des élèves ont la moyenne</small><i className="vp-j or"><i style={{ width: `${tw.reussite}%` }} /></i></div>}
+            {tw.mois_notes > 0 && <div><Tuile i={PiNotebookDuotone} ton="violet" /><b>{tw.mois_notes}</b><small>mois de notes suivis cette année</small></div>}
+          </div> : <p className="note">Les résultats de la classe apparaîtront ici dès que les notes seront saisies.</p>}
+          <div className="vp-merci"><PiHandsClappingDuotone aria-hidden="true" /><span>{d.valide ? <>Merci pour votre engagement auprès des élèves de <b>{d.ecole}</b>.</> : <>A travaillé à <b>{d.ecole}</b>.</>}</span></div></>}
+        {onglet === 'ecole' && <><h2 className="vp-t">L'école</h2><div className="vp-ec"><LogoEcole etab={{ logo_chemin: d.logo }} taille={56} /><div><b>{d.ecole}</b><span>{d.ville}</span></div></div>
+          <div className="vp-liste">{R(PiMapPinDuotone, 'rouge', 'Adresse', [d.adresse || d.quartier, d.ville].filter(Boolean).join(', '))}{R(PiPhoneDuotone, 'bleu', 'Téléphone', d.telephone ? telAff(telIntl(d.telephone)) : '')}{R(PiCalendarDuotone, 'violet', 'Année scolaire', d.annee)}</div>
+          {d.telephone && <div className="vp-btns"><a className="btn plein" href={`tel:+${telIntl(d.telephone)}`}><PiPhoneFill aria-hidden="true" />Appeler</a><a className="btn wa" href={`https://wa.me/${telIntl(d.telephone)}`}><PiWhatsappLogoFill aria-hidden="true" />WhatsApp</a></div>}</>}
+        <p className="vp-pied"><PiShieldCheckDuotone aria-hidden="true" />Vérification sécurisée par Scolaris</p>
+      </section>
+      <nav className="barre-bas vp-nav" style={{ gridTemplateColumns: `repeat(${O.length},minmax(0,1fr))` }} aria-label="Menu">{O.map(([k, tt, I]) => <button key={k} className={onglet === k ? 'on' : ''} aria-current={onglet === k ? 'page' : undefined} onClick={() => { setO(k); scrollTo(0, 0); }}><I aria-hidden="true" /><span>{tt}</span></button>)}</nav>
+    </>;
+  }}</Etat></main>;
 }
 

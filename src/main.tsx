@@ -51,6 +51,8 @@ const ROLES: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 
 function BarreBas({ chemin, can, role, ouvrir }: any) {
   const fin = can(...STAFF);
   const it = (to: string, t: string, I: any, J: any) => { const on = chemin.startsWith(to); const K = on ? J : I; return <Lien to={to} className={on ? 'on' : ''}><K aria-hidden="true" /><span>{t}</span></Lien>; };
+  // Un enseignant ne voit que son espace.
+  if (role === 'enseignant') return <nav className="barre-bas" style={{ gridTemplateColumns: 'repeat(2,minmax(0,1fr))' }} aria-label="Navigation principale">{it('/tableau', 'Mon espace', PiSquaresFour, PiSquaresFourFill)}<button type="button" onClick={ouvrir}><PiDotsNine aria-hidden="true" /><span>Menu</span></button></nav>;
   return (
     <nav className="barre-bas" aria-label="Navigation principale">
       {it('/tableau', 'Accueil', PiSquaresFour, PiSquaresFourFill)}
@@ -112,7 +114,8 @@ function Coque({ m, annees, recharger, abo }: any) {
   // Bouton WhatsApp flottant seulement sur la liste des paramètres (téléphone) : ailleurs il cachait des montants. L'aide reste dans le menu et en bas de l'accueil.
   const supportFlottant = seg[0] === 'parametres' && !seg[1];
   let page: any = <Tableau />;
-  if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
+  if (role === 'enseignant') page = seg[0] === 'parametres' && seg[1] === 'compte' ? <Parametres key="compte" vue="compte" /> : annee ? <Tableau /> : <Parametres vue="compte" />;
+  else if (!annee) page = <Parametres vue={seg[0] === 'parametres' ? seg[1] : 'annee'} />;
   else if (seg[0] === 'eleves' && seg[1]) page = <DetailEleve id={seg[1]} key={seg[1]} />;
   else if (seg[0] === 'eleves') page = <Eleves />;
   else if (seg[0] === 'inscriptions') page = <Inscriptions />;
@@ -147,7 +150,7 @@ function Coque({ m, annees, recharger, abo }: any) {
         {ouvert && <div className="voile" onClick={() => setO(false)} />}
         <aside className={ouvert ? 'menu ouvert' : 'menu'}>
           <Lien to="/tableau" className="marque"><img src="/img/icone.png" alt="" /><Mot taille={26} /></Lien>
-          <nav aria-label="Menu">{MENU.filter((x) => !x[3] || can(...x[3])).map(([to, t, I, , cle, J, grp, nv], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}{NOUVEAUX.includes(grp) && <b className="nouveau">Nouveau</b>}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}{nv && !(cle && nd[cle] > 0) && <i className="pt-nv" aria-label="Nouveau" />}</Lien></Fragment>; })}</nav>
+          <nav aria-label="Menu">{MENU.filter((x) => role === 'enseignant' ? x[0] === '/tableau' : !x[3] || can(...x[3])).map(([to, t, I, , cle, J, grp, nv], i, l) => { const on = chemin.startsWith(to); const K = on ? J || I : I; return <Fragment key={to}>{grp && grp !== l[i - 1]?.[6] && <small className="menu-g">{grp}{NOUVEAUX.includes(grp) && <b className="nouveau">Nouveau</b>}</small>}<Lien to={to} className={on ? 'actif' : ''}><span className="mi"><K aria-hidden="true" /></span><span>{role === 'enseignant' && to === '/tableau' ? 'Mon espace' : t}</span>{cle && nd[cle] > 0 && <em>{nd[cle] > 999 ? '999+' : nd[cle]}</em>}{nv && !(cle && nd[cle] > 0) && <i className="pt-nv" aria-label="Nouveau" />}</Lien></Fragment>; })}</nav>
           <AideMenu /><div className="profil"><span className="av">{init}</span><div><b>{nom}</b><small>{ROLES[role]}</small></div><button onClick={auth.deconnexion} aria-label="Se déconnecter" title="Se déconnecter"><PiSignOutDuotone aria-hidden="true" /></button></div>
         </aside>
         <div className="corps">

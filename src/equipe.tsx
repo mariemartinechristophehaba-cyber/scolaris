@@ -37,7 +37,7 @@ function AjouterMembre({ fermer, fini }: any) {
   </form></Modale>;
 }
 
-function Identifiants({ r, fermer }: any) {
+export function Identifiants({ r, fermer }: any) {
   const { etab } = useApp(); const [copie, setC] = useState(false);
   const lien = `${location.origin}/connexion`; const mail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email || '') && !/@membres\.scolaris\.app$/i.test(r.email) ? r.email : '';
   if (!r.mot_de_passe) return <Modale titre={r.titre} fermer={fermer}><div className="ident-c"><p><b>{r.nom}</b> a déjà un compte Scolaris. Cette personne se connecte avec son mot de passe habituel.</p><button className="btn plein" onClick={fermer}>Compris</button></div></Modale>;

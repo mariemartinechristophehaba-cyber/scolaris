@@ -12,10 +12,12 @@ import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptCl
 
 const STAFF = ['directeur', 'comptable', 'caissier', 'secretaire'];
 
+import { TableauEnseignant } from './pedagogie';
 export function Tableau() {
   const { role } = useApp();
   if (role === 'secretaire') return <TableauSecretaire />;
   if (role === 'caissier') return <TableauCaissier />;
+  if (role === 'enseignant') return <TableauEnseignant />;
   return <TableauFinance />;
 }
 

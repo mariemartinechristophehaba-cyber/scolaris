@@ -12,6 +12,7 @@ import { DetailEleve, Classes, Eleves, Frais } from './gestion';
 import { Inscriptions, Reinscriptions } from './inscriptions';
 import { Depenses, NouveauPaiement, Paiements, Rapports, Tableau } from './finance';
 import { Importation, Parametres, Relances } from './outils';
+import { ReprisePaiements } from './reprise';
 import { Activite, Equipe } from './equipe';
 import { Abonnement, AideMenu, BandeauAbonnement, BoutonSupport } from './abonnement';
 import { EspaceAdmin } from './admin';
@@ -138,6 +139,7 @@ function Coque({ m, annees, recharger, abo }: any) {
   else if (seg[0] === 'depenses') page = <Depenses />;
   else if (seg[0] === 'rapports') page = <Rapports />;
   else if (seg[0] === 'relances') page = <Relances />;
+  else if (seg[0] === 'importation' && seg[1] === 'paiements') page = <ReprisePaiements />;
   else if (seg[0] === 'importation') page = <Importation />;
   else if (seg[0] === 'equipe' && role === 'fondateur') page = <Equipe />;
   else if (seg[0] === 'activite' && role === 'fondateur') page = <Activite />;

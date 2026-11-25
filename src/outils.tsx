@@ -180,7 +180,7 @@ const COLS: [string, string, RegExp][] = [['matricule', 'Matricule', /matri/i], 
 const norm = (s: any) => String(s ?? '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 export function Importation() {
-  const { annee, eid } = useApp();
+  const { annee, eid, can } = useApp();
   const [tab, setTab] = useState<string[][] | null>(null); const [nomF, setNF] = useState(''); const [map, setMap] = useState<Record<string, number>>({}); const [rap, setRap] = useState<any>(null); const [av, setAv] = useState(0); const [sur, setSur] = useState(false);
   const e = useEnvoi(); const inp = useRef<HTMLInputElement>(null);
   const ex = useQ(async () => db.tout(`eleves?etablissement_id=eq.${eid}&select=id,matricule,prenom,nom&order=id`), [eid, rap]);
@@ -230,6 +230,7 @@ export function Importation() {
             <button className="btn plein mini" onClick={() => inp.current?.click()} disabled={e.occupe}><PiFileArrowUpDuotone />Choisir un fichier</button>
             <input ref={inp} type="file" hidden accept=".xlsx,.csv" onChange={(x) => { ouvrir(x.target.files?.[0]); x.target.value = ''; }} />
           </section>
+          {can('directeur', 'comptable') && <section className="carte modele-i"><div><h2>Paiements déjà reçus avant Scolaris</h2><p className="note">Importez le total payé par chaque élève : Scolaris le reconnaît et répartit le montant sur ses tranches.</p></div><Lien to="/importation/paiements" className="btn contour mini"><PiMoneyWavyDuotone />Importer les paiements</Lien></section>}
           <section className="carte modele-i"><div><h2>Colonnes attendues</h2><div className="puces g">{COLS.map(([k, t]) => <span className="puce" key={k}>{t}</span>)}</div></div><button className="btn contour mini" onClick={modele}><PiDownloadSimpleBold />Télécharger le modèle</button></section>
         </> : <>
           <div className="minis"><div className="carte mini-c"><Tuile i={PiCheckCircleFill} ton="vert" t={44} /><div><span>Lignes prêtes</span><span className="gnf"><b>{nb(bonnes.length)}</b></span></div></div><div className="carte mini-c"><Tuile i={PiWarningDuotone} ton="orange" t={44} /><div><span>Lignes écartées</span><span className="gnf"><b>{nb(lignes.length - bonnes.length)}</b></span></div></div></div>

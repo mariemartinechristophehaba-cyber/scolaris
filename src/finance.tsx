@@ -1,5 +1,5 @@
 import { AideMenu } from './abonnement';
-import { PiLightbulbDuotone, PiCopyDuotone, PiPhoneSlashDuotone, PiChartLineUpDuotone, PiChalkboardDuotone, PiSparkleFill, PiCheckCircleDuotone, PiChecksBold } from 'react-icons/pi';
+import { PiFileArrowUpDuotone, PiLightbulbDuotone, PiCopyDuotone, PiPhoneSlashDuotone, PiChartLineUpDuotone, PiChalkboardDuotone, PiSparkleFill, PiCheckCircleDuotone, PiChecksBold } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PiArrowsLeftRightBold, PiBooksDuotone, PiBusDuotone, PiFilePdfDuotone, PiFileXlsDuotone, PiHouseLineDuotone, PiLightningDuotone, PiUsersThreeDuotone, PiBankDuotone, PiCalendarCheckDuotone, PiCalendarDotsFill, PiChartBarFill, PiCheckBold, PiMagnifyingGlassBold, PiMoneyDuotone, PiPaperclipDuotone, PiPlusBold, PiReceiptDuotone, PiShieldCheckDuotone, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiHandCoinsDuotone, PiHourglassMediumDuotone, PiMoneyWavyDuotone, PiPiggyBankDuotone, PiShoppingCartDuotone, PiStudentDuotone, PiTrendUpBold, PiUserPlusDuotone, PiWalletDuotone, PiWarningCircleFill, PiWarningDuotone, PiXCircleFill } from 'react-icons/pi';
@@ -261,7 +261,7 @@ export function Paiements() {
   const voirPj = (c: string) => { const w = window.open('about:blank', '_blank'); e.envoyer(async () => { const u = await db.voirFichier(c); if (w) w.location.href = u; else location.href = u; }); };
   return (
     <>
-      <Titre t="Paiements"><Lien to="/paiements/nouveau" className="btn plein mini"><PiPlusBold />Enregistrer</Lien></Titre>
+      <Titre t="Paiements">{v && <Lien to="/importation/paiements" className="btn contour mini"><PiFileArrowUpDuotone />Anciens paiements</Lien>}<Lien to="/paiements/nouveau" className="btn plein mini"><PiPlusBold />Enregistrer</Lien></Titre>
       <Erreur t={e.erreur} />
       <EnAttenteEnvoi fini={() => q.reload()} />
       <Etat q={q}>{(d) => {

@@ -229,3 +229,32 @@ export function prevision(pay: any[], encaisse: number, frais: number, finAnnee:
   const proj = Math.min(frais, Math.round(encaisse + (r30 / 30) * jours));
   return { r30, jours, fin, proj, pct: frais ? Math.round((proj / frais) * 100) : 0, manque: Math.max(0, frais - proj) };
 }
+
+// Montant en toutes lettres (français), pour les reçus : 250000 -> « deux cent cinquante mille ».
+const U_ = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+const D_ = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
+function moins100(n: number): string {
+  if (n < 20) return U_[n];
+  const d = Math.floor(n / 10), u = n % 10;
+  if (d === 7 || d === 9) return D_[d] + (d === 7 && u === 1 ? ' et ' : '-') + U_[10 + u];
+  if (u === 0) return d === 8 ? 'quatre-vingts' : D_[d];
+  if (u === 1 && d !== 8) return D_[d] + ' et un';
+  return D_[d] + '-' + U_[u];
+}
+function moins1000(n: number): string {
+  const c = Math.floor(n / 100), r = n % 100; let s = '';
+  if (c > 0) { s = c === 1 ? 'cent' : U_[c] + ' cent'; if (r === 0 && c > 1) s += 's'; }
+  if (r > 0) s += (s ? ' ' : '') + moins100(r);
+  return s;
+}
+export function enLettres(v: number): string {
+  const n = Math.round(Math.abs(Number(v) || 0)); if (!n) return 'zéro';
+  const md = Math.floor(n / 1e9), mi = Math.floor(n / 1e6) % 1000, ml = Math.floor(n / 1000) % 1000, r = n % 1000; const p: string[] = [];
+  if (md) p.push(moins1000(md) + ' milliard' + (md > 1 ? 's' : ''));
+  if (mi) p.push(moins1000(mi) + ' million' + (mi > 1 ? 's' : ''));
+  if (ml) p.push(ml === 1 ? 'mille' : moins1000(ml).replace(/(cent|vingt)s$/, '$1') + ' mille');
+  if (r) p.push(moins1000(r));
+  return p.join(' ');
+}
+const DEV_L: Record<string, string> = { GNF: 'francs guinéens', XOF: 'francs CFA', XAF: 'francs CFA', CDF: 'francs congolais', RWF: 'francs rwandais', NGN: 'nairas', GHS: 'cedis', MGA: 'ariarys', MAD: 'dirhams', TND: 'dinars' };
+export const devEnLettres = () => DEV_L[ACTIF.dev] || symbole(ACTIF.dev);

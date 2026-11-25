@@ -984,3 +984,36 @@ main.vp{display:block;min-height:100vh;padding:0 0 110px;background:linear-gradi
 .ma-carte{display:flex;flex-direction:column;gap:14px;max-width:460px}.ma-carte .carte-sc{width:100%}
 .top-l .rg,.cl-e .rg{flex:none}.res-g{justify-content:flex-start;gap:14px;padding:0 6px}.res-g div{flex:0 0 40px}
 .cs-c dl{padding-right:56px;min-width:0}.cs-c dd{overflow-wrap:anywhere}
+
+/* Reçu imprimé en deux exemplaires (parent en haut, souche de l'école en bas) */
+.recu-imp{display:none}
+@media print{
+  .recu-p>.recu-c,.recu-p>.lignes{display:none!important}
+  .recu-p{display:block;min-height:0;padding:0;background:#fff}
+  .recu-imp{display:block;width:210mm}
+  .rx{position:relative;display:flex;flex-direction:column;height:148.4mm;padding:11mm 15mm 8mm;overflow:hidden;color:#0E1E45;font-family:Inter,system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rx.rx-ecole{border-top:.4mm dashed #8A97B3;overflow:visible}
+  .rx-cut{position:absolute;top:-2.4mm;left:50%;transform:translateX(-50%);padding:0 3mm;background:#fff;font:500 3mm Inter,sans-serif;color:#6B7690}
+  .rx-h{display:flex;align-items:flex-start;justify-content:space-between;gap:6mm;padding-bottom:3.5mm;border-bottom:.7mm solid #0B2A7A}
+  .rx-e b{display:block;font:700 6mm/1.15 Poppins,sans-serif;text-transform:uppercase;color:#0B2A7A}.rx-e small{font:500 3.3mm Inter,sans-serif;color:#55617A}
+  .rx-t{flex:none;text-align:right}.rx-t span{display:inline-block;padding:1mm 2.6mm;border-radius:1.5mm;background:#0B2A7A;color:#fff;font:700 2.8mm Inter,sans-serif;letter-spacing:.3mm}
+  .rx.rx-ecole .rx-t span{background:#fff;color:#0B2A7A;box-shadow:inset 0 0 0 .35mm #0B2A7A}
+  .rx-t b{display:block;margin-top:1.6mm;font:700 4.8mm Poppins,sans-serif}
+  .rx-ti{margin-top:4mm;text-align:center;font:700 4mm Poppins,sans-serif;letter-spacing:.35mm;text-transform:uppercase;color:#24324F}
+  .rx-c{display:grid;grid-template-columns:minmax(0,1fr) 64mm;gap:8mm;margin-top:4mm}
+  .rx dl{display:grid;grid-template-columns:36mm 1fr;align-content:start;row-gap:2.1mm;margin:0;font-size:3.6mm}.rx dt{color:#55617A}.rx dd{margin:0;font-weight:700}
+  .rx-d{display:grid;align-content:start;gap:11mm}
+  .rx-m{position:relative;align-self:start;padding:4mm 4.5mm 5mm;border-radius:3mm;border:.4mm solid #CFDBF2;background:#F4F7FE}
+  .rx-m small{font:700 2.9mm Inter,sans-serif;letter-spacing:.3mm;text-transform:uppercase;color:#55617A}
+  .rx-m b{display:block;margin-top:1.2mm;font:800 8.2mm/1.1 Poppins,sans-serif;color:#0B2A7A;white-space:nowrap}.rx-m i{font:600 3.8mm Inter,sans-serif;font-style:normal;color:#55617A}
+  .rx-tampon{position:absolute;right:5mm;bottom:-8.5mm;padding:.6mm 3.2mm;border-radius:2mm;border:.8mm solid #12A863;background:#fff;color:#12A863;font:800 6mm Poppins,sans-serif;transform:rotate(-9deg)}
+  .rx-m.annule .rx-tampon{border-color:#D92D20;color:#D92D20}
+  .rx dl.rx-sol{grid-template-columns:1fr auto;row-gap:1.6mm;padding:0 1mm;font-size:3.4mm}.rx-sol dd{text-align:right}
+  .rx-sol .rx-r{padding-top:1.6mm;border-top:.3mm solid #CFDBF2;font-size:3.9mm;font-weight:800;color:#0E1E45}.rx-sol dd.du{color:#D92D20}.rx-sol dd.ok{color:#12A863}
+  .rx-l{margin-top:6mm;font:500 3.5mm/1.45 Inter,sans-serif;color:#24324F}.rx-l b{font-weight:700;color:#0E1E45}
+  .rx-s{display:flex;justify-content:flex-end;gap:12mm;margin-top:auto;padding-top:14mm}
+  .rx-s div{flex:1;max-width:72mm;padding-top:1.5mm;border-top:.3mm solid #0E1E45;text-align:center;font:600 3.2mm Inter,sans-serif;color:#3A4A6B}
+  .rx-p{margin-top:2.5mm;text-align:center;font:500 2.6mm Inter,sans-serif;color:#8A97B3}
+}
+
+.t-reste dd.rouge{color:var(--rouge,#D92D20)}.t-reste dd.vert{color:var(--vert,#12A863)}.t-reste dt,.t-reste dd{font-weight:700}

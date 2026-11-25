@@ -2,7 +2,7 @@ import { FaArrowLeft } from 'react-icons/fa6';
 import { PiArrowLeftBold, PiCheckBold, PiPrinterDuotone, PiWhatsappLogoFill, PiXBold } from 'react-icons/pi';
 import { useState } from 'react';
 import { db, getSession } from './api';
-import { dateFr, gnf, nb, dv, choisirPays } from './lib';
+import { dateFr, gnf, nb, dv, choisirPays, devEnLettres, enLettres, telAff } from './lib';
 import { Chargement, Erreur, Lien, Logo, naviguer, useQ } from './ui';
 
 const retourTexte = () => { if (history.length > 1) history.back(); else naviguer('/'); };
@@ -84,8 +84,10 @@ async function imageRecu(r: any): Promise<Blob> {
   x.setLineDash([16, 12]); x.strokeStyle = '#D6E2F7'; x.lineWidth = 4; x.beginPath(); x.moveTo(120, 650); x.lineTo(W - 120, 650); x.stroke(); x.setLineDash([]);
   const lignes: [string, string][] = [['Reçu n°', String(r.numero)], ['Élève', `${r.prenom} ${r.nom}`], ['Matricule', r.matricule || ''], ['Classe', r.classe || ''], ['Année scolaire', r.annee || ''], ['Date', dateFr(r.date)], ['Moyen', r.moyen || '']];
   if (r.reference) lignes.push(['Référence', r.reference]);
-  lignes.forEach(([k, v], i) => { const y = 730 + i * 78; x.textAlign = 'left'; x.fillStyle = '#55617A'; x.font = '500 36px Poppins, sans-serif'; x.fillText(k, 130, y); x.textAlign = 'right'; x.fillStyle = '#0B1F5C'; x.font = '700 36px Poppins, sans-serif'; x.fillText(v, W - 130, y); });
-  x.save(); x.translate(W / 2, 730 + lignes.length * 78 + 66); x.rotate(-0.17); x.strokeStyle = vert; x.lineWidth = 8; rr(-190, -62, 380, 124, 22); x.stroke(); x.fillStyle = vert; x.font = '800 78px Poppins, sans-serif'; x.textAlign = 'center'; x.fillText(annule ? 'ANNULÉ' : 'PAYÉ', 0, 28); x.restore();
+  if (r.statut !== 'annule' && r.reste != null) lignes.push(['Reste à payer', r.reste > 0 ? `${nb(r.reste)} ${dv()}` : 'Soldé']);
+  const pas = lignes.length > 8 ? 70 : 78;
+  lignes.forEach(([k, v], i) => { const y = 730 + i * pas; x.textAlign = 'left'; x.fillStyle = '#55617A'; x.font = '500 36px Poppins, sans-serif'; x.fillText(k, 130, y); x.textAlign = 'right'; x.fillStyle = k === 'Reste à payer' ? (r.reste > 0 ? '#D92D20' : '#12A863') : '#0B1F5C'; x.font = '700 36px Poppins, sans-serif'; x.fillText(v, W - 130, y); });
+  x.save(); x.translate(W / 2, 730 + lignes.length * pas + 66); x.rotate(-0.17); x.strokeStyle = vert; x.lineWidth = 8; rr(-190, -62, 380, 124, 22); x.stroke(); x.fillStyle = vert; x.font = '800 78px Poppins, sans-serif'; x.textAlign = 'center'; x.fillText(annule ? 'ANNULÉ' : 'PAYÉ', 0, 28); x.restore();
   x.fillStyle = 'rgba(255,255,255,.8)'; x.font = '500 28px Poppins, sans-serif'; x.textAlign = 'center'; x.fillText('Reçu émis avec Scolaris', W / 2, 1610);
   return await new Promise((ok) => c.toBlob((b) => ok(b!), 'image/png'));
 }
@@ -127,6 +129,7 @@ export function RecuPublic({ jeton }: { jeton: string }) {
             <div><dt>Date</dt><dd>{dateFr(r.date)}</dd></div>
             <div><dt>Moyen</dt><dd>{r.moyen}</dd></div>
             {r.reference && <div><dt>Référence</dt><dd>{r.reference}</dd></div>}
+            {!annule && r.reste != null && <div className="t-reste"><dt>Reste à payer</dt><dd className={r.reste > 0 ? 'rouge' : 'vert'}>{r.reste > 0 ? `${nb(r.reste)} ${dv()}` : 'Soldé'}</dd></div>}
           </dl>
           <span className={annule ? 'tampon annule' : 'tampon'} aria-hidden="true">{annule ? 'ANNULÉ' : 'PAYÉ'}</span>
         </section></div>
@@ -136,7 +139,48 @@ export function RecuPublic({ jeton }: { jeton: string }) {
           {!membre && <p className="recu-pied">Reçu émis avec Scolaris</p>}
         </div>
       </div>
+      <div className="recu-imp" aria-hidden="true">
+        <style>{'@page{size:A4 portrait;margin:0}'}</style>
+        <Exemplaire r={r} pour="parent" />
+        <Exemplaire r={r} pour="ecole" />
+      </div>
     </main>
+  );
+}
+
+// Reçu imprimé : deux exemplaires identiques sur une feuille A4, le haut pour le parent, le bas (souche) pour l'école.
+function Exemplaire({ r, pour }: { r: any; pour: 'parent' | 'ecole' }) {
+  const annule = r.statut === 'annule';
+  return (
+    <section className={`rx rx-${pour}`}>
+      {pour === 'ecole' && <span className="rx-cut">✂ Découper ici</span>}
+      <div className="rx-h">
+        <div className="rx-e"><b>{r.ecole}</b><small>{[r.ville, r.telephone && telAff(r.telephone)].filter(Boolean).join(' · ')}</small></div>
+        <div className="rx-t"><span>{pour === 'parent' ? 'EXEMPLAIRE PARENT' : 'SOUCHE · EXEMPLAIRE ÉCOLE'}</span><b>Reçu n° {r.numero}</b></div>
+      </div>
+      <p className="rx-ti">Reçu de paiement des frais scolaires</p>
+      <div className="rx-c">
+        <dl>
+          <dt>Élève</dt><dd>{r.prenom} {r.nom}</dd>
+          <dt>Matricule</dt><dd>{r.matricule || '—'}</dd>
+          <dt>Classe</dt><dd>{r.classe || '—'}</dd>
+          <dt>Année scolaire</dt><dd>{r.annee}</dd>
+          <dt>Date du paiement</dt><dd>{dateFr(r.date)}</dd>
+          <dt>Moyen de paiement</dt><dd>{r.moyen}</dd>
+          {r.reference && <><dt>Référence</dt><dd>{r.reference}</dd></>}
+        </dl>
+        <div className="rx-d">
+          <div className={`rx-m${annule ? ' annule' : ''}`}><small>Montant reçu</small><b>{nb(r.montant)} <i>{dv()}</i></b><span className="rx-tampon">{annule ? 'ANNULÉ' : 'PAYÉ'}</span></div>
+          {!annule && r.reste != null && <dl className="rx-sol">
+            {r.total > 0 && <><dt>Total de l'année</dt><dd>{nb(r.total)} {dv()}</dd><dt>Payé à ce jour</dt><dd>{nb(Math.max(0, r.total - r.reste))} {dv()}</dd></>}
+            <dt className="rx-r">Reste à payer</dt><dd className={`rx-r ${r.reste > 0 ? 'du' : 'ok'}`}>{r.reste > 0 ? `${nb(r.reste)} ${dv()}` : 'Soldé'}</dd>
+          </dl>}
+        </div>
+      </div>
+      <p className="rx-l">Arrêté le présent reçu à la somme de : <b>{enLettres(r.montant)} {devEnLettres()}</b>.</p>
+      <div className="rx-s"><div>Signature du comptable</div></div>
+      <p className="rx-p">Reçu émis avec Scolaris</p>
+    </section>
   );
 }
 

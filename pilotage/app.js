@@ -581,7 +581,7 @@ function vueApp() {
     <div class="gt">Applications</div><a href="${LIEN.fixpro}" target="_blank" rel="noopener">${I.app}FixPro Guinée</a><a href="${LIEN.scolaris}" target="_blank" rel="noopener">${I.app}Scolaris</a>
     <div class="gt">Compte</div><a href="#reglages" class="${S.page === 'reglages' ? 'on' : ''}">${I.reglages}Réglages</a>
     <div class="me"><div class="av">${esc(initiales(X.d.moi))}</div><div><b>${esc(X.d.moi || 'Administrateur')}</b><small>Mis à jour à ${heure(S.vu || new Date())}</small></div></div></aside>
-  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? esc(X.d.moi || 'Administrateur') : p[1]}</h1><p>${p[0] === 'accueil' ? 'Bonjour 👋 · ' + date : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations', sante: 'Tes applications vont-elles bien ?' }[p[0]]}</p></div><div class="sp"></div>
+  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? `Bon retour, <em>${esc(String(X.d.moi || 'Serge').split(/\s+/)[0])}</em>` : p[1]}</h1><p>${p[0] === 'accueil' ? date + ' · FixPro et Scolaris en un coup d\'œil' : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations', sante: 'Tes applications vont-elles bien ?' }[p[0]]}</p></div><div class="sp"></div>
     <button class="live ${vieux ? 'vieux' : ''}" data-act="maj" title="Actualiser"><i></i>${S.charge ? 'Mise à jour…' : vieux ? 'Actualiser' : 'En direct'}</button><a class="moi" href="#reglages" title="Réglages">${esc(initiales(X.d.moi))}</a></header>
   <div class="page">${S.err ? `<div class="err" style="margin:0">${esc(S.err)}</div>` : ''}${corps}</div></main>
   <nav class="nav">${PAGES.slice(0, 5).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}"><span class="ni">${I[k]}${k === 'activite' && nT ? '<i class="pt"></i>' : ''}</span>${l}</a>`).join('')}</nav></div>`;
@@ -689,6 +689,17 @@ function rendre() {
   const y = window.scrollY;
   $app.innerHTML = S.session ? vueApp() : vueConnexion();
   if (S.session) window.scrollTo(0, y);
+  if (S.session && S.data && S._pa !== S.page) { S._pa = S.page; animer(); }
+}
+
+// Arrivée animée d'une page : cartes qui montent, chiffres qui défilent
+function animer() {
+  $app.classList.remove('entre'); void $app.offsetWidth; $app.classList.add('entre');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.page .num').forEach((n0) => { const w = document.createTreeWalker(n0, NodeFilter.SHOW_TEXT); let el = null; while (w.nextNode()) if (/\d/.test(w.currentNode.nodeValue)) { el = w.currentNode; break; } if (!el) return; const t = el.nodeValue, m = t.match(/\d[\d\s\u202f\u00a0]*/); if (!m) return;
+    const v = +m[0].replace(/\D/g, ''); if (!v) return; const t0 = performance.now();
+    const pas = (n) => { const k = Math.min(1, (n - t0) / 1100), e = 1 - Math.pow(1 - k, 3); el.nodeValue = t.replace(m[0], Math.round(v * e).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ') + (/\s$/.test(m[0]) ? ' ' : '')); if (k < 1) requestAnimationFrame(pas); };
+    requestAnimationFrame(pas); });
 }
 
 /* ---------- événements ---------- */

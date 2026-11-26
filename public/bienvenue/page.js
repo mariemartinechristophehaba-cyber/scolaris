@@ -77,3 +77,16 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
 // Visite comptée par réseau (une par appareil et par jour), comme dans l'application.
 try{(function(){var s=localStorage.getItem('scolaris_src');if(!s)return;var j=new Date().toISOString().slice(0,10);if(localStorage.getItem('scolaris_vu')===j)return;localStorage.setItem('scolaris_vu',j);
 var K2='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlem50cHZ2c3VrZGxlaHBicXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTc3OTgsImV4cCI6MjEwOTEzMzc5OH0.aAeqyLr8PY2MlGIP09cLSvJSive3YSTTkFW4zuh0Zk4';fetch('https://hezntpvvsukdlehpbqzs.supabase.co/rest/v1/rpc/noter_arrivee',{method:'POST',keepalive:true,headers:{'apikey':K2,'Authorization':'Bearer '+K2,'Content-Type':'application/json'},body:JSON.stringify({p_source:s})}).catch(function(){})})()}catch(e){}
+
+// Avis des écoles : seulement ceux validés par Scolaris et autorisés par l'école.
+(function(){var sec=document.getElementById('avis');if(!sec)return;var t=sec.querySelector('.tr2');if(!t)return;
+ function dr(c){c=(c||'GN').toUpperCase();return c.length===2?String.fromCodePoint(127397+c.charCodeAt(0),127397+c.charCodeAt(1)):'';}
+ function carte(a){var d=document.createElement('div');d.className='rk ae';var tp=document.createElement('span');tp.className='tp';tp.textContent='★★★★★'.slice(0,a.note)+'☆☆☆☆☆'.slice(0,5-a.note);
+  var p=document.createElement('p');p.textContent='« '+a.texte+' »';var w=document.createElement('div');w.className='who';var ic=document.createElement('span');ic.className='ic';ic.textContent='🏫';
+  var x=document.createElement('div');var b=document.createElement('b');b.textContent=a.nom;var sm=document.createElement('small');sm.textContent=a.fonction+' · '+a.ecole+(a.ville?', '+a.ville:'')+' '+dr(a.pays);
+  x.appendChild(b);x.appendChild(sm);w.appendChild(ic);w.appendChild(x);d.appendChild(tp);d.appendChild(p);d.appendChild(w);return d;}
+ var KA='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlem50cHZ2c3VrZGxlaHBicXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTc3OTgsImV4cCI6MjEwOTEzMzc5OH0.aAeqyLr8PY2MlGIP09cLSvJSive3YSTTkFW4zuh0Zk4';try{fetch('https://hezntpvvsukdlehpbqzs.supabase.co/rest/v1/rpc/avis_publics',{method:'POST',headers:{'apikey':KA,'Authorization':'Bearer '+KA,'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.ok?r.json():[]}).then(function(l){
+  if(!l||!l.length)return;var fd=t.querySelectorAll('.rk.fd');fd.forEach(function(f){l.forEach(function(a){t.insertBefore(carte(a),f);});});
+  var sb=sec.querySelector('.sb');if(sb)sb.textContent='Ce que disent les écoles qui utilisent Scolaris.';
+  var m=l.reduce(function(s,a){return s+a.note},0)/l.length;var r=document.createElement('div');r.style.textAlign='center';r.innerHTML='<span class="av-res"><i>★★★★★</i><b>'+m.toFixed(1).replace('.',',')+'/5</b> · '+l.length+(l.length>1?' avis d\'écoles':' avis d\'école')+'</span>';
+  if(sb)sb.parentNode.insertBefore(r,sb.nextSibling);}).catch(function(){});}catch(e){}})();

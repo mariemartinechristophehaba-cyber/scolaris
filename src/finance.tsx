@@ -7,6 +7,7 @@ import { db, envoyerAttente, horsLigne, lireAttente, mettreEnAttente, retirerAtt
 import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { fichesAVerifier, prevision, auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel, dv } from './lib';
 import { EtatPaiement } from './gestion';
+import { DemandeAvis } from './avis';
 import { ADecider, BlocCompta, Bonjour, TableauCaissier, TableauSecretaire } from './espaces';
 import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
@@ -112,6 +113,7 @@ function TableauFinance() {
           {fond ? <div className="kpi"><div><Tuile i={PiShoppingCartDuotone} ton="orange" t={34} /><span>Dépenses du mois</span></div><Gnf n={depMois} /></div>
             : <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Argent en caisse</span></div><Gnf n={d.t.tresorerie} /></div>}
         </div>
+        <DemandeAvis />
         {fond ? <ADecider retard={retard} echu={echu} sit={d.sit} cls={d.cls} /> : <BlocCompta />}
         {can('directeur', 'comptable') && !classe && !per && <Conseils sit={d.sit} pay={d.pay} resp={d.resp} nais={d.nais} cls={d.cls} encaisse={encaisse} frais={frais} />}
         <div className="rang">

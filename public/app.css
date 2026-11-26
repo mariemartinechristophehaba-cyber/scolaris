@@ -1017,3 +1017,29 @@ main.vp{display:block;min-height:100vh;padding:0 0 110px;background:linear-gradi
 }
 
 .t-reste dd.rouge{color:var(--rouge,#D92D20)}.t-reste dd.vert{color:var(--vert,#12A863)}.t-reste dt,.t-reste dd{font-weight:700}
+/* Avis des écoles */
+.etoiles{display:inline-flex;gap:2px;font-size:18px;color:#D7DEEA}.etoiles .on{color:#F5B301}
+.avis-dem{display:flex;align-items:center;gap:18px;background:linear-gradient(120deg,#FFF8E6 0%,#FFFFFF 55%);border-color:#F7E2A8;margin-bottom:18px}
+.avis-dem .avis-ic{flex:none;display:grid;place-items:center;width:72px;height:72px;border-radius:22px;background:linear-gradient(145deg,#FFD25C,#F59E0B);color:#fff;font-size:38px;box-shadow:0 14px 26px -14px rgba(196,120,0,.8),inset 0 1px 0 rgba(255,255,255,.45)}
+.avis-dem h2{font:700 18px var(--pop);margin:0 0 4px;color:var(--encre)}.avis-dem p{margin:0;font-size:14px;color:var(--gris);line-height:1.5}
+.avis-dem .avis-tx{flex:1;min-width:0}.avis-dem .avis-ac{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.avis-dem .avis-ac .btn.plein{min-height:46px;padding:0 22px}.avis-dem .avis-ac .btn.lien{justify-content:center;min-height:36px;width:100%}
+.avis-dem.merci{background:linear-gradient(120deg,#E9F9F0,#fff 60%);border-color:#BFEBD3}.avis-dem.merci .avis-ic{background:linear-gradient(145deg,#34D399,#0FA968);color:#fff;box-shadow:0 14px 26px -14px rgba(6,122,75,.8)}.avis-dem.merci>.btn{width:auto;flex:none}
+.avis-f{display:grid;gap:14px}
+.avis-note{display:flex;justify-content:center;gap:6px;margin-top:4px}
+.avis-note button{background:none;border:0;padding:4px;font-size:42px;line-height:1;color:#D7DEEA;cursor:pointer;transition:transform .15s}
+.avis-note button.on{color:#F5B301}.avis-note button:active{transform:scale(.9)}
+.avis-lib{text-align:center;margin:-6px 0 0;font:600 15px var(--pop);color:var(--orange)}
+.avis-f textarea{width:100%;min-height:120px;padding:12px 14px;border:1.5px solid var(--bord);border-radius:14px;background:#fff;font:inherit;font-size:15px;line-height:1.55;color:var(--encre);outline:0;resize:vertical}.avis-f textarea:focus{border-color:var(--bleu);box-shadow:0 0 0 4px rgba(21,87,240,.12)}.avis-f textarea::placeholder{color:#9AA5BC}
+.avis-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.avis-ok{display:flex;gap:11px;align-items:flex-start;padding:13px 14px;border-radius:14px;background:var(--ciel);font-size:13.5px;line-height:1.45;color:var(--encre);cursor:pointer}
+.avis-ok input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:var(--bleu)}
+.avis-adm{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.avis-c .avis-q{font-size:15px;line-height:1.6;color:var(--encre);margin:6px 0 12px}
+.avis-qui b{display:block;font:700 14.5px var(--pop);color:var(--encre)}.avis-qui small{color:var(--gris);font-size:12.5px}
+.avis-priv{display:flex;align-items:center;gap:6px;margin-top:8px}
+.avis-act{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}
+.avis-ok-s{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--vert)}
+.puce.p-gris{background:#EEF1F6;color:#6B7690}
+.avis-res h2{display:flex;align-items:center;gap:8px}.c-or{color:#F5B301}
+@media(max-width:860px){.avis-dem.merci>.btn{margin-left:auto;min-height:40px}.avis-dem{flex-wrap:wrap;gap:14px;padding:16px}.avis-dem .avis-ic{width:56px;height:56px;border-radius:17px;font-size:30px}.avis-dem h2{font-size:17px}.avis-dem .avis-tx{flex:1 1 calc(100% - 74px)}.avis-dem .avis-ac{flex-direction:row;align-items:center;width:100%;gap:6px}.avis-dem .avis-ac .btn.lien{width:auto;flex:none;padding:0 12px}.avis-dem .avis-ac .btn.plein{flex:1}.avis-2{grid-template-columns:1fr}.avis-note button{font-size:46px}}

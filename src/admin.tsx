@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiChatCircleDots, PiChatCircleDotsFill, PiShoppingCartFill, PiInfoFill, PiDatabaseDuotone, PiLightningDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
+import { PiStar, PiStarFill, PiBuildings, PiBuildingsFill, PiGearSix, PiGearSixFill, PiMoneyWavy, PiMoneyWavyFill, PiSquaresFour, PiSquaresFourFill, PiArrowDownBold, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCheckBold, PiCheckCircleFill, PiCircleHalfFill, PiClockCountdownFill, PiCoinsDuotone, PiGaugeDuotone, PiHourglassMediumDuotone, PiMagnifyingGlassBold, PiProhibitFill, PiReceiptDuotone, PiShieldStarDuotone, PiSignOutDuotone, PiSparkleDuotone, PiStudentDuotone, PiTrendUpBold, PiUsersThreeDuotone, PiWhatsappLogoFill, PiXCircleFill, PiPhoneCallFill, PiChatCircleDots, PiChatCircleDotsFill, PiShoppingCartFill, PiInfoFill, PiDatabaseDuotone, PiLightningDuotone, PiDownloadSimpleBold } from 'react-icons/pi';
 import { auth, db, getSession } from './api';
 import { Barres, Jauge, Segments } from './charts';
 import { PAYS, auj, convertir, dateFr, erreurTel, nb, paysDe, telAff } from './lib';
@@ -14,8 +14,9 @@ const Gnf = ({ n }: { n: any }) => <span className="gnf"><b>{nb(enGnf(n))}</b><s
 import { Drapeau } from './drapeau';
 import { Avatar, Bandeau, Chargement, Champ, Ctx, Erreur, Etat, Lien, Logo, Modale, Montant, Mot, Pastille, Titre, Tuile, Vague, Vide, useApp, useEnvoi, useQ } from './ui';
 import { LIB_M, LIB_P, LIB_T, SIT, ST_P, waUrl } from './abonnement';
+import { AdminAvis, ResumeAvis } from './avis';
 
-const ITEMS: [string, string, any, string, any][] = [['/admin', "Vue d'ensemble", PiSquaresFour, 'Accueil', PiSquaresFourFill], ['/admin/ecoles', 'Écoles', PiBuildings, 'Écoles', PiBuildingsFill], ['/admin/paiements', 'Paiements', PiMoneyWavy, 'Paiements', PiMoneyWavyFill], ['/admin/sms', 'SMS', PiChatCircleDots, 'SMS', PiChatCircleDotsFill], ['/admin/reglages', 'Réglages', PiGearSix, 'Réglages', PiGearSixFill]];
+const ITEMS: [string, string, any, string, any][] = [['/admin', "Vue d'ensemble", PiSquaresFour, 'Accueil', PiSquaresFourFill], ['/admin/ecoles', 'Écoles', PiBuildings, 'Écoles', PiBuildingsFill], ['/admin/paiements', 'Paiements', PiMoneyWavy, 'Paiements', PiMoneyWavyFill], ['/admin/sms', 'SMS', PiChatCircleDots, 'SMS', PiChatCircleDotsFill], ['/admin/avis', 'Avis des écoles', PiStar, 'Avis', PiStarFill], ['/admin/reglages', 'Réglages', PiGearSix, 'Réglages', PiGearSixFill]];
 const MOIS_C = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const NOM_ROLE: any = { fondateur: 'Fondateur', directeur: 'Directeur', comptable: 'Comptable', caissier: 'Caissier', secretaire: 'Secrétaire', enseignant: 'Enseignant' };
 const taille = (o: number) => (o < 1048576 ? `${Math.round(o / 1024)} Ko` : o < 1073741824 ? `${(o / 1048576).toFixed(0)} Mo` : `${(o / 1073741824).toFixed(1).replace('.', ',')} Go`);
@@ -132,6 +133,7 @@ function Vue() {
         <div className="kpi"><div><Tuile i={PiStudentDuotone} ton="bleu" t={34} /><span>Élèves gérés</span></div><Nb n={d.eleves_total} /></div>
       </div>
       <AFaire d={d} s={s} />
+      <ResumeAvis />
       <section className="carte"><div className="tete-carte"><h2>À renouveler{d.a_renouveler.length ? ` (${nb(d.a_renouveler.length)})` : ''}</h2><Lien to="/admin/ecoles?f=retard" className="voir">Toutes les écoles</Lien></div>
         {d.a_renouveler.length === 0 ? <p className="note">Aucun abonnement ne se termine dans les 14 prochains jours.</p> : <ul className="lignes-e">{d.a_renouveler.map((x: any) => <li key={x.id}><div className="ligne-e"><Avatar nom={String(x.nom).replace(/^(école|ecole|groupe scolaire|complexe scolaire|complexe)\s+/i, '')} /><div><Lien to={`/admin/ecoles/${x.id}`}><b>{x.pays && <span className="drp" title={paysDe(x.pays).nom}><Drapeau c={x.pays} l={20} /></span>}{x.nom}</b></Lien><small>{['grace', 'expire'].includes(x.situation) ? 'Terminé le' : 'Se termine le'} {dateFr(x.fin)}{x.prix_mois ? ` · ${gnf(x.prix_mois)} par mois` : ''}</small></div><span className="bureau-seul"><Sit x={x} /></span>{x.tel && <a className="btn wa mini" href={relancer(x)} target="_blank" rel="noreferrer" aria-label={`Relancer ${x.nom} sur WhatsApp`}><PiWhatsappLogoFill aria-hidden="true" /><span className="bureau-seul">Relancer</span></a>}</div></li>)}</ul>}
       </section>
@@ -388,7 +390,7 @@ export function EspaceAdmin() {
   if (droit.data == null || (estAdmin && taux.data == null && !taux.erreur)) return <main className="pub"><Chargement /></main>;
   if (!estAdmin) return <main className="pub"><section className="carte-pub"><Logo /><h1>Accès réservé</h1><p className="intro">Cette page n'est pas accessible avec ce compte.</p><button className="btn plein" onClick={auth.deconnexion}>Se déconnecter</button></section></main>;
   const seg = chemin.split('/').filter(Boolean);
-  const page = seg[1] === 'ecoles' && seg[2] ? <Fiche id={seg[2]} key={seg[2]} /> : seg[1] === 'ecoles' ? <Ecoles /> : seg[1] === 'paiements' ? <Paiements /> : seg[1] === 'reglages' ? <Reglages /> : seg[1] === 'sms' ? <Sms /> : <Vue />;
+  const page = seg[1] === 'ecoles' && seg[2] ? <Fiche id={seg[2]} key={seg[2]} /> : seg[1] === 'ecoles' ? <Ecoles /> : seg[1] === 'paiements' ? <Paiements /> : seg[1] === 'reglages' ? <Reglages /> : seg[1] === 'sms' ? <Sms /> : seg[1] === 'avis' ? <AdminAvis /> : <Vue />;
   const on = (to: string) => (to === '/admin' ? chemin === '/admin' || chemin === '/admin/' : chemin.startsWith(to));
   const att = Number((tableau.data as any)?.a_verifier?.nombre || 0);
   const md = getSession()?.user?.user_metadata || {}; const nom = `${md.prenom || ''} ${md.nom || ''}`.trim() || getSession()?.user?.email || 'Administrateur';
@@ -407,7 +409,7 @@ export function EspaceAdmin() {
           <div className="zone-bandeau" ref={setZB} />
           <main className="feuille">{page}</main>
         </div>
-        <nav className="barre-bas" aria-label="Navigation principale">{ITEMS.map(([to, , I, c, J]) => { const K = on(to) ? J : I; return <Lien key={to} to={to} className={on(to) ? 'on' : ''}><K aria-hidden="true" /><span>{c}</span></Lien>; })}</nav>
+        <nav className="barre-bas" aria-label="Navigation principale">{ITEMS.filter((x) => x[0] !== '/admin/avis').map(([to, , I, c, J]) => { const K = on(to) ? J : I; return <Lien key={to} to={to} className={on(to) ? 'on' : ''}><K aria-hidden="true" /><span>{c}</span></Lien>; })}</nav>
       </div>
     </Ctx.Provider>
   );

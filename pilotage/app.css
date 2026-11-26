@@ -359,3 +359,10 @@ html,body{background:radial-gradient(900px 600px at 0% 0%,#E6E3FF 0%,transparent
  .page{padding-top:10px}
 }
 @media (max-width:1023px){.entete h1{font-size:25px;white-space:normal;overflow:visible}.entete p{font-size:12px}}
+@media (max-width:1023px){.g11,.g111,.g21{display:flex;flex-direction:column;gap:14px}.page{gap:14px}}
+/* Courbe en direct qui défile dans la grande carte (comme le moniteur de la vidéo) */
+.heroD{position:relative;overflow:hidden}
+.heroD:after{content:'';position:absolute;left:0;right:0;bottom:0;height:46px;opacity:.55;pointer-events:none;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='46' viewBox='0 0 240 46'%3E%3Cpath d='M0 30h40l8-4 6 4h20l6-22 8 36 6-14h26l8-6 6 6h40l6-18 8 28 6-10h40' fill='none' stroke='%2334E4A0' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") repeat-x 0 0/240px 46px;animation:pouls 3.2s linear infinite}
+@keyframes pouls{to{background-position:-240px 0}}
+.heroD{padding-bottom:52px!important}.heroD:after{height:34px;bottom:8px;background-size:200px 34px}

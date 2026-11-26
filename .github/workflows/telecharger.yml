@@ -1,0 +1,16 @@
+name: telecharger-clips
+on:
+  push:
+    branches: [medias-tiktok]
+    paths: ['clips.txt']
+permissions:
+  contents: write
+jobs:
+  dl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          while read nom url; do [ -n "$nom" ] && curl -sL -o "$nom" "$url"; done < clips.txt
+          git config user.name "Scolaris"; git config user.email "scolarisguinee@gmail.com"
+          git add *.mp4 && git commit -m "Clips 3D téléchargés" && git push

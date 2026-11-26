@@ -2,7 +2,7 @@
 /* Pilotage — tableau de bord admin FixPro + Scolaris (lecture seule) */
 const SB = 'https://hezntpvvsukdlehpbqzs.supabase.co';
 const CLE = 'sb_publishable_Ej0MV2OXgjNRTF0aLpWmYg_t-Xxd0dd';
-const LIEN = { fixpro: 'https://fixproguinee.com', scolaris: 'https://scolaris-murex.vercel.app/admin' };
+const LIEN = { fixpro: 'https://app.fixproguinee.com', scolaris: 'https://scolarisafrique.com/admin' };
 const $app = document.getElementById('app');
 const S = { session: null, data: null, page: 'accueil', per: 'tout', quoi: 'tous', err: '', charge: false, oeil: false, vu: null };
 
@@ -509,8 +509,8 @@ function pageReglages(X) {
     <div class="rp-st"><div><b class="num">2</b><span>applications</span></div><div><b class="num">${F(X.ecoles.length)}</b><span>école${X.ecoles.length > 1 ? 's' : ''}</span></div><div><b class="num">${F(X.comptesFx)}</b><span>comptes</span></div><div><b class="num">${F(X.actifsSc + X.actifsFx)}</b><span>abonnés</span></div></div></section>
 
   <h2 class="rp-h">Applications</h2>
-  <div class="rp-apps">${app('scolaris', 'Scolaris', 'scolaris-murex.vercel.app', ['Écoles', F(X.ecoles.length)], ['Payantes', F(X.actifsSc)], LIEN.scolaris)}
-    ${app('fixpro', 'FixPro Guinée', 'fixproguinee.com', ['Comptes', F(X.comptesFx)], ['Abonnés', F(X.actifsFx)], LIEN.fixpro)}</div>
+  <div class="rp-apps">${app('scolaris', 'Scolaris', 'scolarisafrique.com', ['Écoles', F(X.ecoles.length)], ['Payantes', F(X.actifsSc)], LIEN.scolaris)}
+    ${app('fixpro', 'FixPro Guinée', 'app.fixproguinee.com', ['Comptes', F(X.comptesFx)], ['Abonnés', F(X.actifsFx)], LIEN.fixpro)}</div>
 
   <div class="g11"><div class="col">
   <h2 class="rp-h">Coûts et tarifs <a href="#argent" data-act="frais" class="rp-mod">Modifier</a></h2>
@@ -630,7 +630,7 @@ function blocSanteBandeau(X, compact) {
 function blocSanteApp(k, nom, a) {
   const [c, lib, cl] = ETAT[a.statut] || ETAT.ok;
   const mes = (a.jours || []).filter(j => j !== null && j !== undefined); const dispo = mes.length ? Math.round(mes.reduce((s, j) => s + j, 0) / mes.length * 1000) / 10 : null;
-  return `<div class="card sapp"><div class="sa-h">${B(k, 40)}<div><b>${nom}</b><small>${k === 'fixpro' ? 'fixproguinee.com' : 'scolaris-murex.vercel.app'}</small></div><span class="tag ${cl}"><i class="dot puls" style="background:${c}"></i>${a.statut === 'ok' ? 'En ligne' : lib}</span></div>
+  return `<div class="card sapp"><div class="sa-h">${B(k, 40)}<div><b>${nom}</b><small>${k === 'fixpro' ? 'app.fixproguinee.com' : 'scolarisafrique.com'}</small></div><span class="tag ${cl}"><i class="dot puls" style="background:${c}"></i>${a.statut === 'ok' ? 'En ligne' : lib}</span></div>
   <div class="sa-st"><div><span>Réponse</span><b class="num">${a.ms ? a.ms + ' ms' : '—'}</b></div><div><span>Disponibilité${mes.length && mes.length < 30 ? ` · ${mes.length} j` : ' 30 j'}</span><b class="num">${dispo === null ? '—' : String(dispo).replace('.', ',') + ' %'}</b></div><div><span>Erreurs 24 h</span><b class="num ${a.erreurs ? 'dn' : ''}">${a.erreurs === undefined ? '—' : F(a.erreurs)}</b></div></div>
   ${blocPouls(k, a)}${a.bd ? blocBD(a.bd) : ''}
   ${barresDispo(a.jours)}
@@ -679,7 +679,7 @@ function pageSante(X) {
 }
 async function pinger() {
   const t = async u => { const d = performance.now(); try { await fetch(u, { mode: 'no-cors', cache: 'no-store' }); return { ok: true, ms: Math.max(1, Math.round(performance.now() - d)) }; } catch (e) { return { ok: false }; } };
-  const [fx, sc] = await Promise.all([t(LIEN.fixpro + '/?ping=' + Date.now()), t('https://scolaris-murex.vercel.app/?ping=' + Date.now())]);
+  const [fx, sc] = await Promise.all([t(LIEN.fixpro + '/?ping=' + Date.now()), t('https://scolarisafrique.com/?ping=' + Date.now())]);
   S.ping = { fixpro: fx, scolaris: sc }; S.pingT = new Date().toISOString();
   S.pouls = S.pouls || { fixpro: [], scolaris: [] };
   [['fixpro', fx], ['scolaris', sc]].forEach(([k, p]) => { S.pouls[k].push(p.ok ? p.ms : null); if (S.pouls[k].length > 24) S.pouls[k].shift(); });

@@ -93,7 +93,7 @@ function EnvoiSerie({ s, setS, lien, etab, envoyer }: any) {
 export function Relances() {
   const { annee, eid, etab, majNotif, can, abo } = useApp(); const e = useEnvoi(); const [serie, setSerie] = useState<any>(null); const [groupe, setGroupe] = useState<any>(null); const [clc, setClc] = useState(''); const [f, setF] = useState('retards'); const [txt, setT] = useState(''); const [cl, setCl] = useState(''); const [pro, setPro] = useState<any>(null); const [n, setN] = useState(30);
   const q = useQ(async () => {
-    const [ret, att, ins, lien, rap, pr, reg, cls] = await Promise.all([
+    const [ret, att, ins, lien, rap, pr, reg, cls, ech, tfs] = await Promise.all([
       db.tout(`v_situation_eleves?annee_scolaire_id=eq.${annee.id}&en_retard=is.true&order=impaye_echu.desc,inscription_id`),
       db.get(`v_paiements_detail?annee_scolaire_id=eq.${annee.id}&statut=eq.en_attente&order=date_paiement.desc&limit=30`),
       db.get(`inscriptions?annee_scolaire_id=eq.${annee.id}&select=id,cree_le,classes(nom),eleves(prenom,nom)&order=cree_le.desc&limit=10`),
@@ -102,11 +102,18 @@ export function Relances() {
       db.tout(`promesses?etablissement_id=eq.${eid}&select=eleve_id,date_promise&order=date_promise.desc,id`),
       db.get(`parametres_relance?etablissement_id=eq.${eid}&select=*`),
       db.get(`classes?annee_scolaire_id=eq.${annee.id}&select=nom,niveaux(nom)`),
+      db.tout(`v_echeances_soldes?annee_scolaire_id=eq.${annee.id}&etat=eq.echue&select=inscription_id,libelle,type_frais_id&order=inscription_id,date_limite`),
+      db.get(`types_frais?etablissement_id=eq.${eid}&select=id,libelle`),
     ]);
+    // nature des sommes en retard (Inscription, Tranche 1…) pour chaque élève
+    const nomTf = new Map((tfs as any[]).map((t) => [t.id, t.libelle]));
+    const quoi = new Map<string, string>();
+    for (const x of ech as any[]) { const lib = nomTf.get(x.type_frais_id) || x.libelle; const v = quoi.get(x.inscription_id); if (!v) quoi.set(x.inscription_id, lib); else if (!v.split(', ').includes(lib)) quoi.set(x.inscription_id, `${v}, ${lib}`); }
+    for (const r of ret as any[]) r.quoi = quoi.get(r.inscription_id) || '';
     return { ret, att, ins, lien: premier(lien), rap: premier(rap), pro: premier(pr), reg: reg[0] || null, cls };
   }, [annee.id]);
   const relancer = (r: any, resp: any) => {
-    const msg = `Bonjour ${resp.nom}, ${etab.nom} vous rappelle que ${r.prenom} ${r.nom} (${r.classe}) a un retard de paiement de ${gnf(r.impaye_echu)}. Détail : ${location.origin}/f/${resp.jeton_public}`;
+    const msg = `Bonjour ${resp.nom}, ${etab.nom} vous rappelle que ${r.prenom} ${r.nom} (${r.classe}) a un retard de paiement de ${gnf(r.impaye_echu)}${r.quoi ? ` (${r.quoi})` : ''}. Détail : ${location.origin}/f/${resp.jeton_public}`;
     window.open(`https://wa.me/224${resp.telephone}?text=${encodeURIComponent(msg)}`, '_blank');
     e.envoyer(async () => {
       await db.ins('rappels', { etablissement_id: eid, eleve_id: r.eleve_id, responsable_id: resp.id, telephone: resp.telephone, montant: r.impaye_echu, canal: 'whatsapp', message: msg, statut: 'envoye', envoye_par: getSession()?.user?.id, envoye_le: new Date().toISOString() });
@@ -147,7 +154,7 @@ export function Relances() {
             <section className="carte c-etat par-cl"><div className="tete-carte"><h2>Relancer par classe</h2>{lc.length > 0 && <span className="puce p-rouge">{nb(lc.length)} en retard</span>}</div>
               {groupes.length === 0 ? <p className="note">Aucun élève en retard. Bravo !</p> : <>
                 <div className="niv-cl">{groupes.map(([niv, l]) => <div key={niv}><small>{niv}</small><div className="chips-cl">{(l as any[]).map((c) => <button key={c.nom} type="button" className={c.nom === choisie ? 'on' : ''} onClick={() => setClc(c.nom)}>{c.nom}<em>{parCl.get(c.nom)!.length}</em></button>)}</div></div>)}</div>
-                <ul className="lignes-e">{lc.slice(0, 3).map((r: any) => <li key={r.inscription_id}><div className="ligne-e"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>{fait(r) ? 'Relancé aujourd’hui' : dernier(r) ? `Relancé le ${dateFr(dernier(r).cree_le)}` : 'Jamais relancé'}</small></div><b className="le-m rg">{nb(r.impaye_echu)}</b></div></li>)}</ul>
+                <ul className="lignes-e">{lc.slice(0, 3).map((r: any) => <li key={r.inscription_id}><div className="ligne-e"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>{r.quoi ? `${r.quoi} · ` : ''}{fait(r) ? 'Relancé aujourd’hui' : dernier(r) ? `Relancé le ${dateFr(dernier(r).cree_le)}` : 'Jamais relancé'}</small></div><b className="le-m rg">{nb(r.impaye_echu)}</b></div></li>)}</ul>
                 {lc.length > 3 && <p className="note centre">+ {nb(lc.length - 3)} autre{lc.length - 3 > 1 ? 's' : ''} parent{lc.length - 3 > 1 ? 's' : ''}</p>}
                 <button type="button" className="btn plein" disabled={!lc.length} onClick={() => setGroupe({ cl: choisie, l: lc })}><PiPaperPlaneTiltFill />Envoyer à toute la classe ({nb(lc.length)})</button>
                 <button type="button" className="btn contour" disabled={!aRelancer.length} onClick={() => setSerie({ cl: choisie, l: aRelancer, i: 0, faits: 0 })}><PiWhatsappLogoFill />Un par un sur WhatsApp</button>
@@ -162,8 +169,8 @@ export function Relances() {
           {f === 'retards' && <>
             <div className="barre-outils"><div className="recherche"><PiMagnifyingGlassBold aria-hidden="true" /><input value={txt} onChange={(x) => setT(x.target.value)} placeholder="Rechercher un élève" aria-label="Rechercher un élève" /></div><select value={cl} onChange={(x) => setCl(x.target.value)} aria-label="Classe"><option value="">Toutes les classes</option>{classes.map((c) => <option key={c}>{c}</option>)}</select></div>
             <section className="carte c-table">{l.length === 0 ? <Vide t={d.ret.length ? 'Aucun élève trouvé.' : 'Aucun élève en retard.'} /> : <>
-              <div className="table vue-bureau"><table><thead><tr><th>Élève</th><th className="dr">En retard</th><th>Suivi</th><th /></tr></thead><tbody>{l.slice(0, n).map((r: any) => <tr key={r.inscription_id}><td><Lien to={`/eleves/${r.eleve_id}`} className="nom-el"><Avatar nom={`${r.nom} ${r.prenom}`} /><span><b>{r.nom} {r.prenom}</b><small className="bloc">{r.classe}</small></span></Lien></td><td className="dr fort rouge">{nb(r.impaye_echu)}</td><td>{suivi(r)}</td><td><div className="acts-l">{actions(r)}</div></td></tr>)}</tbody></table></div>
-              <ul className="vue-tel liste-p">{l.slice(0, n).map((r: any) => <li key={r.inscription_id}><div className="lp-h"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>{r.classe}</small></div><div className="fin"><span className="gnf rouge"><b>{nb(r.impaye_echu)}</b></span>{suivi(r)}</div></div><div className="acts-l">{actions(r)}</div></li>)}</ul>
+              <div className="table vue-bureau"><table><thead><tr><th>Élève</th><th className="dr">En retard</th><th>Suivi</th><th /></tr></thead><tbody>{l.slice(0, n).map((r: any) => <tr key={r.inscription_id}><td><Lien to={`/eleves/${r.eleve_id}`} className="nom-el"><Avatar nom={`${r.nom} ${r.prenom}`} /><span><b>{r.nom} {r.prenom}</b><small className="bloc">{r.classe}</small></span></Lien></td><td className="dr fort rouge">{nb(r.impaye_echu)}{r.quoi && <small className="bloc gris-f">{r.quoi}</small>}</td><td>{suivi(r)}</td><td><div className="acts-l">{actions(r)}</div></td></tr>)}</tbody></table></div>
+              <ul className="vue-tel liste-p">{l.slice(0, n).map((r: any) => <li key={r.inscription_id}><div className="lp-h"><Avatar nom={`${r.nom} ${r.prenom}`} /><div><b>{r.nom} {r.prenom}</b><small>{r.classe}</small></div><div className="fin"><span className="gnf rouge"><b>{nb(r.impaye_echu)}</b></span>{r.quoi && <small className="gris-f">{r.quoi}</small>}{suivi(r)}</div></div><div className="acts-l">{actions(r)}</div></li>)}</ul>
               {l.length > n && <div className="plus-l"><button className="btn contour mini" onClick={() => setN(n + 30)}>Voir la suite ({nb(l.length - n)})</button></div>}
             </>}</section>
           </>}

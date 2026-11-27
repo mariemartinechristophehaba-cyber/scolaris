@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:#F1F0EC;color:#111}
+.rang{display:flex;gap:56px;padding:56px 60px 40px}
+.bloc{display:flex;flex-direction:column;align-items:center;gap:18px}
+.leg{font-weight:700;font-size:21px;text-align:center}.leg small{display:block;font-weight:500;font-size:15px;color:#777;margin-top:3px}
+.tel{width:390px;height:844px;border-radius:52px;background:#111;padding:11px;box-shadow:0 24px 50px -22px rgba(0,0,0,.35)}
+.e{width:100%;height:100%;border-radius:42px;overflow:hidden;position:relative;background:#fff}
+.ile{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:108px;height:30px;background:#000;border-radius:20px;z-index:9}
+.sb{height:46px;display:flex;justify-content:space-between;align-items:center;padding:0 30px;font-size:15px;font-weight:600}
+.p{padding:0 20px}
+.g{color:#888}
+.row{display:flex;align-items:center;justify-content:space-between}
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 20px 14px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:-.3px}
+.logo i{width:26px;height:26px;border-radius:8px;background:#F2541B;display:block;position:relative}
+.logo i:after{content:"";position:absolute;left:8px;top:8px;width:10px;height:10px;border-radius:50%;background:#fff}
+.ville{font-size:13px;font-weight:600;background:#F4F4F2;padding:8px 12px;border-radius:20px}
+.rech{margin:0 20px 14px;background:#F4F4F2;border-radius:14px;padding:13px 14px;font-size:14px;color:#999}
+.pills{display:flex;gap:8px;padding:0 20px 20px;white-space:nowrap;overflow:hidden}
+.pills span{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid #E6E5E1}
+.pills span.on{background:#111;color:#fff;border-color:#111}
+.h2{display:flex;justify-content:space-between;align-items:baseline;padding:0 20px 12px}
+.h2 b{font-size:18px;letter-spacing:-.3px}.h2 span{font-size:13px;color:#F2541B;font-weight:600}
+.scroll{display:flex;gap:12px;padding:0 20px 22px;overflow:hidden}
+.pc{flex:none;width:168px}
+.pc .po{height:210px;border-radius:16px;margin-bottom:10px}
+.pc b{font-size:14px;display:block;line-height:1.25}.pc span{font-size:12px;color:#888;display:block;margin:3px 0}
+.pc em{font-style:normal;font-size:13px;font-weight:700}
+.li{display:flex;gap:12px;align-items:center;padding:0 20px 14px}
+.li .po{width:64px;height:80px;border-radius:12px;flex:none}
+.li b{font-size:14px;display:block}.li span{font-size:12px;color:#888;display:block;margin:2px 0}.li em{font-style:normal;font-size:13px;font-weight:700}
+.nav{position:absolute;left:0;right:0;bottom:0;height:84px;border-top:1px solid #EEE;background:#fff;display:flex;justify-content:space-around;padding-top:12px;font-size:11px;font-weight:600;color:#AAA}
+.nav div{text-align:center}.nav b{display:block;font-size:20px;margin-bottom:2px;font-weight:400}.nav .on{color:#111}
+/* affiches */
+.po{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:12px;font-family:Inter;color:#111}
+.po .k{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.po .T{font-weight:900;line-height:.9;letter-spacing:-1px;position:relative;z-index:2}.po .k,.po .d{position:relative;z-index:2}
+.po .d{font-size:9px;font-weight:700}
+.a1{background:#FFD23F}.a1 .T{font-size:34px}
+.a1:after{content:"";position:absolute;right:-26%;top:-18%;width:62%;aspect-ratio:1;border-radius:50%;background:#111;z-index:1}
+.a2{background:#0E1B3D;color:#F3D28B}.a2 .T{font-size:30px;color:#fff}.a2 .T span{color:#F3D28B;font-size:17px;letter-spacing:0;display:block;margin:4px 0}
+.a2:before{content:"";position:absolute;inset:auto -20px -40px auto;width:140px;height:140px;border-radius:50%;border:18px solid rgba(243,210,139,.25)}
+.a3{background:#0F7A3D;color:#fff}.a3 .T{font-size:30px}
+.a3:after{content:"";position:absolute;left:-20px;bottom:-20px;width:100px;height:100px;border-radius:50%;border:10px solid #fff;opacity:.2}
+.a4{background:#E8432E;color:#FFF1E6}.a4 .T{font-size:26px}
+.a5{background:#F4EDE2}.a5 .T{font-size:22px;color:#8A3B12}
+.tiny .k,.tiny .d{display:none}.tiny .T{font-size:15px!important}
+/* detail */
+.hero{height:360px;padding:110px 22px 22px}.hero .T{font-size:64px}.hero .k{font-size:12px}.hero .d{font-size:13px}
+.back{position:absolute;top:56px;left:18px;width:38px;height:38px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:18px;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.shr{left:auto;right:18px}
+.tt{font-size:24px;font-weight:800;letter-spacing:-.5px;margin:18px 0 12px}
+.info{display:flex;gap:12px;align-items:center;margin-bottom:12px;font-size:14px}
+.info i{width:38px;height:38px;border-radius:12px;background:#F4F4F2;display:grid;place-items:center;font-style:normal;font-size:16px;flex:none}
+.info span{display:block;font-size:12px;color:#888}
+.sep{height:1px;background:#EEE;margin:14px 0}
+.tk{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #F0F0EE}
+.tk b{font-size:15px;display:block}.tk span{font-size:13px;color:#888}
+.q{display:flex;align-items:center;gap:12px;font-weight:700}
+.q i{width:32px;height:32px;border-radius:50%;border:1px solid #DDD;display:grid;place-items:center;font-style:normal;font-size:18px;color:#555}
+.q i.on{background:#111;color:#fff;border-color:#111}
+.bar{position:absolute;left:0;right:0;bottom:0;padding:14px 20px 30px;border-top:1px solid #EEE;background:#fff;display:flex;align-items:center;gap:14px}
+.bar div:first-child span{font-size:12px;color:#888;display:block}.bar div:first-child b{font-size:19px}
+.btn{flex:1;background:#F2541B;color:#fff;text-align:center;font-weight:700;font-size:16px;padding:16px;border-radius:14px}
+.btn.n{background:#111}
+/* paiement */
+.hd{display:flex;align-items:center;gap:12px;padding:8px 20px 16px}.hd i{width:38px;height:38px;border-radius:50%;background:#F4F4F2;display:grid;place-items:center;font-style:normal}.hd b{font-size:18px}
+.box{border:1px solid #EAEAE6;border-radius:16px;padding:14px;margin-bottom:14px}
+.lab{font-size:13px;font-weight:600;color:#888;margin:4px 0 10px}
+.mp{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #EAEAE6;border-radius:14px;margin-bottom:10px;font-weight:600;font-size:15px}
+.mp.on{border:2px solid #111}
+.lg{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:11px;color:#fff}
+.rad{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid #CCC}.mp.on .rad{border:6px solid #111}
+.inp{border:1px solid #EAEAE6;border-radius:14px;padding:14px;font-size:15px;font-weight:500}
+/* billet */
+.tick{margin:6px 20px 0;border:1px solid #EAEAE6;border-radius:22px;overflow:hidden}
+.tick .po{height:150px;border-radius:0}
+.ti{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}.ti span{font-size:12px;color:#888;display:block}.ti b{font-size:15px}
+.cut{border-top:2px dashed #E4E4E0;margin:0 16px;position:relative}
+.cut:before,.cut:after{content:"";position:absolute;top:-12px;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid #EAEAE6}
+.cut:before{left:-28px}.cut:after{right:-28px}
+.qr{padding:18px 0 20px;text-align:center}.qr canvas{width:160px;height:160px}.qr small{display:block;font-size:12px;color:#888;font-weight:600;margin-top:6px;letter-spacing:1px}
+/* cotis */
+.ct{display:flex;gap:12px;padding:0 20px 18px}
+.ct .im{width:84px;height:84px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:30px}
+.ct b{font-size:14px;display:block;line-height:1.3}.ct span{font-size:12px;color:#888}
+.jg{height:6px;background:#F0F0EC;border-radius:6px;margin:8px 0 5px;overflow:hidden}.jg i{display:block;height:100%;background:#16A34A;border-radius:6px}
+.ct em{font-style:normal;font-size:13px;font-weight:700}
+/* creer */
+.cr{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid #F0F0EE}
+.cr i{width:48px;height:48px;border-radius:14px;background:#F4F4F2;display:grid;place-items:center;font-style:normal;font-size:22px;flex:none}
+.cr b{font-size:16px;display:block}.cr span{font-size:13px;color:#888}.cr em{margin-left:auto;font-style:normal;color:#BBB;font-size:20px}
+</style></head><body>
+<div class="rang" id="r1">
+<!-- 1 ACCUEIL -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div><div class="sb"><span>9:41</span><span>▮▮▮ ▬</span></div>
+ <div class="top"><div class="logo"><i></i>Sorties</div><div class="ville">📍 Conakry ▾</div></div>
+ <div class="rech">🔍  Rechercher un événement</div>
+ <div class="pills"><span class="on">Tout</span><span>Concerts</span><span>Soirées</span><span>Sport</span><span>Culture</span></div>
+ <div class="h2"><b>Populaires</b><span>Voir tout</span></div>
+ <div class="scroll">
+  <div class="pc"><div class="po a2"><div class="k">31 décembre · 21h</div><div class="T">NUIT<span>DU NOUVEL</span>AN</div><div class="d">PALAIS DU PEUPLE</div></div><b>Grand concert du Nouvel An</b><span>Mer. 31 déc · Kaloum</span><em>dès 100 000 GNF</em></div>
+  <div class="pc"><div class="po a1"><div class="k">Soirée · 20 déc</div><div class="T">AFRO<br>NIGHT</div><div class="d">HÔTEL RIVIERA</div></div><b>Afro Night Conakry</b><span>Sam. 20 déc · Kaloum</span><em>dès 50 000 GNF</em></div>
+ </div>
+ <div class="h2"><b>Cette semaine</b><span>Voir tout</span></div>
+ <div class="li"><div class="po a3 tiny"><div></div><div class="T">DER<br>BY</div><div></div></div><div><b>Derby de Conakry</b><span>Dim. 14 déc · Stade du 28 Septembre</span><em>dès 15 000 GNF</em></div></div>
+ <div class="li"><div class="po a4 tiny"><div></div><div class="T" style="font-size:13px!important">STAND<br>UP</div><div></div></div><div><b>Soirée stand-up</b><span>Ven. 12 déc · Centre culturel</span><em>dès 25 000 GNF</em></div></div>
+ <div class="nav"><div class="on"><b>⌂</b>Accueil</div><div><b>⌕</b>Explorer</div><div><b>🎟︎</b>Billets</div><div><b>♡</b>Cotisations</div><div><b>☺</b>Profil</div></div>
+</div></div><div class="leg">1. Accueil<small>simple, clair, comme une boutique</small></div></div>
+
+<!-- 2 DETAIL -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div>
+ <div class="back">←</div><div class="back shr">↗</div>
+ <div class="po a1 hero"><div class="k">Soirée · Samedi 20 décembre</div><div class="T">AFRO<br>NIGHT</div><div class="d">HÔTEL RIVIERA · KALOUM · 22H</div></div>
+ <div class="p">
+  <div class="tt">Afro Night Conakry</div>
+  <div class="info"><i>📅</i><div>Samedi 20 décembre<span>22h00 – 04h00</span></div></div>
+  <div class="info"><i>📍</i><div>Hôtel Riviera<span>Kaloum, Conakry</span></div></div>
+  <div class="sep" style="margin-bottom:0"></div>
+  <div class="tk"><div><b>Standard</b><span>50 000 GNF</span></div><div class="q"><i>−</i>1<i class="on">+</i></div></div>
+  <div class="tk"><div><b>VIP</b><span>150 000 GNF · boisson offerte</span></div><div class="q"><i>−</i>1<i class="on">+</i></div></div>
+ </div>
+ <div class="bar"><div><span>Total · 2 billets</span><b>200 000 GNF</b></div><div class="btn">Continuer</div></div>
+</div></div><div class="leg">2. Page de l'événement<small>infos essentielles, choix des billets</small></div></div>
+
+<!-- 3 PAIEMENT -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div><div class="sb"><span>9:41</span><span>▮▮▮ ▬</span></div>
+ <div class="hd"><i>←</i><b>Paiement</b></div>
+ <div class="p">
+  <div class="box"><div class="row"><div style="display:flex;gap:12px;align-items:center"><div class="po a1 tiny" style="width:46px;height:56px;border-radius:10px;padding:6px"><div></div><div class="T" style="font-size:11px!important">AFRO<br>NIGHT</div><div></div></div><div><b style="font-size:14px">Afro Night Conakry</b><div class="g" style="font-size:12px">Sam. 20 déc · 22h</div></div></div></div>
+   <div class="sep"></div>
+   <div class="row" style="font-size:14px;margin-bottom:6px"><span class="g">1 × Standard</span><span>50 000 GNF</span></div>
+   <div class="row" style="font-size:14px;margin-bottom:6px"><span class="g">1 × VIP</span><span>150 000 GNF</span></div>
+   <div class="row" style="font-size:14px"><span class="g">Frais</span><span style="color:#16A34A;font-weight:600">Gratuit</span></div>
+   <div class="sep"></div>
+   <div class="row"><b>Total</b><b style="font-size:18px">200 000 GNF</b></div></div>
+  <div class="lab">Payer avec</div>
+  <div class="mp on"><div class="lg" style="background:#FF7900">OM</div>Orange Money<div class="rad"></div></div>
+  <div class="mp"><div class="lg" style="background:#FFCB05;color:#111">MTN</div>MTN MoMo<div class="rad"></div></div>
+  <div class="mp"><div class="lg" style="background:#111">💵</div>Espèces au kiosque<div class="rad"></div></div>
+  <div class="lab">Numéro Orange Money</div>
+  <div class="inp">🇬🇳 +224  621 45 78 90</div>
+ </div>
+ <div class="bar"><div class="btn">Payer 200 000 GNF</div></div>
+</div></div><div class="leg">3. Paiement<small>récap clair, pas de frais cachés</small></div></div>
+</div>
+
+<div class="rang" id="r2">
+<!-- 4 BILLET -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div><div class="sb"><span>9:41</span><span>▮▮▮ ▬</span></div>
+ <div class="hd"><i>←</i><b>Mon billet</b><span style="margin-left:auto;font-size:12px;font-weight:700;color:#16A34A;background:#EAF7EF;padding:6px 10px;border-radius:20px">✓ Payé</span></div>
+ <div class="tick"><div class="po a1"><div class="k">Soirée · 20 déc</div><div class="T" style="font-size:40px">AFRO<br>NIGHT</div><div class="d">HÔTEL RIVIERA · KALOUM</div></div>
+  <div class="ti"><div><span>Nom</span><b>Mamadou Camara</b></div><div><span>Billet</span><b>VIP</b></div><div><span>Date</span><b>Sam. 20 déc</b></div><div><span>Heure</span><b>22h00</b></div></div>
+  <div class="cut"></div>
+  <div class="qr"><canvas id="q1" width="160" height="160"></canvas><small>N° AFN-4827</small></div></div>
+ <div class="p" style="margin-top:14px;display:flex;gap:10px"><div class="btn n" style="font-size:14px;padding:14px">Enregistrer</div><div class="btn" style="font-size:14px;padding:14px;background:#25D366">WhatsApp</div></div>
+</div></div><div class="leg">4. Le billet<small>QR code, à montrer à l'entrée</small></div></div>
+
+<!-- 5 COTISATIONS -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div><div class="sb"><span>9:41</span><span>▮▮▮ ▬</span></div>
+ <div class="top"><b style="font-size:24px;letter-spacing:-.5px">Cotisations</b><div class="ville">＋ Créer</div></div>
+ <div class="pills"><span class="on">Tout</span><span>Mariage</span><span>Baptême</span><span>Solidarité</span><span>Études</span></div>
+ <div class="ct"><div class="im" style="background:#FCE7EF">💍</div><div style="flex:1"><b>Mariage de Fanta & Ibrahima</b><div class="jg"><i style="width:74%"></i></div><div class="row"><em>18,4 M GNF</em><span>74 % · 6 jours</span></div></div></div>
+ <div class="ct"><div class="im" style="background:#E8F5EC">🎓</div><div style="flex:1"><b>Fournitures pour l'école de Kindia</b><div class="jg"><i style="width:62%"></i></div><div class="row"><em>6,2 M GNF</em><span>62 % · 12 jours</span></div></div></div>
+ <div class="ct"><div class="im" style="background:#FFF4DC">👶</div><div style="flex:1"><b>Baptême du petit Alpha</b><div class="jg"><i style="width:40%"></i></div><div class="row"><em>2 M GNF</em><span>40 % · 3 jours</span></div></div></div>
+ <div class="ct"><div class="im" style="background:#E9F0FF">🤲</div><div style="flex:1"><b>Aide pour la famille Bah</b><div class="jg"><i style="width:88%"></i></div><div class="row"><em>8,8 M GNF</em><span>88 % · 2 jours</span></div></div></div>
+ <div class="nav"><div><b>⌂</b>Accueil</div><div><b>⌕</b>Explorer</div><div><b>🎟︎</b>Billets</div><div class="on"><b>♡</b>Cotisations</div><div><b>☺</b>Profil</div></div>
+</div></div><div class="leg">5. Cotisations<small>mariage, baptême, solidarité</small></div></div>
+
+<!-- 6 CREER -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div><div class="sb"><span>9:41</span><span>▮▮▮ ▬</span></div>
+ <div class="hd"><i>✕</i><b>Créer</b></div>
+ <div class="p">
+  <div style="font-size:26px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin:6px 0 6px">Que veux-tu créer ?</div>
+  <div class="g" style="font-size:14px;margin-bottom:10px">C'est gratuit. Tu paies seulement quand tu vends.</div>
+  <div class="cr"><i>🎤</i><div><b>Un événement</b><span>Concert, soirée, conférence</span></div><em>›</em></div>
+  <div class="cr"><i>⚽</i><div><b>Un match ou un tournoi</b><span>Tribunes, équipes, pass saison</span></div><em>›</em></div>
+  <div class="cr"><i>🤝</i><div><b>Une cotisation</b><span>Mariage, baptême, solidarité</span></div><em>›</em></div>
+  <div class="cr" style="border:0"><i>🏪</i><div><b>Devenir point de vente</b><span>Vends des billets dans ton quartier</span></div><em>›</em></div>
+ </div>
+</div></div><div class="leg">6. Créer<small>4 choix, une phrase chacun</small></div></div>
+</div>
+<script>
+function qr(id){const c=document.getElementById(id),x=c.getContext('2d'),n=25,s=c.width/n;let r=11;const R=()=>{r=(r*9301+49297)%233280;return r/233280};
+x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.fillStyle='#111';
+for(let i=0;i<n;i++)for(let j=0;j<n;j++){const f=(i<8&&j<8)||(i<8&&j>n-9)||(i>n-9&&j<8);if(!f&&R()>.52)x.fillRect(i*s,j*s,s,s)}
+[[0,0],[n-7,0],[0,n-7]].forEach(([a,b])=>{x.fillRect(a*s,b*s,7*s,7*s);x.fillStyle='#fff';x.fillRect((a+1)*s,(b+1)*s,5*s,5*s);x.fillStyle='#111';x.fillRect((a+2)*s,(b+2)*s,3*s,3*s)})}
+qr('q1');
+</script></body></html>

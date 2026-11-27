@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,system-ui,sans-serif;background:#ECE9F7;color:#14122B}
+.rang{display:flex;gap:56px;padding:56px 60px 40px;align-items:flex-start}
+.bloc{display:flex;flex-direction:column;align-items:center;gap:18px}
+.leg{font-weight:700;font-size:22px;color:#14122B;text-align:center}
+.leg small{display:block;font-weight:500;font-size:15px;color:#6B6890;margin-top:2px}
+.tel{width:390px;height:844px;border-radius:52px;background:#0A0A14;padding:12px;box-shadow:0 30px 60px -20px rgba(40,20,90,.45)}
+.ecran{width:100%;height:100%;border-radius:42px;overflow:hidden;position:relative;background:#F7F6FC}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:600}
+.ile{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#000;border-radius:20px;z-index:5}
+.sombre{background:#0E0C24;color:#fff}
+.hd{display:flex;align-items:center;gap:12px;padding:6px 20px 14px}
+.hd .r{width:38px;height:38px;border-radius:12px;background:#fff;display:grid;place-items:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hd h1{font-size:19px;font-weight:700}
+.lbl{font-size:12px;font-weight:600;color:#6B6890;margin:0 0 6px}
+.champ{background:#fff;border:1.5px solid #E4E1F2;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.pad{padding:0 20px}
+.affiche{border-radius:20px;height:170px;position:relative;overflow:hidden;background:radial-gradient(circle at 20% 30%,#FF7A3D 0,transparent 45%),radial-gradient(circle at 80% 70%,#8B5CF6 0,transparent 50%),linear-gradient(135deg,#1B0F3D,#3B0F5C);display:flex;flex-direction:column;justify-content:flex-end;padding:16px;color:#fff}
+.affiche .t{font-size:24px;font-weight:800;line-height:1.05;letter-spacing:-.5px}
+.affiche .s{font-size:12px;opacity:.85;font-weight:500}
+.affiche .rond{position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;border:16px solid rgba(255,255,255,.08)}
+.affiche .rond2{position:absolute;right:40px;top:30px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.15)}
+.ajout{position:absolute;right:12px;top:12px;background:rgba(255,255,255,.2);backdrop-filter:blur(6px);border-radius:10px;padding:6px 10px;font-size:11px;font-weight:600}
+.billet-t{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #E4E1F2;border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.billet-t b{font-size:15px;display:block}
+.billet-t span{font-size:12px;color:#6B6890}
+.prix{font-weight:700;color:#FF5A1F;font-size:15px}
+.btn{background:linear-gradient(135deg,#FF6A2B,#FF3D6E);color:#fff;font-weight:700;font-size:16px;border-radius:16px;padding:16px;text-align:center;box-shadow:0 10px 24px -8px rgba(255,80,60,.6)}
+.btn2{background:#14122B;color:#fff;font-weight:600;font-size:14px;border-radius:14px;padding:12px;text-align:center}
+.bas{position:absolute;left:0;right:0;bottom:0;padding:16px 20px 30px;background:linear-gradient(transparent,#F7F6FC 30%)}
+.ligne{display:flex;justify-content:space-between;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 10px;border-radius:30px;background:#F0ECFF;color:#5B3FD6}
+.qte{display:flex;align-items:center;gap:10px;font-weight:700}
+.qte i{width:30px;height:30px;border-radius:10px;background:#F0ECFF;display:grid;place-items:center;font-style:normal;color:#5B3FD6;font-size:18px}
+.qte i.p{background:#FF5A1F;color:#fff}
+.pay{display:flex;gap:10px;margin:6px 0 14px}
+.pay div{flex:1;border:1.5px solid #E4E1F2;background:#fff;border-radius:14px;padding:12px 8px;text-align:center;font-size:12px;font-weight:600}
+.pay div.on{border-color:#FF7900;background:#FFF4EA}
+.om{display:inline-block;width:26px;height:26px;border-radius:7px;background:#FF7900;color:#fff;font-weight:800;font-size:11px;line-height:26px;margin-bottom:4px}
+.mtn{display:inline-block;width:26px;height:26px;border-radius:7px;background:#FFCC00;color:#14122B;font-weight:800;font-size:10px;line-height:26px;margin-bottom:4px}
+.wave{display:inline-block;width:26px;height:26px;border-radius:7px;background:#1DC8F2;color:#fff;font-weight:800;font-size:10px;line-height:26px;margin-bottom:4px}
+/* billet */
+.ticket{margin:4px 20px 0;background:#fff;border-radius:26px;overflow:hidden;box-shadow:0 20px 40px -20px rgba(40,20,90,.35)}
+.ticket .haut{padding:0}
+.ticket .affiche{border-radius:0;height:150px}
+.ticket .info{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ticket .info div span{font-size:11px;color:#6B6890;font-weight:500;display:block}
+.ticket .info div b{font-size:15px}
+.dec{position:relative;border-top:2px dashed #E4E1F2;margin:0 18px}
+.dec:before,.dec:after{content:"";position:absolute;top:-14px;width:26px;height:26px;border-radius:50%;background:#F7F6FC}
+.dec:before{left:-32px}.dec:after{right:-32px}
+.qr{display:flex;flex-direction:column;align-items:center;padding:18px 0 20px;gap:8px}
+.qr canvas{width:170px;height:170px}
+.qr small{font-size:12px;color:#6B6890;font-weight:600;letter-spacing:1px}
+/* scan */
+.cam{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#3A3550 0,#121022 70%)}
+.cadre{position:absolute;left:70px;top:190px;width:250px;height:250px}
+.cadre i{position:absolute;width:50px;height:50px;border:5px solid #22C55E}
+.cadre i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-radius:18px 0 0 0}
+.cadre i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-radius:0 18px 0 0}
+.cadre i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-radius:0 0 0 18px}
+.cadre i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-radius:0 0 18px 0}
+.cadre canvas{position:absolute;left:45px;top:45px;width:160px;height:160px;opacity:.9;border-radius:6px}
+.ok{position:absolute;left:16px;right:16px;bottom:30px;background:#fff;border-radius:26px;padding:20px;color:#14122B}
+.ok .v{display:flex;align-items:center;gap:14px}
+.ok .v .c{width:54px;height:54px;border-radius:50%;background:#22C55E;display:grid;place-items:center;color:#fff;font-size:30px;font-weight:800}
+.ok .v b{font-size:20px;display:block}
+.ok .v span{font-size:13px;color:#6B6890}
+.compteur{margin-top:16px;background:#F3F1FB;border-radius:16px;padding:12px 14px}
+.barre{height:10px;border-radius:10px;background:#E4E1F2;margin-top:8px;overflow:hidden}
+.barre i{display:block;height:100%;width:61%;background:linear-gradient(90deg,#22C55E,#16A34A);border-radius:10px}
+.topscan{position:absolute;top:58px;left:20px;right:20px;display:flex;justify-content:space-between;color:#fff;font-weight:600;font-size:14px}
+.refus{position:absolute;left:20px;right:20px;top:470px;background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.6);color:#FCA5A5;border-radius:14px;padding:10px 14px;font-size:12px;font-weight:600}
+/* dashboard */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(40,20,90,.05)}
+.kpi span{font-size:11px;color:#6B6890;font-weight:600}
+.kpi b{display:block;font-size:22px;font-weight:800;letter-spacing:-.5px;margin-top:2px}
+.kpi em{font-style:normal;font-size:11px;color:#16A34A;font-weight:700}
+.kpi.f{background:linear-gradient(135deg,#1B0F3D,#3B1A78);color:#fff}
+.kpi.f span{color:#C9BFFF}
+.graph{background:#fff;border-radius:18px;padding:14px;margin-bottom:12px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:90px;margin-top:10px}
+.bars i{flex:1;background:#E9E4FF;border-radius:8px 8px 4px 4px}
+.bars i.h{background:linear-gradient(180deg,#FF6A2B,#FF3D6E)}
+.jours{display:flex;gap:8px;margin-top:6px}.jours span{flex:1;text-align:center;font-size:10px;color:#6B6890;font-weight:600}
+.liste{background:#fff;border-radius:18px;padding:6px 14px}
+.it{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F0EEF8}
+.it:last-child{border:0}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.it .n{flex:1}.it .n b{font-size:14px;display:block}.it .n span{font-size:11px;color:#6B6890}
+.it .m{text-align:right;font-size:13px;font-weight:700}.it .m span{display:block;font-size:11px;color:#16A34A;font-weight:600}
+.lien{background:#fff;border:1.5px dashed #C9BFFF;border-radius:16px;padding:14px;margin-bottom:12px}
+.lien .u{font-size:13px;font-weight:600;color:#5B3FD6;margin:4px 0 10px}
+.share{display:flex;gap:8px}.share div{flex:1;border-radius:12px;padding:10px 0;text-align:center;font-size:12px;font-weight:700;color:#fff}
+.nav{position:absolute;left:16px;right:16px;bottom:22px;background:#14122B;border-radius:24px;height:64px;display:flex;justify-content:space-around;align-items:center;color:#8E89B8;font-size:10px;font-weight:600}
+.nav div{text-align:center}.nav div.on{color:#fff}.nav b{display:block;font-size:18px}
+</style></head><body>
+<div class="rang" id="r1">
+ <div class="bloc"><div class="tel"><div class="ecran"><div class="ile"></div>
+  <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+  <div class="hd"><div class="r">←</div><h1>Créer un événement</h1></div>
+  <div class="pad">
+   <div class="affiche"><div class="rond"></div><div class="rond2"></div><div class="ajout">📷 Changer l'affiche</div><div class="t">AFRO NIGHT<br>CONAKRY</div><div class="s">Soirée spéciale fin d'année</div></div>
+   <div style="height:14px"></div>
+   <div class="lbl">Date et heure</div><div class="champ">📅 Sam. 20 déc. · 22h00</div>
+   <div class="lbl">Lieu</div><div class="champ">📍 Hôtel Riviera, Kaloum</div>
+   <div class="lbl">Types de billets</div>
+   <div class="billet-t"><div><b>Standard</b><span>250 places</span></div><div class="prix">50 000 GNF</div></div>
+   <div class="billet-t"><div><b>VIP 👑</b><span>50 places · boisson offerte</span></div><div class="prix">150 000 GNF</div></div>
+   <div class="pill">＋ Ajouter un type de billet</div>
+  </div>
+  <div class="bas"><div class="btn">Publier et obtenir mon lien 🚀</div></div>
+ </div></div><div class="leg">1. Créer l'événement<small>organisateur · 1 minute</small></div></div>
+
+ <div class="bloc"><div class="tel"><div class="ecran"><div class="ile"></div>
+  <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+  <div class="pad" style="padding-top:4px">
+   <div class="affiche" style="height:200px"><div class="rond"></div><div class="rond2"></div><div class="t" style="font-size:30px">AFRO NIGHT<br>CONAKRY</div><div class="s">Sam. 20 déc. · 22h · Hôtel Riviera, Kaloum</div></div>
+   <div class="ligne" style="margin:14px 0 12px"><div class="pill">🔥 186 billets vendus</div><div class="pill" style="background:#FFF1E8;color:#E2560F">Plus que 64 places</div></div>
+   <div class="billet-t" style="border-color:#FF5A1F;background:#FFF8F3"><div><b>VIP 👑</b><span>150 000 GNF</span></div><div class="qte"><i>−</i>2<i class="p">+</i></div></div>
+   <div class="billet-t"><div><b>Standard</b><span>50 000 GNF</span></div><div class="qte"><i>−</i>0<i class="p">+</i></div></div>
+   <div class="lbl" style="margin-top:6px">Payer avec</div>
+   <div class="pay"><div class="on"><span class="om">OM</span><br>Orange Money</div><div><span class="mtn">MoMo</span><br>MTN</div><div><span class="wave">W</span><br>Wave</div></div>
+   <div class="champ">📱 +224 621 45 78 90</div>
+  </div>
+  <div class="bas"><div class="ligne" style="margin-bottom:10px;font-weight:600"><span style="color:#6B6890">Total · 2 billets</span><span style="font-size:20px;font-weight:800">300 000 GNF</span></div><div class="btn">Payer et recevoir mes billets</div></div>
+ </div></div><div class="leg">2. Acheter son billet<small>acheteur · depuis le lien TikTok / WhatsApp</small></div></div>
+
+ <div class="bloc"><div class="tel"><div class="ecran"><div class="ile"></div>
+  <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+  <div class="hd"><div class="r">←</div><h1>Mes billets</h1><div class="pill" style="margin-left:auto;background:#E9FBF0;color:#15803D">✓ Payé</div></div>
+  <div class="ticket">
+   <div class="affiche"><div class="rond"></div><div class="rond2"></div><div class="t">AFRO NIGHT CONAKRY</div><div class="s">Billet 1 sur 2</div></div>
+   <div class="info"><div><span>Nom</span><b>Mamadou Camara</b></div><div><span>Billet</span><b>VIP 👑</b></div><div><span>Date</span><b>Sam. 20 déc.</b></div><div><span>Porte</span><b>22h00</b></div></div>
+   <div class="dec"></div>
+   <div class="qr"><canvas id="q1" width="170" height="170"></canvas><small>N° AFN-4827-VIP</small></div>
+  </div>
+  <div class="pad" style="margin-top:14px;display:flex;gap:10px"><div class="btn2" style="flex:1">⬇ Enregistrer</div><div class="btn2" style="flex:1;background:#25D366">Envoyer sur WhatsApp</div></div>
+ </div></div><div class="leg">3. Le billet QR<small>reçu tout de suite + SMS/WhatsApp</small></div></div>
+</div>
+
+<div class="rang" id="r2">
+ <div class="bloc"><div class="tel"><div class="ecran sombre"><div class="cam"></div><div class="ile"></div>
+  <div class="sb" style="position:relative"><span>22:47</span><span>●●● ▮</span></div>
+  <div class="topscan"><span>✕ Fermer</span><span>Contrôle · Entrée VIP</span><span>🔦</span></div>
+  <div class="cadre"><i></i><i></i><i></i><i></i><canvas id="q2" width="160" height="160"></canvas></div>
+  <div class="refus">✕ 22:41 · Billet AFN-1093 déjà utilisé : entrée refusée</div>
+  <div class="ok"><div class="v"><div class="c">✓</div><div><b>Billet valide</b><span>Mamadou Camara · VIP 👑 · 1 sur 2</span></div></div>
+   <div class="compteur"><div class="ligne" style="font-size:13px;font-weight:600"><span>Entrés ce soir</span><span><b style="font-size:16px">182</b> / 300</span></div><div class="barre"><i></i></div></div></div>
+ </div></div><div class="leg">4. Scan à l'entrée<small>un simple téléphone · faux billets refusés</small></div></div>
+
+ <div class="bloc"><div class="tel"><div class="ecran"><div class="ile"></div>
+  <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+  <div class="hd"><div><div style="font-size:12px;color:#6B6890;font-weight:600">Afro Night Conakry</div><h1>Mes ventes</h1></div><div class="r" style="margin-left:auto">🔔</div></div>
+  <div class="pad">
+   <div class="kpis"><div class="kpi f"><span>Encaissé</span><b>12,6 M</b><em style="color:#86EFAC">GNF · +2,1 M aujourd'hui</em></div><div class="kpi"><span>Billets vendus</span><b>214</b><em>+38 aujourd'hui</em></div><div class="kpi"><span>Places restantes</span><b>86</b><em style="color:#E2560F">sur 300</em></div><div class="kpi"><span>Ventes ambassadeurs</span><b>41 %</b><em>des billets</em></div></div>
+   <div class="graph"><div class="ligne"><b style="font-size:14px">Ventes des 7 derniers jours</b><span class="pill">Billets</span></div><div class="bars"><i style="height:22%"></i><i style="height:30%"></i><i style="height:26%"></i><i style="height:48%"></i><i style="height:55%"></i><i style="height:70%"></i><i class="h" style="height:95%"></i></div><div class="jours"><span>Sam</span><span>Dim</span><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span></div></div>
+   <div class="btn2" style="background:linear-gradient(135deg,#1B0F3D,#3B1A78)">💸 Retirer vers Orange Money</div>
+  </div>
+  <div class="nav"><div class="on"><b>▦</b>Ventes</div><div><b>🎟</b>Billets</div><div><b>⌖</b>Scanner</div><div><b>👥</b>Ambassadeurs</div></div>
+ </div></div><div class="leg">5. Tableau de bord<small>l'organisateur suit tout en direct</small></div></div>
+
+ <div class="bloc"><div class="tel"><div class="ecran"><div class="ile"></div>
+  <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+  <div class="hd"><div class="r">←</div><h1>Ambassadeurs</h1></div>
+  <div class="pad">
+   <div class="lien"><div class="lbl" style="margin:0">Ton lien d'ambassadeur · 5 % par billet vendu</div><div class="u">billet.gn/afro-night?a=fanta</div><div class="share"><div style="background:#25D366">WhatsApp</div><div style="background:#111">TikTok</div><div style="background:#1877F2">Facebook</div></div></div>
+   <div class="ligne" style="margin:4px 2px 8px"><b style="font-size:15px">Classement</b><span class="pill">🏆 Cette semaine</span></div>
+   <div class="liste">
+    <div class="it"><div class="av" style="background:#FF5A1F">FB</div><div class="n"><b>🥇 Fanta B.</b><span>31 billets vendus</span></div><div class="m">1,9 M GNF<span>+93 000 pour elle</span></div></div>
+    <div class="it"><div class="av" style="background:#7C3AED">IK</div><div class="n"><b>🥈 Ibrahim K.</b><span>24 billets vendus</span></div><div class="m">1,4 M GNF<span>+72 000 pour lui</span></div></div>
+    <div class="it"><div class="av" style="background:#0EA5E9">AD</div><div class="n"><b>🥉 Aïssatou D.</b><span>18 billets vendus</span></div><div class="m">1,1 M GNF<span>+54 000 pour elle</span></div></div>
+    <div class="it"><div class="av" style="background:#16A34A">MS</div><div class="n"><b>Moussa S.</b><span>15 billets vendus</span></div><div class="m">850 000 GNF<span>+42 500 pour lui</span></div></div>
+   </div>
+   <div class="btn" style="margin-top:14px">＋ Inviter des ambassadeurs</div>
+  </div>
+ </div></div><div class="leg">6. Ambassadeurs<small>ils vendent et font ta pub gratuitement</small></div></div>
+</div>
+<script>
+function qr(id){const c=document.getElementById(id),x=c.getContext('2d'),n=25,s=c.width/n;let r=7;const R=()=>{r=(r*9301+49297)%233280;return r/233280};
+x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.fillStyle='#14122B';
+for(let i=0;i<n;i++)for(let j=0;j<n;j++){const f=(i<8&&j<8)||(i<8&&j>n-9)||(i>n-9&&j<8);if(!f&&R()>.52)x.fillRect(i*s,j*s,s,s)}
+[[0,0],[n-7,0],[0,n-7]].forEach(([a,b])=>{x.fillRect(a*s,b*s,7*s,7*s);x.fillStyle='#fff';x.fillRect((a+1)*s,(b+1)*s,5*s,5*s);x.fillStyle='#14122B';x.fillRect((a+2)*s,(b+2)*s,3*s,3*s)})}
+qr('q1');qr('q2');
+</script></body></html>

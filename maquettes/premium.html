@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,sans-serif;background:#E9E6F5;color:#fff}
+.rang{display:flex;gap:56px;padding:56px 60px 40px}
+.bloc{display:flex;flex-direction:column;align-items:center;gap:18px}
+.leg{font-weight:700;font-size:22px;color:#14122B;text-align:center}.leg small{display:block;font-weight:500;font-size:15px;color:#6B6890;margin-top:2px}
+.tel{width:390px;height:844px;border-radius:52px;background:#050509;padding:12px;box-shadow:0 30px 60px -20px rgba(30,10,70,.55)}
+.e{width:100%;height:100%;border-radius:42px;overflow:hidden;position:relative;background:#0B0A14}
+.e:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 90% -5%,rgba(255,90,60,.28),transparent 40%),radial-gradient(circle at -10% 40%,rgba(124,58,237,.25),transparent 45%);pointer-events:none}
+.ile{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#000;border-radius:20px;z-index:9}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:600;position:relative}
+.p{padding:0 18px;position:relative}
+.mute{color:#9C97C2}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 18px 12px;position:relative}
+.logo{width:40px;height:40px;border-radius:13px;background:conic-gradient(from 200deg,#FF4D6D,#FF8A3D,#FFC145,#7C3AED,#FF4D6D);display:grid;place-items:center}
+.logo i{width:16px;height:16px;border-radius:5px;background:#0B0A14;transform:rotate(45deg)}
+.loc{font-size:11px;color:#9C97C2;font-weight:500}.loc b{display:block;font-size:16px;color:#fff;font-weight:700}
+.ic{width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);display:grid;place-items:center;font-size:16px;position:relative}
+.dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:#FF4D6D;border:2px solid #0B0A14}
+.srch{margin:0 18px 14px;display:flex;gap:10px}
+.srch div:first-child{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px 14px;font-size:13px;color:#8A85B0}
+.filt{width:46px;border-radius:16px;background:linear-gradient(135deg,#FF8A3D,#FF4D6D);display:grid;place-items:center;font-size:16px}
+.cats{display:flex;gap:10px;padding:0 18px 16px;overflow:hidden}
+.cat{flex:none;width:72px;text-align:center;font-size:11px;font-weight:600;color:#C9C5E8}
+.cat div{width:60px;height:60px;margin:0 auto 6px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:grid;place-items:center;font-size:24px}
+.cat.on div{background:linear-gradient(135deg,#FF8A3D,#FF4D6D);border:0;box-shadow:0 10px 20px -8px rgba(255,77,109,.7)}
+.cat.on{color:#fff}
+.sec{display:flex;justify-content:space-between;align-items:flex-end;padding:0 18px 10px;position:relative}
+.sec b{font-size:18px;font-weight:700}.sec small{display:block;font-size:11px;color:#9C97C2;font-weight:500}
+.sec span{font-size:12px;color:#FF8A3D;font-weight:600}
+.hero{margin:0 18px 18px;height:300px;border-radius:28px;position:relative;overflow:hidden}
+.ps1{background:radial-gradient(circle at 70% 20%,#FFC145 0,transparent 32%),radial-gradient(circle at 20% 70%,#FF4D6D 0,transparent 45%),linear-gradient(160deg,#3A0E6B,#14062B)}
+.ps2{background:radial-gradient(circle at 30% 25%,#22D3EE 0,transparent 35%),radial-gradient(circle at 80% 80%,#7C3AED 0,transparent 45%),linear-gradient(160deg,#0B2A5C,#070B24)}
+.ps3{background:radial-gradient(circle at 75% 25%,#34D399 0,transparent 35%),radial-gradient(circle at 20% 85%,#FACC15 0,transparent 40%),linear-gradient(160deg,#064E3B,#03140F)}
+.ps4{background:radial-gradient(circle at 25% 30%,#FF8A3D 0,transparent 40%),linear-gradient(160deg,#5B1A1A,#1A0707)}
+.ring{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.14)}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(5,4,12,.92))}
+.glass{position:absolute;font-size:11px;font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18)}
+.hot{background:linear-gradient(135deg,#FF8A3D,#FF4D6D);border:0}
+.vrf{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#3B82F6;font-size:9px;vertical-align:1px;margin-left:4px}
+.hb{position:absolute;left:18px;right:18px;bottom:16px}
+.ht{font-size:28px;font-weight:800;line-height:1.02;letter-spacing:-.5px}
+.hm{font-size:12px;color:#D8D4F2;margin:6px 0 12px}
+.row{display:flex;align-items:center;justify-content:space-between}
+.amis{display:flex;align-items:center;font-size:11px;color:#D8D4F2}
+.amis i{width:22px;height:22px;border-radius:50%;border:2px solid #14062B;margin-left:-7px;display:inline-block}.amis i:first-child{margin-left:0}.amis span{margin-left:6px}
+.bt{background:#fff;color:#0B0A14;font-weight:700;font-size:13px;padding:10px 16px;border-radius:14px}
+.btg{background:linear-gradient(135deg,#FF8A3D,#FF4D6D);color:#fff;font-weight:700;border-radius:18px;padding:16px;text-align:center;font-size:15px;box-shadow:0 12px 26px -10px rgba(255,77,109,.8)}
+.mini{display:flex;gap:12px;padding:0 18px}
+.mc{flex:none;width:150px}
+.mc .im{height:120px;border-radius:20px;position:relative;overflow:hidden;margin-bottom:8px}
+.mc b{font-size:13px;display:block}.mc span{font-size:11px;color:#9C97C2}
+.mc em{font-style:normal;font-size:12px;font-weight:700;color:#FFB15C}
+.nav{position:absolute;left:14px;right:14px;bottom:20px;height:66px;border-radius:24px;background:rgba(22,20,38,.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-around;align-items:center;font-size:10px;font-weight:600;color:#7F7AA6;z-index:5}
+.nav div{text-align:center}.nav b{display:block;font-size:19px;margin-bottom:2px}
+.nav .on{color:#fff}.nav .plus{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,#FF8A3D,#FF4D6D);display:grid;place-items:center;font-size:26px;color:#fff;box-shadow:0 10px 20px -6px rgba(255,77,109,.8)}
+/* liste */
+.card{margin:0 18px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:24px;overflow:hidden}
+.card .im{height:150px;position:relative}
+.card .c{padding:12px 14px 14px}
+.card .t{font-size:16px;font-weight:700}
+.meta{display:flex;gap:12px;font-size:11px;color:#B9B4DC;margin:6px 0 10px;flex-wrap:wrap}
+.prix{font-size:14px;font-weight:800;background:linear-gradient(90deg,#FFC145,#FF8A3D);-webkit-background-clip:text;color:transparent}
+.org{display:flex;align-items:center;gap:8px;font-size:11px;color:#B9B4DC;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700}
+.sui{margin-left:auto;font-size:11px;font-weight:700;color:#fff;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.1)}
+.jauge{height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}.jauge i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#FF8A3D,#FF4D6D)}
+.cnt{font-size:11px;color:#FFB15C;font-weight:600;margin-top:5px}
+/* sport */
+.match{margin:0 18px 14px;border-radius:26px;overflow:hidden;position:relative;height:250px}
+.vs{position:absolute;left:0;right:0;top:46px;display:flex;justify-content:space-around;align-items:center}
+.club{text-align:center;font-size:13px;font-weight:700}
+.club div{width:74px;height:74px;border-radius:24px;margin:0 auto 8px;display:grid;place-items:center;font-size:22px;font-weight:800;border:2px solid rgba(255,255,255,.25)}
+.vsx{font-size:30px;font-weight:800;opacity:.9}
+.vsx small{display:block;font-size:11px;font-weight:600;color:#D8D4F2;text-align:center}
+.trib{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 18px}
+.tb{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:12px}
+.tb b{font-size:13px;display:block}.tb span{font-size:11px;color:#9C97C2}.tb em{display:block;font-style:normal;font-weight:800;margin-top:6px;color:#FFC145}
+.tb.on{border-color:#FF8A3D;background:rgba(255,138,61,.1)}
+/* cotisation */
+.cot{margin:0 18px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:12px}
+.cot .im{height:120px;border-radius:18px;position:relative;overflow:hidden;margin-bottom:10px}
+.mont{display:flex;align-items:baseline;gap:6px}.mont b{font-size:22px;font-weight:800}.mont span{font-size:12px;color:#9C97C2}
+.jg{height:8px;border-radius:8px;background:rgba(255,255,255,.1);margin:8px 0 6px;overflow:hidden}.jg i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#34D399,#10B981)}
+/* sheet */
+.voile{position:absolute;inset:0;background:rgba(3,2,10,.65);z-index:6}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:7;background:#15132A;border-radius:32px 32px 0 0;padding:12px 18px 34px;border-top:1px solid rgba(255,255,255,.1)}
+.poi{width:44px;height:5px;border-radius:5px;background:rgba(255,255,255,.2);margin:0 auto 16px}
+.opt{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-bottom:10px}
+.opt .ico{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;font-size:24px;flex:none}
+.opt b{font-size:15px;display:block}.opt span{font-size:12px;color:#9C97C2}
+.opt .fl{margin-left:auto;color:#6F6A96;font-size:20px}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 7px;border-radius:7px;background:rgba(52,211,153,.15);color:#34D399;margin-left:6px;vertical-align:2px}
+</style></head><body>
+
+<div class="rang" id="r1">
+<!-- ACCUEIL -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div>
+ <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+ <div class="hdr"><div style="display:flex;gap:10px;align-items:center"><div class="logo"><i></i></div><div class="loc">Bonsoir Serge 👋<b>Conakry ▾</b></div></div><div class="ic">🔔<span class="dot"></span></div></div>
+ <div class="srch"><div>🔍  Artiste, soirée, match, lieu…</div><div class="filt">⚙</div></div>
+ <div class="sec"><div><b>À la une 🔥</b></div><span>Tout voir</span></div>
+ <div class="hero ps1"><div class="ring" style="width:220px;height:220px;right:-60px;top:-60px"></div><div class="ring" style="width:120px;height:120px;right:30px;top:40px"></div><div class="shade"></div>
+  <div class="glass hot" style="left:14px;top:14px">⚡ Bientôt complet</div><div class="glass" style="right:14px;top:14px">♥ 3,4k</div>
+  <div class="hb"><div class="ht">GRAND CONCERT<br>DU NOUVEL AN</div><div class="hm">📅 Mer. 31 déc · 21h  ·  📍 Palais du Peuple</div>
+  <div class="row"><div class="amis"><i style="background:#FFC145"></i><i style="background:#34D399"></i><i style="background:#60A5FA"></i><span>+12 amis y vont</span></div><div class="bt">dès 100 000 GNF</div></div></div></div>
+ <div class="sec"><div><b>Ce week-end</b><small>à moins de 5 km de toi</small></div><span>Tout voir</span></div>
+ <div class="mini">
+  <div class="mc"><div class="im ps2"><div class="shade"></div><div class="glass" style="left:10px;top:10px">🪩 Soirée</div></div><b>Afro Night Kaloum</b><span>Sam · 22h</span><br><em>dès 50 000 GNF</em></div>
+  <div class="mc"><div class="im ps3"><div class="shade"></div><div class="glass" style="left:10px;top:10px">⚽ Sport</div></div><b>Tournoi de Ratoma</b><span>Dim · 16h</span><br><em>dès 10 000 GNF</em></div>
+  <div class="mc"><div class="im ps4"><div class="shade"></div></div></div>
+ </div>
+ <div class="nav"><div class="on"><b>⌂</b>Accueil</div><div><b>🗓</b>Agenda</div><div class="plus">＋</div><div><b>🤝</b>Cotisations</div><div><b>🎟</b>Billets</div></div>
+</div></div><div class="leg">1. Accueil<small>vitrine premium · amis · urgence</small></div></div>
+
+<!-- LISTE EVENEMENTS -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div>
+ <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+ <div class="hdr"><div class="ic">←</div><b style="font-size:18px">Événements</b><div class="ic">♡</div></div>
+ <div class="srch"><div>🔍  Rechercher…</div><div class="filt">⚙</div></div>
+ <div class="cats"><div class="cat on"><div>✨</div>Tout</div><div class="cat"><div>🎤</div>Concerts</div><div class="cat"><div>🪩</div>Soirées</div><div class="cat"><div>⚽</div>Sport</div><div class="cat"><div>🎭</div>Culture</div></div>
+ <div class="p mute" style="font-size:12px;margin-bottom:10px">128 événements en Guinée cette semaine</div>
+ <div class="card"><div class="im ps1"><div class="ring" style="width:160px;height:160px;right:-30px;top:-50px"></div><div class="shade"></div><div class="glass hot" style="left:12px;top:12px">⚡ 64 places restantes</div><div class="glass" style="right:12px;top:12px">♥ 2,3k</div>
+  <div style="position:absolute;left:14px;bottom:12px;font-size:22px;font-weight:800;line-height:1">AFRO NIGHT<br>CONAKRY</div></div>
+  <div class="c"><div class="meta"><span>📅 Sam. 20 déc · 22h</span><span>📍 Hôtel Riviera, Kaloum</span></div>
+  <div class="row"><div><span class="mute" style="font-size:11px">À partir de</span><br><span class="prix">50 000 GNF</span></div><div class="bt" style="background:linear-gradient(135deg,#FF8A3D,#FF4D6D);color:#fff">Réserver</div></div>
+  <div class="jauge"><i style="width:79%"></i></div><div class="cnt">79 % vendus · ça part vite</div>
+  <div class="org"><div class="av" style="background:#7C3AED">VS</div>Vibes Squad<span class="vrf">✓</span><div class="sui">+ Suivre</div></div></div></div>
+ <div class="card"><div class="im ps2" style="height:90px"><div class="shade"></div></div></div>
+</div></div><div class="leg">2. Liste des événements<small>jauge de vente · prix clair · organisateur vérifié</small></div></div>
+
+<!-- SPORT -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div>
+ <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+ <div class="hdr"><div class="ic">←</div><b style="font-size:18px">Sport ⚽</b><div class="ic">↗</div></div>
+ <div class="match ps3"><div class="shade" style="background:linear-gradient(180deg,rgba(0,0,0,.1),rgba(3,20,15,.9))"></div>
+  <div class="glass" style="left:14px;top:12px">🏆 Championnat · J12</div><div class="glass hot" style="right:14px;top:12px">🔴 Derby</div>
+  <div class="vs"><div class="club"><div style="background:linear-gradient(135deg,#DC2626,#7F1D1D)">AC</div>Ass. Conakry</div><div class="vsx">VS<small>Dim. 14 déc · 16h</small></div><div class="club"><div style="background:linear-gradient(135deg,#FACC15,#A16207)">EK</div>Étoile de Kaloum</div></div>
+  <div style="position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:12px;color:#D8D4F2">📍 Stade du 28 Septembre · Dixinn</div></div>
+ <div class="sec"><div><b>Choisis ta tribune</b><small>prix fixe · billet QR · entrée rapide</small></div></div>
+ <div class="trib">
+  <div class="tb"><b>Pelouse</b><span>Places libres</span><em>15 000 GNF</em></div>
+  <div class="tb on"><b>Tribune couverte</b><span style="color:#FFB15C">⚠ 120 restantes</span><em>40 000 GNF</em></div>
+  <div class="tb"><b>Tribune VIP 👑</b><span>Siège numéroté</span><em>150 000 GNF</em></div>
+  <div class="tb"><b>Pass saison 🎫</b><span>Tous les matchs</span><em>350 000 GNF</em></div>
+ </div>
+ <div class="p" style="margin-top:14px"><div class="row" style="background:rgba(255,255,255,.05);border-radius:16px;padding:12px 14px;font-size:12px"><span>👥 Supporters inscrits</span><b>4 812</b></div></div>
+ <div class="p" style="position:absolute;left:0;right:0;bottom:30px"><div class="btg">Acheter · 40 000 GNF</div></div>
+</div></div><div class="leg">3. Sport<small>matchs, tribunes, pass saison</small></div></div>
+</div>
+
+<div class="rang" id="r2">
+<!-- COTISATIONS -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div>
+ <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+ <div class="hdr"><div class="ic">←</div><b style="font-size:18px">Cotisations</b><div class="ic">🔍</div></div>
+ <div class="cats"><div class="cat on"><div>✨</div>Tout</div><div class="cat"><div>💍</div>Mariage</div><div class="cat"><div>👶</div>Baptême</div><div class="cat"><div>🤲</div>Solidarité</div><div class="cat"><div>🎓</div>Études</div></div>
+ <div class="cot"><div class="im" style="background:radial-gradient(circle at 70% 30%,#F472B6,transparent 45%),linear-gradient(135deg,#4C1D95,#1E1B4B)"><div class="shade"></div><div class="glass" style="left:10px;top:10px">💍 Mariage</div><div class="glass" style="right:10px;top:10px">⏳ 6 jours</div><div style="position:absolute;left:12px;bottom:10px;font-weight:800;font-size:17px">Mariage de Fanta & Ibrahima</div></div>
+  <div class="mont"><b>18,4 M GNF</b><span>sur 25 M</span></div><div class="jg"><i style="width:74%"></i></div>
+  <div class="row" style="font-size:11px"><div class="amis"><i style="background:#FFC145;border-color:#1A1830"></i><i style="background:#34D399;border-color:#1A1830"></i><i style="background:#60A5FA;border-color:#1A1830"></i><span>142 participants</span></div><b style="color:#34D399">74 %</b></div></div>
+ <div class="cot"><div class="im" style="background:radial-gradient(circle at 30% 30%,#34D399,transparent 45%),linear-gradient(135deg,#064E3B,#022C22)"><div class="shade"></div><div class="glass" style="left:10px;top:10px">🎓 Études</div><div style="position:absolute;left:12px;bottom:10px;font-weight:800;font-size:17px">Fournitures pour l'école de Kindia</div></div>
+  <div class="mont"><b>6,2 M GNF</b><span>sur 10 M</span></div><div class="jg"><i style="width:62%"></i></div></div>
+ <div class="nav"><div><b>⌂</b>Accueil</div><div><b>🗓</b>Agenda</div><div class="plus">＋</div><div class="on"><b>🤝</b>Cotisations</div><div><b>🎟</b>Billets</div></div>
+</div></div><div class="leg">4. Cotisations<small>mariage, baptême, solidarité… jauge en direct</small></div></div>
+
+<!-- PARTICIPER -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div>
+ <div class="hero" style="margin:0;border-radius:0;height:270px;background:radial-gradient(circle at 70% 30%,#F472B6,transparent 45%),linear-gradient(135deg,#4C1D95,#1E1B4B)"><div class="shade"></div><div class="glass" style="left:18px;top:56px">←</div><div class="glass" style="right:18px;top:56px">↗ Partager</div>
+  <div class="hb"><div class="glass" style="position:static;display:inline-block;margin-bottom:8px">💍 Mariage · vérifié ✓</div><div class="ht" style="font-size:24px">Mariage de Fanta<br>& Ibrahima</div></div></div>
+ <div class="p" style="margin-top:14px">
+  <div class="mont"><b style="font-size:26px">18,4 M GNF</b><span>récoltés sur 25 M</span></div><div class="jg"><i style="width:74%"></i></div>
+  <div class="row mute" style="font-size:11px;margin-bottom:14px"><span>142 participants</span><span>⏳ plus que 6 jours</span></div>
+  <div style="font-size:12px;font-weight:600;color:#C9C5E8;margin-bottom:8px">Je participe avec</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+   <div class="tb" style="text-align:center;padding:10px"><b>50 000</b></div><div class="tb on" style="text-align:center;padding:10px"><b>100 000</b></div><div class="tb" style="text-align:center;padding:10px"><b>200 000</b></div></div>
+  <div class="tb" style="margin-bottom:10px;font-size:12px">💬 « Félicitations aux mariés ! » <span style="float:right">✎</span></div>
+  <div class="row tb" style="font-size:12px;margin-bottom:10px"><span>🙈 Participer en anonyme</span><span style="width:40px;height:22px;border-radius:12px;background:#34D399;display:inline-block;position:relative"><i style="position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff"></i></span></div>
+ </div>
+ <div class="p" style="position:absolute;left:0;right:0;bottom:30px"><div class="btg" style="background:linear-gradient(135deg,#34D399,#059669);box-shadow:0 12px 26px -10px rgba(16,185,129,.8)">Participer · 100 000 GNF</div><div class="mute" style="text-align:center;font-size:11px;margin-top:8px">Orange Money · MTN · Wave · Kiosque</div></div>
+</div></div><div class="leg">5. Participer<small>montants rapides, message, anonyme</small></div></div>
+
+<!-- CREER -->
+<div class="bloc"><div class="tel"><div class="e"><div class="ile"></div>
+ <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+ <div class="hdr"><div style="display:flex;gap:10px;align-items:center"><div class="logo"><i></i></div><div class="loc">Bonsoir Serge 👋<b>Conakry ▾</b></div></div><div class="ic">🔔</div></div>
+ <div class="hero ps1" style="height:260px"><div class="shade"></div></div>
+ <div class="voile"></div>
+ <div class="sheet"><div class="poi"></div>
+  <div style="font-size:22px;font-weight:800;margin-bottom:4px">Que veux-tu créer ?</div><div class="mute" style="font-size:13px;margin-bottom:16px">Gratuit · ton lien prêt en 1 minute</div>
+  <div class="opt"><div class="ico" style="background:linear-gradient(135deg,#FF8A3D,#FF4D6D)">🎤</div><div><b>Un événement</b><span>Concert, soirée, conférence…</span></div><div class="fl">›</div></div>
+  <div class="opt"><div class="ico" style="background:linear-gradient(135deg,#22C55E,#15803D)">⚽</div><div><b>Un match ou tournoi<span class="badge">NOUVEAU</span></b><span>Tribunes, pass saison, équipes</span></div><div class="fl">›</div></div>
+  <div class="opt"><div class="ico" style="background:linear-gradient(135deg,#A78BFA,#6D28D9)">🤝</div><div><b>Une cotisation</b><span>Mariage, baptême, solidarité…</span></div><div class="fl">›</div></div>
+  <div class="opt"><div class="ico" style="background:linear-gradient(135deg,#38BDF8,#0369A1)">🏪</div><div><b>Devenir point de vente</b><span>Vends des billets, gagne une commission</span></div><div class="fl">›</div></div>
+  <div style="text-align:center;font-weight:600;color:#9C97C2;margin-top:8px">Annuler</div>
+ </div>
+</div></div><div class="leg">6. Menu « Créer »<small>4 choix dont le sport et les kiosques</small></div></div>
+</div>
+</body></html>

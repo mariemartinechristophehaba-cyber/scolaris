@@ -37,6 +37,7 @@ const I = {
   fusee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/></svg>',
   accueil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>',
   argent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4h-12A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/><path d="M3 6.5A2.5 2.5 0 0 0 5.5 9h14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H16a3 3 0 0 1 0-6"/><circle cx="16.2" cy="13" r=".6" fill="currentColor"/></svg>',
+  marketing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
   reseaux: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
   activite: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
   reglages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.8v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
@@ -450,7 +451,7 @@ function blocFondatrices(X) {
 }
 
 /* ---------- pages ---------- */
-const PAGES = [['accueil', 'Tableau de bord', 'Accueil'], ['argent', 'Argent', 'Argent'], ['reseaux', 'Réseaux', 'Réseaux'], ['sante', 'Santé', 'Santé'], ['activite', 'Activité', 'Activité'], ['reglages', 'Réglages', 'Réglages']];
+const PAGES = [['accueil', 'Tableau de bord', 'Accueil'], ['argent', 'Argent', 'Argent'], ['reseaux', 'Réseaux', 'Réseaux'], ['marketing', 'Marketing', 'Marketing'], ['sante', 'Santé', 'Santé'], ['activite', 'Activité', 'Activité'], ['reglages', 'Réglages', 'Réglages']];
 function filtres(per) {
   const seg = (cle, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-${cle}="${v}" class="${S[cle] === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   return `<div class="filtres">${seg('quoi', [['tous', 'Les 2 apps'], ['fixpro', 'FixPro'], ['scolaris', 'Scolaris']])}${per ? seg('per', [['7', '7 j'], ['30', '30 j'], ['90', '3 mois'], ['tout', 'Tout']]) : ''}</div>`;
@@ -574,17 +575,17 @@ function vueApp() {
   const p = PAGES.find(x => x[0] === S.page) || PAGES[0];
   const vieux = S.vu && Date.now() - S.vu > 15 * 6e4;
   const now = X.now; const date = `${cap(JOURS[now.getDay()])} ${now.getDate()} ${MOIS[now.getMonth()].replace('.', '')} ${now.getFullYear()}`;
-  const corps = { sante: pageSante, accueil: pageAccueil, argent: pageArgent, reseaux: pageReseaux, activite: pageActivite, reglages: pageReglages }[p[0]](X);
+  const corps = { sante: pageSante, accueil: pageAccueil, argent: pageArgent, reseaux: pageReseaux, marketing: pageMarketing, activite: pageActivite, reglages: pageReglages }[p[0]](X);
   return `<div class="cadre">
   <aside class="side"><div class="brand">${LOGO(36)}<div>${WM(18, '#fff')}<small>FixPro · Scolaris</small></div></div>
-    <div class="gt">Vue d'ensemble</div>${PAGES.slice(0, 5).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}">${I[k]}${k === 'accueil' ? 'Tableau de bord' : l}${k === 'activite' && nT ? `<span class="cnt">${nT}</span>` : ''}</a>`).join('')}
+    <div class="gt">Vue d'ensemble</div>${PAGES.slice(0, 6).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}">${I[k]}${k === 'accueil' ? 'Tableau de bord' : l}${k === 'activite' && nT ? `<span class="cnt">${nT}</span>` : ''}</a>`).join('')}
     <div class="gt">Applications</div><a href="${LIEN.fixpro}" target="_blank" rel="noopener">${I.app}FixPro Guinée</a><a href="${LIEN.scolaris}" target="_blank" rel="noopener">${I.app}Scolaris</a>
     <div class="gt">Compte</div><a href="#reglages" class="${S.page === 'reglages' ? 'on' : ''}">${I.reglages}Réglages</a>
     <div class="me"><div class="av">${esc(initiales(X.d.moi))}</div><div><b>${esc(X.d.moi || 'Administrateur')}</b><small>Mis à jour à ${heure(S.vu || new Date())}</small></div></div></aside>
-  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? `Bon retour, <em>${esc(String(X.d.moi || 'Serge').split(/\s+/)[0])}</em>` : p[1]}</h1><p>${p[0] === 'accueil' ? date + ' · FixPro et Scolaris en un coup d\'œil' : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations', sante: 'Tes applications vont-elles bien ?' }[p[0]]}</p></div><div class="sp"></div>
+  <main><header class="entete">${LOGO(38)}<div><h1>${p[0] === 'accueil' ? `Bon retour, <em>${esc(String(X.d.moi || 'Serge').split(/\s+/)[0])}</em>` : p[1]}</h1><p>${p[0] === 'accueil' ? date + ' · FixPro et Scolaris en un coup d\'œil' : { argent: 'Ce qui rentre vraiment', reseaux: "D'où viennent les gens", marketing: 'Contenus, prospects et parrainages', activite: 'Paiements, inscriptions, alertes', reglages: 'Compte et informations', sante: 'Tes applications vont-elles bien ?' }[p[0]]}</p></div><div class="sp"></div>
     <button class="live ${vieux ? 'vieux' : ''}" data-act="maj" title="Actualiser"><i></i>${S.charge ? 'Mise à jour…' : vieux ? 'Actualiser' : 'En direct'}</button><a class="moi" href="#reglages" title="Réglages">${esc(initiales(X.d.moi))}</a></header>
   <div class="page">${S.err ? `<div class="err" style="margin:0">${esc(S.err)}</div>` : ''}${corps}</div></main>
-  <nav class="nav">${PAGES.slice(0, 5).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}"><span class="ni">${I[k]}${k === 'activite' && nT ? '<i class="pt"></i>' : ''}</span>${l}</a>`).join('')}</nav></div>`;
+  <nav class="nav">${PAGES.filter(x => x[0] !== 'reseaux').slice(0, 5).map(([k, , l]) => `<a href="#${k}" class="${S.page === k ? 'on' : ''}"><span class="ni">${I[k]}${k === 'activite' && nT ? '<i class="pt"></i>' : ''}</span>${l}</a>`).join('')}</nav></div>`;
 }
 const initiales = n => String(n || 'A').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
 /* ---------- santé ---------- */
@@ -716,6 +717,13 @@ document.addEventListener('click', e => {
   else if (b.dataset.act === 'frais-ok') enregistrerFrais();
   else if (b.dataset.act === 'sms-achete') smsAchete(b.dataset.id);
   else if (b.dataset.act === 'sortir') deconnexion();
+  else if (b.dataset.act === 'mk-ouvrir') { S.mkOuvert = S.mkOuvert === b.dataset.id ? null : b.dataset.id; rendre(); }
+  else if (b.dataset.act === 'mk-statut') mkMaj({ quoi: 'plan_statut', id: b.dataset.id, statut: b.dataset.v });
+  else if (b.dataset.act === 'mk-copier') { navigator.clipboard && navigator.clipboard.writeText(b.dataset.t || '').then(() => { b.textContent = 'Copié ✓'; setTimeout(() => { b.textContent = 'Copier'; }, 1500); }).catch(() => {}); }
+  else if (b.dataset.act === 'pr-form') { S.prForm = !S.prForm; S.mkErr = ''; rendre(); }
+  else if (b.dataset.act === 'pr-filtre') { S.prFiltre = b.dataset.v; rendre(); }
+  else if (b.dataset.act === 'pr-statut') mkMaj({ quoi: 'prospect_statut', id: b.dataset.id, statut: b.dataset.v });
+  else if (b.dataset.act === 'pr-suppr') { if (confirm('Supprimer ce prospect ?')) mkMaj({ quoi: 'prospect_supprimer', id: b.dataset.id }); }
   else if (b.dataset.act === 'mode') { S.mode = S.mode === 'activer' ? '' : 'activer'; S.err = ''; S.oeil = false; rendre(); }
   else if (b.dataset.act === 'oeil') { const i = document.querySelector('input[name=mdp]'); S.oeil = !S.oeil; if (i) i.type = S.oeil ? 'text' : 'password'; }
 });
@@ -726,6 +734,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('submit', async e => {
   if (e.target.id === 'fact') return activer(e);
+  if (e.target.id === 'fpr') { e.preventDefault(); const f = new FormData(e.target); return mkMaj({ quoi: 'prospect', app: f.get('app'), nom: f.get('nom'), telephone: f.get('telephone'), ville: f.get('ville'), note: f.get('note') }, true); }
   if (e.target.id !== 'fcx') return; e.preventDefault();
   const f = new FormData(e.target); S.err = ''; S.charge = true;
   const btn = e.target.querySelector('.cta'); btn.disabled = true; btn.textContent = 'Connexion…';
@@ -764,3 +773,69 @@ setInterval(() => { if (!document.hidden && S.session && S.page === 'sante') pin
   const c = lire('pilotage_cache'); if (S.session && c && c.d) { S.data = c.d; S.vu = new Date(c.t); }
   rendre(); if (S.session) { charger(!!S.data); pinger(); }
 })();
+
+
+/* ---------- Marketing : plan de la semaine, bilans, prospects, parrainages ---------- */
+async function rpcMk(nom, corps) {
+  const t = await jeton(); if (!t) throw new Error('Session expirée');
+  const r = await fetch(`${SB}/rest/v1/rpc/${nom}`, { method: 'POST', headers: { apikey: CLE, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify(corps || {}) });
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.message || 'Erreur ' + r.status); return j;
+}
+async function chargerMk() {
+  if (S.mkCharge) return; S.mkCharge = true;
+  try { S.mk = await rpcMk('pilotage_marketing'); S.mkErr = ''; } catch (e) { S.mkErr = e.message; }
+  S.mkCharge = false; rendre();
+}
+async function mkMaj(p, form) {
+  try { S.mk = await rpcMk('pilotage_marketing_maj', { p }); S.mkErr = ''; if (form) S.prForm = false; } catch (e) { S.mkErr = e.message; }
+  rendre();
+}
+const MSG_PR = {
+  scolaris: n => `Bonjour ${n}, je suis Serge de Scolaris. Notre application aide les écoles à suivre les paiements des élèves, envoyer les reçus et relancer les parents, depuis le téléphone. Je peux vous montrer en 5 minutes ? scolarisafrique.com`,
+  fixpro: n => `Bonjour ${n}, je suis Serge de FixPro Guinée. Inscrivez-vous gratuitement et recevez des demandes de clients près de chez vous : app.fixproguinee.com`,
+};
+const ST_PR = [['nouveau', 'Nouveau', '#64748B'], ['contacte', 'Contacté', '#2563EB'], ['interesse', 'Intéressé', '#D97706'], ['inscrit', 'Inscrit', '#16A34A'], ['refus', 'Pas intéressé', '#DC2626']];
+const telWa = t => { let d = String(t || '').replace(/\D/g, ''); if (d.length === 9) d = '224' + d; return d; };
+function pageMarketing(X) {
+  if (!S.mk && !S.mkErr) { chargerMk(); return '<div class="card"><p class="mk-vide">Chargement du marketing…</p></div>'; }
+  if (!S.mk) return `<div class="card"><p class="mk-vide">${esc(S.mkErr)}</p><button class="btn p" data-act="mk-recharger" onclick="S.mk=null;S.mkErr='';rendre()">Réessayer</button></div>`;
+  const M = S.mk, fx = M.fixpro || {}, pr = M.prospects || [], pa = M.parrainages || {};
+  const aRelancer = pr.filter(x => x.statut === 'contacte' || x.statut === 'interesse').length;
+  const kpi = (lab, v, sous) => `<div class="card mk-k"><span>${lab}</span><b class="num">${v}</b><small>${sous}</small></div>`;
+  const kpis = `<div class="mk-kpis">${kpi('Nouvelles écoles', F(M.ecoles_7j), '7 derniers jours')}${kpi('Techniciens FixPro', F(fx.techniciens_30j || 0), '30 derniers jours')}${kpi('Parrainages', F(pa.total), `${F(pa.recompenses)} récompensé${pa.recompenses > 1 ? 's' : ''}`)}${kpi('Prospects à suivre', F(aRelancer), `${F(pr.length)} au total`)}</div>`;
+  // plan de la semaine
+  const auj = new Date(); auj.setHours(0, 0, 0, 0); const fin7 = new Date(auj.getTime() + 7 * 864e5); const plan = (M.plan || []).filter(p => { const j = new Date(p.jour + 'T00:00:00'); return j >= auj && j < fin7; });
+  const jr = d => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  const stl = { a_faire: ['À faire', '#64748B'], pret: ['Prêt', '#D97706'], publie: ['Publié', '#16A34A'] };
+  const ligne = p => { const o = S.mkOuvert === p.id, st = stl[p.statut] || stl.a_faire;
+    return `<div class="mk-l ${o ? 'o' : ''}"><button class="mk-lh" data-act="mk-ouvrir" data-id="${p.id}">${B(p.app, 34)}<div class="mk-lx"><b>${esc(p.titre)}</b><small>${jr(p.jour)}${p.heure ? ' · ' + esc(p.heure) : ''}${p.format ? ' · ' + esc(p.format) : ''}</small></div><span class="mk-st" style="--c:${st[1]}">${st[0]}</span></button>
+    ${o ? `<div class="mk-ld">${p.script ? `<div class="mk-bl"><div class="mk-blh"><b>Script</b><button class="mk-cp" data-act="mk-copier" data-t="${esc(p.script)}">Copier</button></div><p>${esc(p.script)}</p></div>` : ''}
+      ${p.legende ? `<div class="mk-bl"><div class="mk-blh"><b>Légende</b><button class="mk-cp" data-act="mk-copier" data-t="${esc(p.legende)}">Copier</button></div><p>${esc(p.legende)}</p></div>` : ''}
+      <div class="mk-act">${['a_faire', 'pret', 'publie'].map(v => `<button class="btn ${p.statut === v ? 'p' : ''}" data-act="mk-statut" data-id="${p.id}" data-v="${v}">${stl[v][0]}</button>`).join('')}</div></div>` : ''}</div>`; };
+  const blocPlan = `<section class="card"><div class="ct"><h3>Les 7 prochains jours</h3><small class="mk-sm">Plan préparé chaque lundi</small></div>
+    ${plan.length ? plan.map(ligne).join('') : '<p class="mk-vide">Le plan de la semaine arrive lundi matin : idées de vidéos, scripts et légendes pour FixPro et Scolaris.</p>'}</section>`;
+  // bilan
+  const b = (M.bilans || [])[0];
+  const blocBilan = `<section class="card"><div class="ct"><h3>Bilan de la semaine</h3><small class="mk-sm">Chaque dimanche</small></div>
+    ${b ? `<p class="mk-sm" style="margin:0 0 8px">Semaine du ${jr(b.semaine)}</p><div class="mk-txt">${esc(b.texte).replace(/\n/g, '<br>')}</div>` : '<p class="mk-vide">Le premier bilan arrive dimanche soir : vues, inscriptions et la vidéo qui a le mieux marché.</p>'}
+    <a href="#reseaux" class="mk-lien">Voir d'où viennent les gens ›</a></section>`;
+  // parrainage
+  const blocParr = `<section class="card"><div class="ct"><h3>Parrainage</h3></div>
+    <div class="mk-pa">${B('scolaris', 34)}<div><b>Scolaris</b><small>${F(pa.codes)} école${pa.codes > 1 ? 's ont' : ' a'} un code · ${F(pa.total)} invitée${pa.total > 1 ? 's' : ''} · ${F(pa.recompenses)} récompense${pa.recompenses > 1 ? 's' : ''} (1 mois chacune)</small></div></div>
+    <div class="mk-pa">${B('fixpro', 34)}<div><b>FixPro</b><small>5 % pour le technicien qui invite, sur chaque abonnement de son filleul</small></div></div></section>`;
+  // prospects
+  const f = S.prFiltre || 'tous';
+  const liste = pr.filter(x => f === 'tous' || x.app === f);
+  const form = S.prForm ? `<form id="fpr" class="mk-form"><select name="app"><option value="scolaris">Scolaris (école)</option><option value="fixpro">FixPro (technicien)</option></select>
+      <input name="nom" placeholder="Nom de l'école ou du technicien" required><input name="telephone" placeholder="Téléphone WhatsApp" inputmode="tel"><input name="ville" placeholder="Ville / quartier"><input name="note" placeholder="Note (facultatif)">
+      <div class="mk-act"><button type="button" class="btn" data-act="pr-form">Annuler</button><button class="btn p">Ajouter</button></div></form>` : '';
+  const pl = x => { const st = ST_PR.find(s => s[0] === x.statut) || ST_PR[0]; const wa = telWa(x.telephone);
+    return `<div class="mk-pr">${B(x.app, 30)}<div class="mk-lx"><b>${esc(x.nom)}</b><small>${[x.ville, x.telephone].filter(Boolean).map(esc).join(' · ')}${x.note ? ' · ' + esc(x.note) : ''}</small>
+      <div class="mk-chips">${ST_PR.map(s => `<button class="${s[0] === x.statut ? 'on' : ''}" style="--c:${s[2]}" data-act="pr-statut" data-id="${x.id}" data-v="${s[0]}">${s[1]}</button>`).join('')}<button class="mk-x" data-act="pr-suppr" data-id="${x.id}" aria-label="Supprimer">✕</button></div></div>
+      ${wa ? `<a class="mk-wa" href="https://wa.me/${wa}?text=${encodeURIComponent(MSG_PR[x.app](x.nom))}" target="_blank" rel="noopener" title="Écrire sur WhatsApp">${B('whatsapp', 34)}</a>` : ''}</div>`; };
+  const blocPr = `<section class="card"><div class="ct"><h3>Prospects</h3><button class="bf-mod" data-act="pr-form">${S.prForm ? 'Fermer' : '+ Ajouter'}</button></div>
+    ${S.mkErr ? `<p class="mk-err">${esc(S.mkErr)}</p>` : ''}${form}
+    <div class="seg mk-seg">${[['tous', 'Tous'], ['scolaris', 'Écoles'], ['fixpro', 'Techniciens']].map(([v, l]) => `<button class="${f === v ? 'on' : ''}" data-act="pr-filtre" data-v="${v}">${l}</button>`).join('')}</div>
+    ${liste.length ? liste.map(pl).join('') : '<p class="mk-vide">Ajoute les écoles et les techniciens à contacter. Le bouton WhatsApp prépare un message court pour chacun.</p>'}</section>`;
+  return `${kpis}<div class="g11"><div class="col">${blocPlan}${blocBilan}</div><div class="col">${blocPr}${blocParr}</div></div>`;
+}

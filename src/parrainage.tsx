@@ -1,5 +1,5 @@
 // Parrainage des écoles : une école invite une autre école avec son lien.
-// Au premier abonnement payé de l'école invitée, les deux écoles reçoivent 1 mois offert (géré en base).
+// Au premier abonnement payé de l'école invitée, l'école qui a invité reçoit 1 mois offert ; l'école invitée paie normalement (géré en base).
 import { useEffect, useState } from 'react';
 import { PiGiftFill, PiWhatsappLogoFill, PiCopyBold, PiCheckBold } from 'react-icons/pi';
 import { db } from './api';
@@ -38,14 +38,14 @@ export function CarteParrainage() {
   const d: any = q.data;
   if (!ok || !d?.code) return null;
   const lien = `${SITE}/?p=${d.code}&src=whatsapp`;
-  const msg = `Bonjour ! Mon école ${etab?.nom ? `(${etab.nom}) ` : ''}gère ses paiements avec Scolaris : reçus, relances et suivi des élèves depuis le téléphone. Inscris ton école avec mon lien, on gagne chacun 1 mois offert 🎁\n${lien}`;
+  const msg = `Bonjour ! Mon école ${etab?.nom ? `(${etab.nom}) ` : ''}gère ses paiements avec Scolaris : reçus, relances et suivi des élèves depuis le téléphone. Essaie avec mon lien, la démonstration est gratuite 👇\n${lien}`;
   const copier = async () => { try { await navigator.clipboard.writeText(lien); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch { /* ignoré */ } };
   return (
     <section className="carte avis-dem parr">
       <span className="avis-ic"><PiGiftFill aria-hidden="true" /></span>
       <div className="avis-tx">
         <h2>Invitez une école, gagnez 1 mois</h2>
-        <p>Dès que l'école invitée paie son premier abonnement, <b>vous recevez chacune 1 mois gratuit</b>.
+        <p>Dès que l'école invitée paie son premier abonnement, <b>vous recevez 1 mois gratuit</b>.
           {d.filleuls > 0 && <> {d.filleuls} école{d.filleuls > 1 ? 's' : ''} invitée{d.filleuls > 1 ? 's' : ''}{d.mois > 0 && <>, <b>{d.mois} mois gagné{d.mois > 1 ? 's' : ''}</b></>}.</>}</p>
         <button type="button" className="parr-code" onClick={copier} aria-label="Copier le lien">Code <b>{d.code}</b>{copie ? <PiCheckBold aria-hidden="true" /> : <PiCopyBold aria-hidden="true" />}</button>
       </div>

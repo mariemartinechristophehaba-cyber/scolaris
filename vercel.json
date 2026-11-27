@@ -4,6 +4,10 @@
   "framework": null,
   "rewrites": [
     {
+      "source": "/q/:c",
+      "destination": "https://hezntpvvsukdlehpbqzs.supabase.co/functions/v1/qr?c=:c"
+    },
+    {
       "source": "/((?!app\\.js|app\\.css|sw\\.js|img/|bienvenue|fonts/|manifest\\.json|api/).*)",
       "destination": "/index.html"
     }

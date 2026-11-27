@@ -822,7 +822,7 @@ function pageMarketing(X) {
     <a href="#reseaux" class="mk-lien">Voir d'où viennent les gens ›</a></section>`;
   // parrainage
   const blocParr = `<section class="card"><div class="ct"><h3>Parrainage</h3></div>
-    <div class="mk-pa">${B('scolaris', 34)}<div><b>Scolaris</b><small>${F(pa.codes)} école${pa.codes > 1 ? 's ont' : ' a'} un code · ${F(pa.total)} invitée${pa.total > 1 ? 's' : ''} · ${F(pa.recompenses)} récompense${pa.recompenses > 1 ? 's' : ''} (1 mois pour l'école qui invite)</small></div></div>
+    <div class="mk-pa">${B('scolaris', 34)}<div><b>Scolaris</b><small>${F(pa.codes)} école${pa.codes > 1 ? 's ont' : ' a'} un code · ${F(pa.total)} invitée${pa.total > 1 ? 's' : ''} · ${F(pa.recompenses)} récompense${pa.recompenses > 1 ? 's' : ''} (1 mois pour l'école qui invite, 3 max. par an)</small></div></div>
     <div class="mk-pa">${B('fixpro', 34)}<div><b>FixPro</b><small>5 % pour le technicien qui invite, sur chaque abonnement de son filleul</small></div></div></section>`;
   // scans des QR codes des affiches
   const dq = d => { if (!d) return 'jamais scannée'; const m = Math.round((Date.now() - new Date(d)) / 6e4); return 'dernier scan ' + (m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.round(m / 60)} h` : new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })); };

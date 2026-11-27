@@ -13,8 +13,8 @@ const initiales = (n: string) => n.split(/\s+/).slice(0, 2).map((x) => x[0] || '
 export const logoUrl = (etab: any) => (etab?.logo_chemin ? `${SUPA}/storage/v1/object/public/logos/${etab.logo_chemin}` : '');
 
 export function LogoEcole({ etab, taille = 44 }: any) {
-  const u = logoUrl(etab);
-  return u ? <img className="logo-ec" src={u} alt="" style={{ width: taille, height: taille }} /> : <span className="logo-ec sans" style={{ width: taille, height: taille }} aria-hidden="true"><PiBuildingsFill /></span>;
+  const u = logoUrl(etab); const [ko, setKo] = useState(false);
+  return u && !ko ? <img className="logo-ec" src={u} alt="" style={{ width: taille, height: taille }} onError={() => setKo(true)} /> : <span className="logo-ec sans" style={{ width: taille, height: taille }} aria-hidden="true"><PiBuildingsFill /></span>;
 }
 
 export function Qr({ texte, taille = 64, couleur = '#071A52' }: { texte: string; taille?: number; couleur?: string }) {

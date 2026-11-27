@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
+import { capterParrain } from './parrainage';
 import { createRoot } from 'react-dom/client';
 import { PiChalkboard, PiChalkboardFill, PiReceipt, PiReceiptFill, PiMoneyWavy, PiMoneyWavyFill, PiBellRinging, PiBellRingingFill, PiChartLineUp, PiChartLineUpFill, PiFileArrowUp, PiFileArrowUpFill, PiClockCounterClockwise, PiClockCounterClockwiseFill, PiSealCheck, PiSealCheckFill, PiSquaresFour, PiSquaresFourFill, PiStudent, PiStudentFill, PiUsersThree, PiUsersThreeFill, PiWallet, PiWalletFill, PiGearSix, PiGearSixFill, PiDotsNine, PiBellSimpleDuotone, PiBuildingsDuotone, PiPlusBold, PiSignOutDuotone } from 'react-icons/pi';
 import { auth, db, envoyerAttente, getSession, horsLigne, lireAttente, noterArrivee, poserLectureSeule, surReseau, surSession } from './api';
@@ -237,6 +238,7 @@ function VersVitrine() {
   return null;
 }
 
+capterParrain();
 createRoot(document.getElementById('root')!).render(<Racine />);
 // Application utilisable sans réseau (pages gardées sur le téléphone).
 if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.protocol === 'https:') navigator.serviceWorker.register('/sw.js').catch(() => {});

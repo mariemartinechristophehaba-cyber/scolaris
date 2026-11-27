@@ -1,3 +1,4 @@
+try{var _p=(new URLSearchParams(location.search).get('p')||'').toUpperCase();if(/^SC[A-Z0-9]{5}$/.test(_p))localStorage.setItem('scolaris_parrain',_p)}catch(e){}
 try{var _s=(new URLSearchParams(location.search).get('src')||'').toLowerCase();if(/^(affiche|tiktok|facebook|whatsapp|youtube|instagram)$/.test(_s)&&!localStorage.getItem('scolaris_src'))localStorage.setItem('scolaris_src',_s)}catch(e){}
 
 const T=[["Jusqu'à 100 élèves",28000,224000],["101 à 200 élèves",36000,288000],["201 à 300 élèves",44000,352000],["301 à 400 élèves",52000,416000],["401 à 500 élèves",60000,480000],["501 à 700 élèves",72000,576000],["701 à 1 000 élèves",88000,704000]];

@@ -8,6 +8,7 @@ import { Anneau, Barres, Cumul, Jauge, Segments } from './charts';
 import { fichesAVerifier, prevision, auj, dateFr, entier, gnf, grouperClasses, heure, moisAnnee, nb, parMois, telechargerExcel, dv } from './lib';
 import { EtatPaiement } from './gestion';
 import { DemandeAvis } from './avis';
+import { CarteParrainage, RattacherParrain } from './parrainage';
 import { ADecider, BlocCompta, Bonjour, TableauCaissier, TableauSecretaire } from './espaces';
 import { Avatar, Bandeau, Champ, Erreur, Etat, Gnf, Lien, Modale, Montant, OptClasses, Pastille, SelAnnee, Titre, Tuile, Vague, Verre, Vide, naviguer, useApp, useEnvoi, useQ } from './ui';
 
@@ -103,6 +104,7 @@ function TableauFinance() {
           <div><span>Élèves inscrits</span><span className="gnf"><b>{nb(tot)}</b></span></div>
         </div>}
       </section></Bandeau>
+      <RattacherParrain />
       {!fin ? <section className="carte"><h2>Votre établissement</h2><p className="note">{nb(tot)} élèves inscrits, {nb(d.t.classes)} classes et {nb(d.t.enseignants)} enseignants.</p></section> : <>
         <div className="kpis">
           <div className="kpi"><div><Tuile i={PiStudentDuotone} ton="bleu" t={34} /><span>Élèves inscrits</span></div><span className="gnf"><b>{nb(tot)}</b></span></div>
@@ -114,6 +116,7 @@ function TableauFinance() {
             : <div className="kpi"><div><Tuile i={PiWalletDuotone} ton="violet" t={34} /><span>Argent en caisse</span></div><Gnf n={d.t.tresorerie} /></div>}
         </div>
         <DemandeAvis />
+        <CarteParrainage />
         {fond ? <ADecider retard={retard} echu={echu} sit={d.sit} cls={d.cls} /> : <BlocCompta />}
         {can('directeur', 'comptable') && !classe && !per && <Conseils sit={d.sit} pay={d.pay} resp={d.resp} nais={d.nais} cls={d.cls} encaisse={encaisse} frais={frais} />}
         <div className="rang">

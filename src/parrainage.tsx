@@ -1,5 +1,5 @@
 // Parrainage des écoles : une école invite une autre école avec son lien.
-// Au premier abonnement payé de l'école invitée, l'école qui a invité reçoit 1 mois offert ; l'école invitée paie normalement (géré en base).
+// Au premier abonnement payé de l'école invitée, l'école qui a invité reçoit 1 mois offert (3 mois max. par an) ; l'école invitée paie normalement (géré en base).
 import { useEffect, useState } from 'react';
 import { PiGiftFill, PiWhatsappLogoFill, PiCopyBold, PiCheckBold } from 'react-icons/pi';
 import { db } from './api';
@@ -45,7 +45,7 @@ export function CarteParrainage() {
       <span className="avis-ic"><PiGiftFill aria-hidden="true" /></span>
       <div className="avis-tx">
         <h2>Invitez une école, gagnez 1 mois</h2>
-        <p>Dès que l'école invitée paie son premier abonnement, <b>vous recevez 1 mois gratuit</b>.
+        <p>Dès que l'école invitée paie son premier abonnement, <b>vous recevez 1 mois gratuit</b> (jusqu'à 3 mois par an).
           {d.filleuls > 0 && <> {d.filleuls} école{d.filleuls > 1 ? 's' : ''} invitée{d.filleuls > 1 ? 's' : ''}{d.mois > 0 && <>, <b>{d.mois} mois gagné{d.mois > 1 ? 's' : ''}</b></>}.</>}</p>
         <button type="button" className="parr-code" onClick={copier} aria-label="Copier le lien">Code <b>{d.code}</b>{copie ? <PiCheckBold aria-hidden="true" /> : <PiCopyBold aria-hidden="true" />}</button>
       </div>

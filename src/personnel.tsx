@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { PiBuildings, PiBriefcase, PiGraduationCap, PiIdentificationCard, PiTrophy, PiBriefcaseDuotone, PiBuildingsDuotone, PiCalendarCheckDuotone, PiCalendarDuotone, PiChalkboardDuotone, PiChalkboardTeacherDuotone, PiChartLineUpDuotone, PiHandsClappingDuotone, PiHashDuotone, PiMapPinDuotone, PiMedalDuotone, PiMedalFill, PiNotebookDuotone, PiPhoneDuotone, PiPhoneFill, PiSealCheckDuotone, PiShieldCheckDuotone, PiTargetDuotone, PiUsersThreeDuotone, PiWhatsappLogoFill, PiBuildingsFill, PiCameraDuotone, PiCaretRightBold, PiCheckBold, PiIdentificationCardDuotone, PiMagnifyingGlassBold, PiPencilSimpleDuotone, PiPlusBold, PiPrinterDuotone, PiSealCheckFill, PiWarningCircleFill, PiXCircleFill } from 'react-icons/pi';
 import { SUPA, db, equipeApi, getSession } from './api';
 import { Identifiants } from './equipe';
-import { dateFr, erreurTel, grouperClasses, nb, tel, telAff } from './lib';
+import { dateFr, erreurTel, grouperClasses, nb, tel, telAff, telAff as telAffBase } from './lib';
 import { qrChemin } from './qr';
 import { Bandeau, Champ, Chargement, DateRoue, Erreur, Etat, Logo, Modale, Titre, Tuile, Vide, useApp, useEnvoi, usePc, useQ } from './ui';
 
@@ -253,6 +253,7 @@ export function Organigramme() {
 
 // ---------------------------------------------------------------- Cartes scolaires
 export function Carte({ x, eleve, etab, annee, url, verso, pub }: any) {
+  const telAff = (t: string) => telAffBase(t).replace(/ /g, '\u00a0'); // un numéro ne se coupe jamais en deux lignes
   const nom = nomP(x); const fin = annee?.date_fin ? dateFr(annee.date_fin) : '';
   const resp = eleve ? ((x.eleve_responsables || []).find((r: any) => r.principal) || (x.eleve_responsables || [])[0])?.responsables : null;
   const contact = eleve ? (resp ? `${nomP(resp)}${resp.telephone ? ' · ' + telAff(resp.telephone) : ''}` : '') : (x.contact_nom ? `${x.contact_nom}${x.contact_telephone ? ' · ' + telAff(x.contact_telephone) : ''}` : '');

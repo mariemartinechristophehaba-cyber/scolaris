@@ -391,3 +391,4 @@ html,body{background:radial-gradient(900px 600px at 0% 0%,#E6E3FF 0%,transparent
 .mk-form{display:grid;gap:8px;margin:4px 0 12px}.mk-form input,.mk-form select{font:inherit;font-size:14px;padding:11px 12px;border-radius:12px;border:1px solid var(--l);background:#fff;width:100%;min-width:0}
 .mk-err{color:#DC2626;font-size:13px;margin:0 0 8px}
 @media(max-width:860px){.mk-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.mk-k b{font-size:24px}.mk-ld{padding-left:0}}
+.mk-qn{margin-left:auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end}.mk-qn b{font-size:22px;line-height:1}.mk-qn small{font-size:11.5px;color:var(--m);white-space:nowrap}

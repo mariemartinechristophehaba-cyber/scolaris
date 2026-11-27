@@ -800,9 +800,10 @@ function pageMarketing(X) {
   if (!S.mk && !S.mkErr) { chargerMk(); return '<div class="card"><p class="mk-vide">Chargement du marketing…</p></div>'; }
   if (!S.mk) return `<div class="card"><p class="mk-vide">${esc(S.mkErr)}</p><button class="btn p" data-act="mk-recharger" onclick="S.mk=null;S.mkErr='';rendre()">Réessayer</button></div>`;
   const M = S.mk, fx = M.fixpro || {}, pr = M.prospects || [], pa = M.parrainages || {};
+  const qrs = M.qr || [];
   const aRelancer = pr.filter(x => x.statut === 'contacte' || x.statut === 'interesse').length;
   const kpi = (lab, v, sous) => `<div class="card mk-k"><span>${lab}</span><b class="num">${v}</b><small>${sous}</small></div>`;
-  const kpis = `<div class="mk-kpis">${kpi('Nouvelles écoles', F(M.ecoles_7j), '7 derniers jours')}${kpi('Techniciens FixPro', F(fx.techniciens_30j || 0), '30 derniers jours')}${kpi('Parrainages', F(pa.total), `${F(pa.recompenses)} récompensé${pa.recompenses > 1 ? 's' : ''}`)}${kpi('Prospects à suivre', F(aRelancer), `${F(pr.length)} au total`)}</div>`;
+  const kpis = `<div class="mk-kpis">${kpi('Nouvelles écoles', F(M.ecoles_7j), '7 derniers jours')}${kpi('Techniciens FixPro', F(fx.techniciens_30j || 0), '30 derniers jours')}${kpi('Scans des affiches', F(qrs.reduce((t, q) => t + q.j7, 0)), `${F(qrs.reduce((t, q) => t + q.total, 0))} depuis le début`)}${kpi('Prospects à suivre', F(aRelancer), `${F(pr.length)} au total`)}</div>`;
   // plan de la semaine
   const auj = new Date(); auj.setHours(0, 0, 0, 0); const fin7 = new Date(auj.getTime() + 7 * 864e5); const plan = (M.plan || []).filter(p => { const j = new Date(p.jour + 'T00:00:00'); return j >= auj && j < fin7; });
   const jr = d => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -823,6 +824,10 @@ function pageMarketing(X) {
   const blocParr = `<section class="card"><div class="ct"><h3>Parrainage</h3></div>
     <div class="mk-pa">${B('scolaris', 34)}<div><b>Scolaris</b><small>${F(pa.codes)} école${pa.codes > 1 ? 's ont' : ' a'} un code · ${F(pa.total)} invitée${pa.total > 1 ? 's' : ''} · ${F(pa.recompenses)} récompense${pa.recompenses > 1 ? 's' : ''} (1 mois chacune)</small></div></div>
     <div class="mk-pa">${B('fixpro', 34)}<div><b>FixPro</b><small>5 % pour le technicien qui invite, sur chaque abonnement de son filleul</small></div></div></section>`;
+  // scans des QR codes des affiches
+  const dq = d => { if (!d) return 'jamais scannée'; const m = Math.round((Date.now() - new Date(d)) / 6e4); return 'dernier scan ' + (m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.round(m / 60)} h` : new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })); };
+  const blocQr = `<section class="card"><div class="ct"><h3>Scans des affiches</h3><small class="mk-sm">Chaque QR code compte ses scans</small></div>
+    ${qrs.map(q => `<div class="mk-pa">${B(q.app, 34)}<div class="mk-lx"><b>${esc(q.code)} · ${esc(q.libelle)}</b><small>${F(q.personnes)} personne${q.personnes > 1 ? 's' : ''} · ${dq(q.dernier)}</small></div><div class="mk-qn"><b class="num">${F(q.total)}</b><small>${q.aujourdhui ? '+' + F(q.aujourdhui) + " aujourd'hui" : F(q.j7) + ' en 7 j'}</small></div></div>`).join('') || '<p class="mk-vide">Aucune affiche pour l\'instant.</p>'}</section>`;
   // prospects
   const f = S.prFiltre || 'tous';
   const liste = pr.filter(x => f === 'tous' || x.app === f);
@@ -837,5 +842,5 @@ function pageMarketing(X) {
     ${S.mkErr ? `<p class="mk-err">${esc(S.mkErr)}</p>` : ''}${form}
     <div class="seg mk-seg">${[['tous', 'Tous'], ['scolaris', 'Écoles'], ['fixpro', 'Techniciens']].map(([v, l]) => `<button class="${f === v ? 'on' : ''}" data-act="pr-filtre" data-v="${v}">${l}</button>`).join('')}</div>
     ${liste.length ? liste.map(pl).join('') : '<p class="mk-vide">Ajoute les écoles et les techniciens à contacter. Le bouton WhatsApp prépare un message court pour chacun.</p>'}</section>`;
-  return `${kpis}<div class="g11"><div class="col">${blocPlan}${blocBilan}</div><div class="col">${blocPr}${blocParr}</div></div>`;
+  return `${kpis}<div class="g11"><div class="col">${blocQr}${blocPlan}${blocBilan}</div><div class="col">${blocPr}${blocParr}</div></div>`;
 }
